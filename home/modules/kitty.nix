@@ -1,0 +1,85 @@
+{ pkgs, lib, config, ... }: let
+  tabBarPath = "${config.home.homeDirectory}/.config/nix-config/config/kitty/tab_bar.py";
+  sessionPath = "${config.home.homeDirectory}/.config/nix-config/config/kitty/default.s";
+in
+{
+  programs.kitty = {
+    enable = true;
+
+    font = {
+      name = "JetBrainsMono Nerd Font Mono";
+      size = 12.0;
+    };
+
+    # themeFile = "Catppuccin-Macchiato";
+
+    shellIntegration = {
+      enableZshIntegration     = true;
+      mode                     = "no-cursor";
+    };
+
+    settings = {
+
+      cursor_shape               = "underline";
+      cursor_trail               = 1;
+
+      allow_remote_control       = true;
+      listen_on                  = "unix:/tmp/kitty";
+
+      enabled_layouts            = "Splits,Stack";
+
+      startup_session            = "~/.config/kitty/default.s";
+
+      window_padding_width       = 15.0;
+      window_margin_width        = 0;
+      update_check_interval      = 0;
+
+      tab_bar_margin_height      = "10 0";
+      tab_bar_edge               = "top";
+      tab_bar_style              = "custom";
+      tab_separator              = "\"\"";
+      tab_title_template         = "\"{fmt.fg.color0} 󰄰 {' ' if layout_name == 'stack' else ''}{fmt.fg.color7}{title} {fmt.bg.default}\"";
+      active_tab_title_template  = "\"{fmt.bg.color0} {fmt.fg._c6a0f6}󰐾 {fmt.fg.yellow + ' ' if layout_name == 'stack' else ''}{fmt.fg.color6}{title} {fmt.bg.default}\"";
+
+    };
+
+    keybindings = {
+      "alt+v"       = "paste_from_clipboard";
+      "kitty_mod+]" = "next_tab";
+      "kitty_mod+[" = "previous_tab";
+      "kitty_mod+h" = "previous_window";
+      "kitty_mod+l" = "next_window";
+      "kitty_mod+o" = "show_scrollback";
+      "kitty_mod+n" = "set_tab_title";
+      "kitty_mod+'" = "launch --location vsplit";
+      "kitty_mod+5" = "launch --location hsplit";
+      "kitty_mod+z" = "next_layout";
+      "kitty_mod+u" = "scroll_page_up";
+      "kitty_mod+d" = "scroll_page_down";
+
+      "kitty_mod+m" = "create_marker";
+      "ctrl+m"      = "remove_marker";
+    };
+
+    extraConfig = ''
+      mark1_foreground red
+      mark1_background #282a36
+      mark2_foreground green
+      mark2_background #282a36
+
+      # kitty-scrollback.nvim Kitten alias
+      action_alias kitty_scrollback_nvim kitten '~/.local/share/nvim/lazy/kitty-scrollback.nvim/python/kitty_scrollback_nvim.py'
+      # Browse scrollback buffer in nvim
+      map kitty_mod+enter kitty_scrollback_nvim
+      # Browse output of the last shell command in nvim
+      map kitty_mod+g kitty_scrollback_nvim --config ksb_builtin_last_cmd_output
+      # Show clicked command output in nvim
+      mouse_map ctrl+shift+right press ungrabbed combine : mouse_select_command_output : kitty_scrollback_nvim --config ksb_builtin_last_visited_cmd_output
+    '';
+
+  };
+
+  xdg.configFile."kitty/tab_bar.py".source = config.lib.file.mkOutOfStoreSymlink tabBarPath;
+  xdg.configFile."kitty/default.s".source = config.lib.file.mkOutOfStoreSymlink sessionPath;
+
+}

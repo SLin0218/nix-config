@@ -46,6 +46,9 @@ in
     brightnessctl
     gemini-cli
     nodejs
+    satty
+    grim
+
   ];
 
   home.sessionVariables = {

@@ -109,6 +109,8 @@ in
         "$mod, k, movefocus, u"
         "$mod, n, movefocus, d"
 
+        "$mod, F, fullscreen"
+
         "$mod, 1, workspace, 1"
         "$mod, 2, workspace, 2"
         "$mod, 3, workspace, 3"
@@ -130,6 +132,8 @@ in
         "$mod SHIFT, 8, movetoworkspace, 8"
         "$mod SHIFT, 9, movetoworkspace, 9"
         "$mod SHIFT, 0, movetoworkspace, 10"
+
+        "$mod SHIFT, A, exec, ags request screenshot"
 
         "$mod SHIFT, Q, exec, hyprctl dispatch exit"
       ];

@@ -1,73 +1,31 @@
 import { Gtk, Gdk } from "ags/gtk4";
 import { createBinding, With, Accessor } from "ags";
 import AstalHyprland from "gi://AstalHyprland";
+import AstalApps from "gi://AstalApps";
 import Pango from "gi://Pango?version=1.0";
-import { readFile, monitorFile } from "ags/file";
-import { exec } from "ags/process";
-import Gio from "gi://Gio?version=2.0";
-import GLib from "gi://GLib?version=2.0";
 
-const specialNames = new Map<string, string>();
+const apps = new AstalApps.Apps();
 
-function readIcons(file: string) {
-  const lines = readFile(file).split("\n");
-  let iconName;
-  let className;
-  for (const line of lines) {
-    if (line.startsWith("StartupWMClass=")) {
-      className = line.split("=")[1];
-    }
-    if (line.startsWith("Icon=")) {
-      iconName = line.split("=")[1];
-    }
-    if (className && iconName) {
-      specialNames.set(className, iconName);
-      break;
-    }
-  }
-}
+function lookUpIcon(className: string | null | undefined): string {
+  if (!className) return "application-x-executable";
 
-const applicationDirs = ["/usr/share/applications/", `${GLib.get_home_dir()}/.local/share/applications/`];
-for (const applicationDir of applicationDirs) {
-  const content = exec(`ls ${applicationDir}`);
-  for (const f of content.split("\n")) {
-    readIcons(`${applicationDir}${f}`)
-  }
-
-  monitorFile(applicationDir, (file: string, event: Gio.FileMonitorEvent) => {
-    if (event !== Gio.FileMonitorEvent.DELETED) {
-      readIcons(file);
-    }
-  })
-}
-
-
-
-
-function lookUpIcon(iconName: string | null | undefined): string {
-  // 添加空值检查
-  if (!iconName) {
-    return "application-x-executable";
-  }
-
+  // 1. 尝试直接在图标主题中查找类名（有些应用图标名和类名一致）
   const display = Gdk.Display.get_default();
-  if (!display) {
-    console.error("No display found");
-    return "application-x-executable";
-  }
-  const iconTheme = Gtk.IconTheme.get_for_display(display);
-  if (iconTheme.has_icon(iconName)) {
-    return iconName;
+  if (display) {
+    const iconTheme = Gtk.IconTheme.get_for_display(display);
+    if (iconTheme.has_icon(className)) return className;
+    if (iconTheme.has_icon(className.toLowerCase())) return className.toLowerCase();
   }
 
-  if (specialNames.has(iconName)) {
-    return specialNames.get(iconName)!;
+  // 2. 使用 AstalApps 查找对应 WMClass 的应用
+  // AstalApps 会自动处理 .desktop 文件中的 StartupWMClass 和 Icon 字段
+  const app = apps.fuzzy_query(className)?.[0];
+  if (app && app.icon_name) {
+    return app.icon_name;
   }
 
-  // 如果找不到图标，返回一个默认图标
   return "application-x-executable";
 }
-
 
 const AppIcon = ({
   iconName,
@@ -80,20 +38,14 @@ const AppIcon = ({
     <With value={iconName}>
       {() => {
         const lookUpIconName = iconName.as(lookUpIcon)
-        if (lookUpIconName.apply(String).endsWith("svg")) {
-          return <image
-            file={lookUpIconName}
-            pixelSize={size}
-          />
-        } else {
-          return <image
+        return (
+          <image
             iconName={lookUpIconName}
             pixelSize={size}
           />
-        }
+        )
       }}
     </With>
-
   );
 };
 
@@ -113,7 +65,11 @@ export default function Window() {
             client && (
               <box spacing={8}>
                 <AppIcon iconName={createBinding(client, "class").as(String)} />
-                <label maxWidthChars={50} ellipsize={Pango.EllipsizeMode.END} label={createBinding(client, "title").as(String)} />
+                <label
+                  maxWidthChars={50}
+                  ellipsize={Pango.EllipsizeMode.END}
+                  label={createBinding(client, "title").as(String)}
+                />
               </box>
             )
           )}

@@ -5,11 +5,13 @@ window.Bar {
   background: transparent;
   color: $theme-fg-color;
   font-weight: bold;
-  // font-size: 0.8rem;
+  // font-size: 1.2rem;
+  padding: 15px 20px 0px 20px;
 
   >centerbox {
-    background-color: $theme-bg-color-transparent;
-    padding: 0 10px 0 10px;
+    background-color: $theme-bg-color;
+    padding: 3px 10px 3px 10px;
+    border-radius: 5px;
   }
 
   button {
@@ -24,13 +26,13 @@ window.Bar {
 
   .calendar-popover {
     arrow {
-      background-color: #{'alpha(' + $theme-bg-color + ', 0.6)'};
+      background-color: $popover_bg_color;
       border: none;
       box-shadow: none;
     }
 
     contents {
-      background-color: #{'alpha(' + $theme-bg-color + ', 0.6)'};
+      background-color: $popover_bg_color;
       box-shadow: none;
     }
 

@@ -19,6 +19,7 @@ in
       inputs.astal.packages.${mySystem}.wireplumber
       inputs.astal.packages.${mySystem}.network
       inputs.astal.packages.${mySystem}.bluetooth
+      inputs.astal.packages.${mySystem}.apps
 
       libadwaita
     ];

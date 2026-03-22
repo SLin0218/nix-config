@@ -5,7 +5,7 @@ import Tray from "./items/Tray";
 import Volume from "./items/Volume";
 import Clock from "./items/Clock";
 import Workspaces from "./items/Workspaces";
-// import Window from "./items/Window";
+import Window from "./items/Window";
 import Network from "./items/Network";
 import Brightness from "./items/Brightness";
 import NotificationBar from "./items/NotificationBar";
@@ -17,6 +17,7 @@ function Start() {
       halign={Gtk.Align.START}
     >
       <Workspaces />
+      <Window />
     </box>
   );
 }

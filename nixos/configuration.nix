@@ -104,8 +104,8 @@
 
   catppuccin = {
     enable = true;
-    flavor = "macchiato";
-    accent = "blue";
+    flavor = "mocha";
+    accent = "lavender";
   };
 
   system.stateVersion = "25.11";

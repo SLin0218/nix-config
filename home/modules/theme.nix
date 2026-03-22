@@ -3,16 +3,17 @@
 {
   catppuccin = {
     enable = true;      # 默认为所有支持的应用开启
-    flavor = "macchiato";   # latte, frappe, macchiato, mocha
-    accent = "blue"; # blue, flamingo, green, pink, etc.
+    flavor = "mocha";   # latte, frappe, macchiato, mocha
+    accent = "lavender"; # blue, flamingo, green, pink, etc.
+    brave.enable = true;
   };
   gtk = {
     enable = true;
     theme = {
-      name = "catppuccin-macchiato-blue-standard";
+      name = "catppuccin-mocha-lavender-standard";
       package = pkgs.catppuccin-gtk.override {
-        accents = [ "blue" ];
-        variant = "macchiato";
+        accents = [ "lavender" ];
+        variant = "mocha";
         size = "standard";
       };
     };
@@ -26,8 +27,8 @@
     #};
 
     cursorTheme = {
-      name = "catppuccin-macchiato-blue-cursors";
-      package = pkgs.catppuccin-cursors.macchiatoBlue;
+      name = "catppuccin-mocha-lavender-cursors";
+      package = pkgs.catppuccin-cursors.mochaLavender;
     };
     gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
     gtk4.extraConfig.gtk-application-prefer-dark-theme = 1;

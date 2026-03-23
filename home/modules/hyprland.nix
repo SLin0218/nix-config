@@ -185,6 +185,11 @@ in
       ignore_alpha = 0.5
       match:namespace = bar
     }
+
+    xwayland {
+      force_zero_scaling = true
+    }
+
     '';
 
   };

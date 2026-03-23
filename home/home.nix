@@ -34,6 +34,7 @@ in
   home.packages = with pkgs; [
     #gui
     kitty
+    customPkgs.wechat
 
     # cli
     fastfetch

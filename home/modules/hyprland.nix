@@ -103,6 +103,8 @@ in
       bind = [
         "$mod, I, exec, ${toggleApp} kitty kitty"
         "$mod, G, exec, ${toggleApp} brave-browser brave"
+        "$mod, U, exec, ${toggleApp} wechat wechat"
+
         "$mod, Q, killactive"
         "$mod, l, movefocus, l"
         "$mod, h, movefocus, r"
@@ -110,6 +112,7 @@ in
         "$mod, n, movefocus, d"
 
         "$mod, F, fullscreen"
+        "$mod, space, exec, nc -U /run/user/1000/walker/walker.sock"
 
         "$mod, 1, workspace, 1"
         "$mod, 2, workspace, 2"
@@ -135,7 +138,7 @@ in
 
         "$mod SHIFT, A, exec, ags request screenshot"
 
-        "$mod SHIFT, Q, exec, hyprctl dispatch exit"
+        "$mod SHIFT, Q, exit"
       ];
 
       bindel = [
@@ -171,27 +174,41 @@ in
     };
 
     extraConfig = ''
-    layerrule {
-        name = layerrule-notification
+      windowrule {
+        name=fix_xwayland_blur
+        match:xwayland=true
+        match:float=true
+        border_size=0
+        no_blur=on
+      }
+      windowrule {
+        name=wechat_photos
+        match:title=Photos and Videos
+        match:xwayland=true
+        match:class=wechat
+        float=true
+      }
+
+      layerrule {
+          name = layerrule-notification
+          ignore_alpha = 0.5
+          blur=on
+          animation = slide right
+          match:namespace = notification
+      }
+
+      layerrule {
+        name = layerrule-bar
+        blur = on
+        blur_popups = on
         ignore_alpha = 0.5
-        blur=on
-        animation = slide right
-        match:namespace = notification
-    }
-    layerrule {
-      name = layerrule-bar
-      blur = on
-      blur_popups = on
-      ignore_alpha = 0.5
-      match:namespace = bar
-    }
+        match:namespace = bar
+      }
 
-    xwayland {
-      force_zero_scaling = true
-    }
-
+      xwayland {
+        force_zero_scaling = true
+      }
     '';
-
   };
 
 }

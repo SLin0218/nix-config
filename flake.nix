@@ -19,6 +19,12 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
+    elephant.url = "github:abenz1267/elephant";
+    walker = {
+      url = "github:abenz1267/walker";
+      inputs.elephant.follows = "elephant";
+    };
+
     hyprland = {
       url = "github:hyprwm/Hyprland";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -66,7 +72,7 @@
     forAllSystems = nixpkgs.lib.genAttrs systems;
   in
   {
-    packages = forAllSystems (system: 
+    packages = forAllSystems (system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -95,6 +101,7 @@
               imports = [
                 ./home/home.nix
                 catppuccin.homeModules.catppuccin
+                inputs.walker.homeManagerModules.default
                 ags.homeManagerModules.default
               ];
             };

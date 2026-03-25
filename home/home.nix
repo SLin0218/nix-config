@@ -61,5 +61,10 @@ in
 
   programs.home-manager.enable = true;
 
+  programs.walker = {
+    enable = true;
+    runAsService = true; # Note: this option isn't supported in the NixOS module only in the home-manager module
+  };
+
   systemd.user.startServices = "sd-switch";
 }

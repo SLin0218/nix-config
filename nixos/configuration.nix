@@ -10,13 +10,28 @@
 
   nixpkgs.config.allowUnfree = true;
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader = {
+    systemd-boot.enable = false;
+    efi.canTouchEfiVariables = true;
+    # 一直等待
+    timeout = null;
+    grub = {
+      enable = true;
+      # 指定为 EFI 模式
+      efiSupport = true;
+      # 自动搜索其他操作系统（如 Windows），可选
+      useOSProber = true;
+      # 指定 EFI 分区所在的位置，通常是 /boot 或 /boot/efi
+      efiInstallAsRemovable = false;
+      device = "nodev"; # UEFI 模式下设为 "nodev"
+      # 限制显示的版本数量，防止菜单过长
+      configurationLimit = 10;
+    };
+  };
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   networking.networkmanager.enable = true;
   networking.hostName = "inspiron-lin";
-
   time.timeZone = "Asia/Shanghai";
 
   nix = let
@@ -27,13 +42,21 @@
       flake-registry = "";
       nix-path = config.nix.nixPath;
       trusted-users = [ "lin" ];
+
+      auto-optimise-store = true;
     };
 
     channel.enable = false;
 
     registry = lib.mapAttrs (_: flake: {inherit flake;}) flakeInputs;
     nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 7d";
+    };
   };
+
 
   environment = {
     systemPackages = with pkgs; [
@@ -112,4 +135,3 @@
 
   system.stateVersion = "25.11";
 }
-

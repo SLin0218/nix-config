@@ -42,7 +42,7 @@ wechat-sandboxed = pkgs.writeShellScriptBin "wechat" ''
   mkdir -p "$SANDBOX_DIR"
 
   # 针对 XWayland 注入 Xresources DPI 配置，修复 Fcitx5 候选框
-  echo "Xft.dpi: 160" | ${pkgs.xorg.xrdb}/bin/xrdb -merge
+  echo "Xft.dpi: 160" | ${pkgs.xrdb}/bin/xrdb -merge
 
   # 执行 bubblewrap 沙箱
   # 隔离 HOME 到沙箱目录，保持主目录干净
@@ -68,10 +68,10 @@ pkgs.symlinkJoin {
   postBuild = ''
     # 覆盖 desktop 文件
     mkdir -p $out/share/applications
-    if [ -f ${wechat-raw}/share/applications/wechat.desktop ]; then
-      cp ${wechat-raw}/share/applications/wechat.desktop $out/share/applications/
+    if [ -f ${appimageContents}/wechat.desktop ]; then
+      cp ${appimageContents}/wechat.desktop $out/share/applications/
       substituteInPlace $out/share/applications/wechat.desktop \
-        --replace "Exec=wechat" "Exec=$out/bin/wechat"
+        --replace-fail "Exec=AppRun %U" "Exec=$out/bin/wechat"
     fi
   '';
 

@@ -13,6 +13,7 @@ in
     ./modules/kitty.nix
     ./modules/theme.nix
     ./modules/ags.nix
+    ./modules/fastfetch.nix
   ];
 
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink nvimPath;
@@ -34,10 +35,10 @@ in
   home.packages = with pkgs; [
     #gui
     kitty
+    inkscape
     customPkgs.wechat
 
     # cli
-    fastfetch
     fzf
     fd
     bat

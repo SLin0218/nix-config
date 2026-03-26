@@ -137,6 +137,7 @@ in
         "$mod SHIFT, 0, movetoworkspace, 10"
 
         "$mod SHIFT, A, exec, ags request screenshot"
+        "$mod SHIFT, L, exec, hyprlock"
 
         "$mod SHIFT, Q, exit"
       ];

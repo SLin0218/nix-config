@@ -14,6 +14,7 @@ in
     ./modules/theme.nix
     ./modules/ags.nix
     ./modules/fastfetch.nix
+    ./modules/hyprlock.nix
   ];
 
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink nvimPath;
@@ -56,7 +57,6 @@ in
   home.sessionVariables = {
     EDITOR = "nvim";
     NIXOS_OZONE_WL = "1"; # 为 Wayland 优化 Electron
-    NODE_PATH = "${config.home.profileDirectory}/lib/node_modules";
   };
 
 

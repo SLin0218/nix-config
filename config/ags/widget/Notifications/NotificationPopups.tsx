@@ -25,7 +25,7 @@ export default function NotificationPopups(gdkmonitor: Gdk.Monitor): Astal.Windo
 
   let hideTimeout: GLib.Source | null = null
   return <window
-    namespace={"notifications-popup"}
+    namespace={"notification"}
     application={app}
     visible={notifications.as((n) => n.length !== 0)}
     margin={10}

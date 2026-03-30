@@ -2,6 +2,7 @@
   nvimPath = "${config.home.homeDirectory}/.config/nix-config/config/nvim/";
   keydPath = "${config.home.homeDirectory}/.config/nix-config/config/keyd/app.conf";
   agsPath = "${config.home.homeDirectory}/.config/nix-config/config/ags/";
+  ideaVimrcPath = "${config.home.homeDirectory}/.config/nix-config/config/ideavimrc";
   customPkgs = import ../pkgs/default.nix pkgs;
 in
 {
@@ -14,12 +15,13 @@ in
     ./modules/theme.nix
     ./modules/ags.nix
     ./modules/fastfetch.nix
-    ./modules/hyprlock.nix
+    ./modules/hypr.nix
   ];
 
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink nvimPath;
   xdg.configFile."keyd/app.conf".source = config.lib.file.mkOutOfStoreSymlink keydPath;
   xdg.configFile."ags".source = config.lib.file.mkOutOfStoreSymlink agsPath;
+  home.file.".ideavimrc".source = config.lib.file.mkOutOfStoreSymlink ideaVimrcPath;
 
   home.activation.linkAgsModules = lib.hm.dag.entryAfter ["writeBoundary"] ''
     $DRY_RUN_CMD mkdir -p ${agsPath}/node_modules
@@ -38,6 +40,8 @@ in
     kitty
     inkscape
     customPkgs.wechat
+    antigravity-fhs
+    jetbrains.idea
 
     # cli
     fzf
@@ -49,14 +53,17 @@ in
     brightnessctl
     gemini-cli
     nodejs
-    satty
-    grim
+    satty          # 图片标注工具
+    grim           # 截图工具
+    imagemagick    # 终端查看图片信息
 
   ];
 
   home.sessionVariables = {
     EDITOR = "nvim";
     NIXOS_OZONE_WL = "1"; # 为 Wayland 优化 Electron
+    _JAVA_AWT_WM_NONREPARENTING = "1";
+    XCURSOR_SIZE = "32";
   };
 
 

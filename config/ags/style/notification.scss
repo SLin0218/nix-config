@@ -6,7 +6,7 @@
 .notifications-container {
   border-radius: 10px;
   // color: $on_surface;
-  background-color: #{'alpha(' + $theme-bg-color + ', 0.7)'};
+  background-color: $dialog_bg_color;
   min-width: 350px;
 
   separator {

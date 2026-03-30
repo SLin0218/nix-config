@@ -62,7 +62,7 @@ export default function NotificationWindow(_gdkmonitor: Gdk.Monitor) {
   return (
     <PopupWindow
       name={WINDOW_NAME}
-      namespace={WINDOW_NAME}
+      namespace={"notification"}
       layout="right"
       margin={10}
     >

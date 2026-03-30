@@ -35,7 +35,7 @@ in
         gaps_in = 5;
         gaps_out = 20;
         border_size = 2;
-        "col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
+        "col.active_border" = "$lavender";
         "col.inactive_border" = "rgba(595959aa)";
         resize_on_border = "false";
         allow_tearing = "false";
@@ -170,46 +170,31 @@ in
         "fcitx5 -d"
         "keyd-application-mapper -d"
         "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
       ];
 
+      windowrule = [
+        "match:xwayland true, match:float true, no_blur on"
+        "match:xwayland true, match:float true, border_size 0"
+        "match:title Photos and Videos, match:xwayland true, float on"
+      ];
+
+      layerrule = [
+        # 通知中心 (Notification)
+        "blur on, match:namespace notification"
+        "ignore_alpha 0.5, match:namespace notification"
+        "animation slide right, match:namespace notification"
+
+        # 状态栏 (Bar)
+        "blur on, match:namespace bar"
+        "blur_popups on, match:namespace bar"
+        "ignore_alpha 0.5, match:namespace bar"
+      ];
+
+      xwayland = {
+        force_zero_scaling = true;
+      };
+
     };
-
-    extraConfig = ''
-      windowrule {
-        name=fix_xwayland_blur
-        match:xwayland=true
-        match:float=true
-        border_size=0
-        no_blur=on
-      }
-      windowrule {
-        name=wechat_photos
-        match:title=Photos and Videos
-        match:xwayland=true
-        match:class=wechat
-        float=true
-      }
-
-      layerrule {
-          name = layerrule-notification
-          ignore_alpha = 0.5
-          blur=on
-          animation = slide right
-          match:namespace = notification
-      }
-
-      layerrule {
-        name = layerrule-bar
-        blur = on
-        blur_popups = on
-        ignore_alpha = 0.5
-        match:namespace = bar
-      }
-
-      xwayland {
-        force_zero_scaling = true
-      }
-    '';
   };
-
 }

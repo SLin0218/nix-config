@@ -8,10 +8,10 @@
       logo = {
         source = "~/.config/nix-config/config/logo.png";
         type = "kitty";
-        # width = 28;
-        # height = 12;
+        width = 40;
+        height = 16;
         padding = {
-          top = 2;
+          top = 3;
           left = 2;
         };
       };

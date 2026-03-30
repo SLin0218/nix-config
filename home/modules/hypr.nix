@@ -101,4 +101,19 @@
       ];
     };
   };
+
+  services.hyprpaper = {
+    enable = true;
+    settings = {
+      wallpaper = [
+        {
+          monitor = "";
+          path = "~/Pictures/wallpaper/";
+          timeout = 600;
+          fit_mode = "cover";
+        }
+      ];
+    };
+  };
+
 }

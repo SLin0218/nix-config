@@ -19,9 +19,9 @@
       enable = true;
       # 指定为 EFI 模式
       efiSupport = true;
-      # 自动搜索其他操作系统（如 Windows），可选
+      # 自动搜索其他操作系统
       useOSProber = true;
-      # 指定 EFI 分区所在的位置，通常是 /boot 或 /boot/efi
+      # 指定 EFI 分区所在的位置
       efiInstallAsRemovable = false;
       device = "nodev"; # UEFI 模式下设为 "nodev"
       # 限制显示的版本数量，防止菜单过长

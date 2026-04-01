@@ -31,6 +31,19 @@ in
 
       "$mod" = "SUPER";
 
+      input = {
+        touchpad = {
+          natural_scroll = true;
+          scroll_factor = 0.2;
+          clickfinger_behavior = true;
+        };
+        natural_scroll = false;
+      };
+
+      gesture = [
+        "3, horizontal, workspace"
+      ];
+
       general = {
         gaps_in = 5;
         gaps_out = 20;
@@ -112,7 +125,7 @@ in
         "$mod, n, movefocus, d"
 
         "$mod, F, fullscreen"
-        "$mod, space, exec, nc -U /run/user/1000/walker/walker.sock"
+        "$mod, space, exec, ags request launcher"
 
         "$mod, 1, workspace, 1"
         "$mod, 2, workspace, 2"

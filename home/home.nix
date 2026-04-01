@@ -3,7 +3,6 @@
   keydPath = "${config.home.homeDirectory}/.config/nix-config/config/keyd/app.conf";
   agsPath = "${config.home.homeDirectory}/.config/nix-config/config/ags/";
   ideaVimrcPath = "${config.home.homeDirectory}/.config/nix-config/config/ideavimrc";
-  customPkgs = import ../pkgs/default.nix pkgs;
 in
 {
   imports = [
@@ -24,8 +23,13 @@ in
   home.file.".ideavimrc".source = config.lib.file.mkOutOfStoreSymlink ideaVimrcPath;
 
   home.activation.linkAgsModules = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    $DRY_RUN_CMD mkdir -p ${agsPath}/node_modules
-    $DRY_RUN_CMD ln -sf ${customPkgs.lunar-javascript}/lib/node_modules/lunar-javascript $VERBOSE_ARG ${agsPath}/node_modules/
+    if [[ ! -d ${agsPath}/node_modules ]];then
+      $DRY_RUN_CMD mkdir -p ${agsPath}/node_modules
+    fi
+    rm ${agsPath}/node_modules/lunar-javascript
+    rm ${agsPath}/node_modules/ags
+    $DRY_RUN_CMD ln -sf ${pkgs.lunar-javascript}/lib/node_modules/lunar-javascript $VERBOSE_ARG ${agsPath}/node_modules/
+    $DRY_RUN_CMD ln -sf ${pkgs.ags}/share/ags/js/lib $VERBOSE_ARG ${agsPath}/node_modules/ags
   '';
 
   home = {
@@ -39,7 +43,7 @@ in
     #gui
     kitty
     inkscape
-    customPkgs.wechat
+    wechat
     antigravity-fhs
     jetbrains.idea
 
@@ -56,6 +60,7 @@ in
     satty          # 图片标注工具
     grim           # 截图工具
     imagemagick    # 终端查看图片信息
+    jq
 
   ];
 
@@ -72,6 +77,10 @@ in
   programs.walker = {
     enable = true;
     runAsService = true; # Note: this option isn't supported in the NixOS module only in the home-manager module
+  };
+
+  services.cliphist = {
+    enable = true;
   };
 
   systemd.user.startServices = "sd-switch";

@@ -28,7 +28,13 @@
       configurationLimit = 10;
     };
   };
+  # 加载 Dell 专用的内核模块
   boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelModules = [ "coretemp" "dell_smm_hwmon" ];
+  # 为模块添加参数以强制启用（部分 Dell 机型需要）
+  boot.extraModprobeConfig = ''
+    options dell_smm_hwmon ignore_dmi=1
+  '';
 
   networking.networkmanager.enable = true;
   networking.hostName = "inspiron-lin";
@@ -66,6 +72,7 @@
       sing-box
       keyd
       upower
+      lm_sensors # 传感器驱动
     ];
 
     variables.EDITOR = "nvim";
@@ -112,11 +119,13 @@
       noto-fonts-cjk-serif
       noto-fonts-color-emoji
       nerd-fonts.jetbrains-mono
+      roboto-mono
     ];
 
     fontconfig = {
       antialias = true;
       hinting.enable = true;
+      hinting.autohint = true;
       defaultFonts = {
         sansSerif = [ "Noto Sans CJK SC" "Source Han Sans SC" "DejaVu Sans" ];
         serif = [ "Noto Serif CJK SC" "Source Han Serif SC" "DejaVu Serif" ];

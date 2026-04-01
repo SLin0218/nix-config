@@ -2,6 +2,7 @@
   programs.hyprlock = {
     enable = true;
     settings = {
+      font = "Roboto Mono";
       general = {
         disable_loading = true;
         hide_cursor = true;
@@ -21,15 +22,28 @@
           "inputField, 1, 1.8, linear"
         ];
       };
-      label = {
-        text = "$TIME";
-        color = "$text";
-        font_size = "200";
-        font_family = "$font";
-        position = "0, -300";
-        halign = "center";
-        valign = "top";
-      };
+      label = [
+        {
+          monitor = "";
+          text = "$TIME";
+          color = "$text";
+          font_size = "200";
+          font_family = "$font";
+          position = "0, -300";
+          halign = "center";
+          valign = "top";
+        }
+        {
+          monitor = "";
+          text = "cmd[update:43200000] date '+%A, %B %d'";
+          color = "$text";
+          font_size = 50;
+          font_family = "$font";
+          position = "0, -220";
+          halign = "center";
+          valign = "top";
+        }
+      ];
       image = {
         monitor = "";
         path = "$HOME/.face";

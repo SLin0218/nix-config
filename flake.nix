@@ -70,17 +70,28 @@
       "x86_64-linux"
     ];
     forAllSystems = nixpkgs.lib.genAttrs systems;
+
+    # 统一管理所有的 Overlay
+    overlays = [
+      (final: prev: {
+        # 1. 注入最新的 AGS
+        ags = inputs.ags.packages.${prev.system}.default;
+      } // (import ./pkgs prev)) # 2. 注入本地自定义包
+    ];
   in
   {
+    # 命令行直接使用的包 (nix build .#xxx)
     packages = forAllSystems (system:
       let
         pkgs = import nixpkgs {
-          inherit system;
+          inherit system overlays; # 这里应用统一的 Overlay
           config.allowUnfree = true;
         };
       in
-      import ./pkgs pkgs
+      # 导出本地包 + AGS，让命令行也能直接 build
+      (import ./pkgs pkgs) // { inherit (pkgs) ags; }
     );
+
     formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
 
     nixosConfigurations = {
@@ -92,6 +103,9 @@
           catppuccin.nixosModules.catppuccin
           agenix.nixosModules.default
           ./nixos/configuration.nix
+
+          # 直接引用上面定义的统一 Overlay
+          { nixpkgs.overlays = overlays; }
 
           home-manager.nixosModules.home-manager
           {

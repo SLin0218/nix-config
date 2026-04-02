@@ -9,9 +9,6 @@ import Pango from "gi://Pango?version=1.0";
 
 const [launcherMode, setLauncherMode] = createState<"app" | "cliphist">("app");
 
-// 用于全局存储输入框的引用
-let entryRef: Gtk.Entry | null = null;
-
 // Cliphist Support
 type ClipItem = {
   id: string;
@@ -50,12 +47,14 @@ function CliphistItem({
   clip,
   onClick,
   selectedIndex,
-  index
+  index,
+  focusSearch
 }: {
   clip: ClipItem;
   onClick: () => void;
   selectedIndex: Accessor<number>;
   index: number;
+  focusSearch?: () => void;
 }) {
   const selected = selectedIndex.as((s) => s === index);
 
@@ -68,7 +67,7 @@ function CliphistItem({
           if (selectedIndex.peek() === index) {
             GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
               self.grab_focus();
-              if (entryRef) entryRef.grab_focus();
+              if (focusSearch) focusSearch();
               return GLib.SOURCE_REMOVE;
             });
           }
@@ -90,11 +89,13 @@ function CliphistItem({
 function CliphistScrollList({
   list,
   selectedIndex,
-  onHide
+  onHide,
+  focusSearch
 }: {
   list: Accessor<Array<ClipItem>>,
   selectedIndex: Accessor<number>,
   onHide: () => void,
+  focusSearch?: () => void,
 }) {
   return (
     <scrolledwindow
@@ -115,6 +116,7 @@ function CliphistScrollList({
                   clip={item}
                   selectedIndex={selectedIndex}
                   index={index}
+                  focusSearch={focusSearch}
                   onClick={() => {
                     onHide();
                     execAsync(`bash -c "cliphist decode ${item.id} | wl-copy"`).catch(err => {
@@ -135,12 +137,14 @@ function AppItem({
   app,
   onClick,
   selectedIndex,
-  index
+  index,
+  focusSearch
 }: {
   app: Apps.Application;
   onClick: () => void;
   selectedIndex: Accessor<number>;
   index: number;
+  focusSearch?: () => void;
 }) {
   const selected = selectedIndex.as((s) => s === index);
 
@@ -155,7 +159,7 @@ function AppItem({
               // 通过 grab_focus 触发 ScrolledWindow 的自动滚动
               self.grab_focus();
               // 立即将焦点还给输入框，确保用户可以继续键入
-              if (entryRef) entryRef.grab_focus();
+              if (focusSearch) focusSearch();
               return GLib.SOURCE_REMOVE;
             });
           }
@@ -192,11 +196,13 @@ function AppItem({
 function ScrollList({
   list,
   selectedIndex,
-  onHide
+  onHide,
+  focusSearch
 }: {
   list: Accessor<Array<Apps.Application>>,
   selectedIndex: Accessor<number>,
   onHide: () => void,
+  focusSearch?: () => void,
 }) {
   return (
     <scrolledwindow
@@ -214,6 +220,7 @@ function ScrollList({
                   app={item}
                   selectedIndex={selectedIndex}
                   index={index}
+                  focusSearch={focusSearch}
                   onClick={() => {
                     item.launch();
                     onHide();
@@ -240,33 +247,45 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
   const [previewImage, setPreviewImage] = createState<string | null>(null);
   const [previewText, setPreviewText] = createState<string | null>(null);
 
+  let previewTimeout: any = null;
   const loadPreviewFor = (index: number, filtered: ClipItem[]) => {
-    const item = filtered[index];
-    if (item && item.isImage) {
-      setPreviewText(null);
-      const currentPath = `/tmp/cliphist-preview-${item.id}.png`;
-      execAsync(`bash -c "cliphist decode ${item.id} > ${currentPath}"`).then(() => {
-        setPreviewImage(currentPath);
-      }).catch(() => {
-        setPreviewImage(null);
-      });
-    } else if (item) {
-      setPreviewImage(null);
-      setPreviewText(""); // trigger Loading
-      execAsync(`bash -c "cliphist decode ${item.id} | tr -d '\\000'"`).then((output) => {
-        setPreviewText(output || " ");
-      }).catch(() => {
-        setPreviewText("Failed to decode cliphist item");
-      });
-    } else {
-      setPreviewImage(null);
-      setPreviewText("No content selected");
+    if (previewTimeout !== null) {
+      clearTimeout(previewTimeout);
+      previewTimeout = null;
     }
+    setPreviewImage(null);
+    setPreviewText(""); // trigger Loading
+
+    previewTimeout = setTimeout(() => {
+      previewTimeout = null;
+      const item = filtered[index];
+      if (item && item.isImage) {
+        const currentPath = `/tmp/cliphist-preview-${item.id}.png`;
+        execAsync(`bash -c "cliphist decode ${item.id} > ${currentPath}"`).then(() => {
+          setPreviewImage(currentPath);
+        }).catch(() => {
+          setPreviewImage(null);
+        });
+      } else if (item) {
+        execAsync(`bash -c "cliphist decode ${item.id} | tr -d '\\000'"`).then((output) => {
+          setPreviewText(output || " ");
+        }).catch(() => {
+          setPreviewText("Failed to decode cliphist item");
+        });
+      } else {
+        setPreviewText("No content selected");
+      }
+    }, 150);
   };
 
-  launcherMode.subscribe(() => {
+  const refreshLaunchData = () => {
     const m = launcherMode.peek();
-    if (m === "cliphist") {
+    setText(""); // 切换模式或打开时重置搜索
+    if (m === "app") {
+      apps.reload();
+      setList(apps.fuzzy_query(""));
+      setSelectedIndex(0);
+    } else if (m === "cliphist") {
       fetchCliphist().then(items => {
         setClipList(items);
         setClipFiltered(items);
@@ -274,6 +293,10 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
         loadPreviewFor(0, items);
       });
     }
+  };
+
+  launcherMode.subscribe(() => {
+    refreshLaunchData();
   });
 
   clipSelectedIndex.subscribe(() => {
@@ -284,6 +307,11 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
 
   const monitorId = app.get_monitors().indexOf(gdkmonitor);
   const winName = `launcher-${monitorId}`;
+
+  let entryRef: any = null;
+  const focusSearch = () => {
+    if (entryRef) entryRef.grab_focus();
+  };
 
   text.subscribe(() => {
     const val = text.peek();
@@ -343,21 +371,7 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
 
         self.connect("notify::visible", () => {
           if (self.visible) {
-            const m = launcherMode.peek();
-            if (m === "app") {
-              apps.reload();
-              setList(apps.fuzzy_query(text.peek()));
-              setSelectedIndex(0);
-            } else if (m === "cliphist") {
-              fetchCliphist().then(items => {
-                setClipList(items);
-                const val = text.peek();
-                const results = items.filter(item => item.content.toLowerCase().includes(val.toLowerCase()));
-                setClipFiltered(results);
-                setClipSelectedIndex(0);
-                loadPreviewFor(0, results);
-              });
-            }
+            refreshLaunchData();
           }
         });
       }}
@@ -376,51 +390,38 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
               hexpand
               placeholderText="Search..."
               text={text}
-              onActivate={() => {
-                if (launcherMode.peek() === "app") {
-                  launchSelected();
-                } else {
-                  const currentList = clipFiltered.peek();
-                  const index = clipSelectedIndex.peek();
-                  if (currentList[index]) {
-                    onHide();
-                    execAsync(`bash -c "cliphist decode ${currentList[index].id} | wl-copy"`).catch((e) => {
-                      console.error(e);
-                    });
-                  }
-                }
-              }}
               $={(self) => {
                 self.connect("changed", () => setText(self.text));
                 entryRef = self;
                 const keyController = new Gtk.EventControllerKey();
                 keyController.connect("key-pressed", (controller, keyval) => {
-                  const mode = launcherMode.peek();
-                  if (mode === "app") {
-                    const currentList = list.peek();
-                    const index = selectedIndex.peek();
-                    if (currentList.length === 0) return false;
-                    if (keyval === Gdk.KEY_Down) {
-                      setSelectedIndex((index + 1) % currentList.length);
-                      return true;
+                  const isApp = launcherMode.peek() === "app";
+                  const currentList = isApp ? list.peek() : clipFiltered.peek();
+                  const index = isApp ? selectedIndex.peek() : clipSelectedIndex.peek();
+                  const setIdx = isApp ? setSelectedIndex : setClipSelectedIndex;
+                  if (currentList.length === 0) return false;
+
+                  if (keyval === Gdk.KEY_Return) {
+                    if (isApp) {
+                      launchSelected();
+                    } else {
+                      onHide();
+                      const clipList = currentList as ClipItem[];
+                      execAsync(`bash -c "cliphist decode ${clipList[index].id} | wl-copy"`).catch(console.error);
                     }
-                    if (keyval === Gdk.KEY_Up) {
-                      setSelectedIndex((index - 1 + currentList.length) % currentList.length);
-                      return true;
-                    }
-                  } else {
-                    const currentList = clipFiltered.peek();
-                    const index = clipSelectedIndex.peek();
-                    if (currentList.length === 0) return false;
-                    if (keyval === Gdk.KEY_Down) {
-                      setClipSelectedIndex((index + 1) % currentList.length);
-                      return true;
-                    }
-                    if (keyval === Gdk.KEY_Up) {
-                      setClipSelectedIndex((index - 1 + currentList.length) % currentList.length);
-                      return true;
-                    }
+                    return true;
                   }
+
+                  if (keyval === Gdk.KEY_Down) {
+                    setIdx((index + 1) % currentList.length);
+                    return true;
+                  }
+
+                  if (keyval === Gdk.KEY_Up) {
+                    setIdx((index - 1 + currentList.length) % currentList.length);
+                    return true;
+                  }
+
                   return false;
                 });
                 self.add_controller(keyController);
@@ -434,6 +435,7 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
                   list={list}
                   selectedIndex={selectedIndex}
                   onHide={onHide}
+                  focusSearch={focusSearch}
                 />
               ) : (
                 <box cssClasses={["cliphist-layout"]}>
@@ -441,6 +443,7 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
                     list={clipFiltered}
                     selectedIndex={clipSelectedIndex}
                     onHide={onHide}
+                    focusSearch={focusSearch}
                   />
                   <box cssClasses={["preview-panel"]} hexpand>
                     <With value={previewImage}>
@@ -450,10 +453,12 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
                           valign={Gtk.Align.FILL}
                           hexpand
                           vexpand
-                          $={(self) => {
-                            const provider = new Gtk.CssProvider();
-                            provider.load_from_string(`* { background-image: url("file://${img}"); background-size: contain; background-repeat: no-repeat; background-position: center; }`);
-                            self.get_style_context().add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+                          $={(self: any) => {
+                            if (!self._cssProvider) {
+                              self._cssProvider = new Gtk.CssProvider();
+                              self.get_style_context().add_provider(self._cssProvider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+                            }
+                            self._cssProvider.load_from_string(`* { background-image: url("file://${img}"); background-size: contain; background-repeat: no-repeat; background-position: center; }`);
                           }}
                         />
                       ) : (
@@ -492,10 +497,21 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
 }
 
 export function toggleLauncher(mode: "app" | "cliphist" = "app") {
-  setLauncherMode(mode);
-  const hyprland = Hyprland.get_default()
+  const currentMode = launcherMode.peek();
+  const hyprland = Hyprland.get_default();
   const monitor: Hyprland.Monitor | undefined = hyprland.get_monitors().find((monitor) => monitor.focused);
+  
   if (monitor) {
-    app.toggle_window(`launcher-${monitor.id}`);
+    const winName = `launcher-${monitor.id}`;
+    const win = app.get_window(winName);
+    
+    // 如果窗口处于打开状态，并且触发了不同的模式，则只刷新数据和切换模式，不要将其隐藏！
+    if (win && win.visible && currentMode !== mode) {
+      setLauncherMode(mode);
+      return;
+    }
+    
+    setLauncherMode(mode);
+    app.toggle_window(winName);
   }
 }

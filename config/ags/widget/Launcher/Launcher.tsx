@@ -392,6 +392,22 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
               text={text}
               $={(self) => {
                 self.connect("changed", () => setText(self.text));
+
+                self.connect("activate", () => {
+                  const isApp = launcherMode.peek() === "app";
+                  const currentList = isApp ? list.peek() : clipFiltered.peek();
+                  const index = isApp ? selectedIndex.peek() : clipSelectedIndex.peek();
+                  if (currentList.length === 0) return;
+
+                  if (isApp) {
+                    launchSelected();
+                  } else {
+                    onHide();
+                    const clipList = currentList as ClipItem[];
+                    execAsync(`bash -c "cliphist decode ${clipList[index].id} | wl-copy"`).catch(console.error);
+                  }
+                });
+
                 entryRef = self;
                 const keyController = new Gtk.EventControllerKey();
                 keyController.connect("key-pressed", (controller, keyval) => {
@@ -400,17 +416,6 @@ export default function Launcher(gdkmonitor: Gdk.Monitor) {
                   const index = isApp ? selectedIndex.peek() : clipSelectedIndex.peek();
                   const setIdx = isApp ? setSelectedIndex : setClipSelectedIndex;
                   if (currentList.length === 0) return false;
-
-                  if (keyval === Gdk.KEY_Return) {
-                    if (isApp) {
-                      launchSelected();
-                    } else {
-                      onHide();
-                      const clipList = currentList as ClipItem[];
-                      execAsync(`bash -c "cliphist decode ${clipList[index].id} | wl-copy"`).catch(console.error);
-                    }
-                    return true;
-                  }
 
                   if (keyval === Gdk.KEY_Down) {
                     setIdx((index + 1) % currentList.length);
@@ -500,17 +505,17 @@ export function toggleLauncher(mode: "app" | "cliphist" = "app") {
   const currentMode = launcherMode.peek();
   const hyprland = Hyprland.get_default();
   const monitor: Hyprland.Monitor | undefined = hyprland.get_monitors().find((monitor) => monitor.focused);
-  
+
   if (monitor) {
     const winName = `launcher-${monitor.id}`;
     const win = app.get_window(winName);
-    
+
     // 如果窗口处于打开状态，并且触发了不同的模式，则只刷新数据和切换模式，不要将其隐藏！
     if (win && win.visible && currentMode !== mode) {
       setLauncherMode(mode);
       return;
     }
-    
+
     setLauncherMode(mode);
     app.toggle_window(winName);
   }

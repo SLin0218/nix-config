@@ -26,7 +26,7 @@ app.start({
       toggleBrightness();
       res("ok");
     } else if (msg[0] === "launcher") {
-      toggleLauncher();
+      toggleLauncher(msg[1] as "app" | "cliphist");
       res("ok");
     } else {
       res("unknown request");

@@ -34,7 +34,7 @@ in
       input = {
         touchpad = {
           natural_scroll = true;
-          scroll_factor = 0.2;
+          scroll_factor = 0.5;
           clickfinger_behavior = true;
         };
         natural_scroll = false;
@@ -125,7 +125,8 @@ in
         "$mod, n, movefocus, d"
 
         "$mod, F, fullscreen"
-        "$mod, space, exec, ags request launcher"
+        "$mod, space, exec, ags request launcher app"
+        "CTRL SHIFT, V, exec, ags request launcher cliphist"
 
         "$mod, 1, workspace, 1"
         "$mod, 2, workspace, 2"

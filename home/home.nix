@@ -61,6 +61,7 @@ in
     grim           # 截图工具
     imagemagick    # 终端查看图片信息
     jq
+    wl-clipboard
 
   ];
 

@@ -115,11 +115,15 @@
 
   fonts = {
     packages = with pkgs; [
+      adwaita-fonts
+      sarasa-gothic
       noto-fonts-cjk-sans
       noto-fonts-cjk-serif
       noto-fonts-color-emoji
       nerd-fonts.jetbrains-mono
+
       roboto-mono
+      vista-fonts-chs
     ];
 
     fontconfig = {
@@ -127,7 +131,7 @@
       hinting.enable = true;
       hinting.autohint = true;
       defaultFonts = {
-        sansSerif = [ "Noto Sans CJK SC" "Source Han Sans SC" "DejaVu Sans" ];
+        sansSerif = [ "Microsoft YaHei" "Noto Sans CJK SC" "Source Han Sans SC" "DejaVu Sans" ];
         serif = [ "Noto Serif CJK SC" "Source Han Serif SC" "DejaVu Serif" ];
         monospace = [ "Noto Sans Mono CJK SC" "Sarasa Mono SC" "DejaVu Sans Mono" ];
         emoji = [ "Noto Color Emoji" ];

@@ -44,6 +44,7 @@ in
     kitty
     inkscape
     wechat
+    qqmusic-sandbox
     antigravity-fhs
     jetbrains.idea
 
@@ -62,6 +63,7 @@ in
     imagemagick    # 终端查看图片信息
     jq
     wl-clipboard
+    btop
 
   ];
 
@@ -74,11 +76,6 @@ in
 
 
   programs.home-manager.enable = true;
-
-  programs.walker = {
-    enable = true;
-    runAsService = true; # Note: this option isn't supported in the NixOS module only in the home-manager module
-  };
 
   services.cliphist = {
     enable = true;

@@ -89,22 +89,22 @@
       };
 
       listener = [
+        # {
+        #   timeout = 150; # 2 mins
+        #   on-timeout = "brightnessctl -s set 10";
+        #   on-resume = "brightnessctl -r";
+        # }
+        # {
+        #   timeout = 150; # 2 mins
+        #   on-timeout = "brightnessctl -sd rgb:kbd_backlight set 0";
+        #   on-resume = "brightnessctl -rd rgb:kbd_backlight";
+        # }
         {
-          timeout = 150; # 2 mins
-          on-timeout = "brightnessctl -s set 10";
-          on-resume = "brightnessctl -r";
-        }
-        {
-          timeout = 150; # 2 mins
-          on-timeout = "brightnessctl -sd rgb:kbd_backlight set 0";
-          on-resume = "brightnessctl -rd rgb:kbd_backlight";
-        }
-        {
-          timeout = 300; # 5 mins
+          timeout = 600; # 10 mins
           on-timeout = "loginctl lock-session";
         }
         {
-          timeout = 330; # 5.5 mins
+          timeout = 630; # 10.5 mins
           on-timeout = "hyprctl dispatch dpms off";
           on-resume = "hyprctl dispatch dpms on";
         }

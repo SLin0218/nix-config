@@ -4,3 +4,6 @@
 [submodule "config/emacs/site-lisp/awesome-tab"]
 	path = config/emacs/site-lisp/awesome-tab
 	url = https://github.com/manateelazycat/awesome-tab
+[submodule "config/rime-data"]
+	path = config/rime-data
+	url = https://github.com/kchen0x/rime-crane.git

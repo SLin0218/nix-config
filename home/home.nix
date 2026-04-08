@@ -1,6 +1,7 @@
 { inputs, lib, config, pkgs, ... }: let
   keydPath = "${config.home.homeDirectory}/.config/nix-config/config/keyd/app.conf";
   agsPath = "${config.home.homeDirectory}/.config/nix-config/config/ags/";
+  rimeDataPath = "${config.home.homeDirectory}/.config/nix-config/config/rime-data/";
 in
 {
   imports = [
@@ -17,7 +18,7 @@ in
   ];
 
   xdg.configFile."keyd/app.conf".source = config.lib.file.mkOutOfStoreSymlink keydPath;
-  xdg.configFile."ags".source = config.lib.file.mkOutOfStoreSymlink agsPath;
+  home.file.".local/share/fcitx5/rime".source = config.lib.file.mkOutOfStoreSymlink rimeDataPath;
 
   home.activation.linkAgsModules = lib.hm.dag.entryAfter ["writeBoundary"] ''
     if [[ ! -d ${agsPath}/node_modules ]];then

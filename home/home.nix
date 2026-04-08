@@ -1,6 +1,5 @@
 { inputs, lib, config, pkgs, ... }: let
   keydPath = "${config.home.homeDirectory}/.config/nix-config/config/keyd/app.conf";
-  agsPath = "${config.home.homeDirectory}/.config/nix-config/config/ags/";
   rimeDataPath = "${config.home.homeDirectory}/.config/nix-config/config/rime-data/";
 in
 {
@@ -19,16 +18,6 @@ in
 
   xdg.configFile."keyd/app.conf".source = config.lib.file.mkOutOfStoreSymlink keydPath;
   home.file.".local/share/fcitx5/rime".source = config.lib.file.mkOutOfStoreSymlink rimeDataPath;
-
-  home.activation.linkAgsModules = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if [[ ! -d ${agsPath}/node_modules ]];then
-      $DRY_RUN_CMD mkdir -p ${agsPath}/node_modules
-    fi
-    rm ${agsPath}/node_modules/lunar-javascript
-    rm ${agsPath}/node_modules/ags
-    $DRY_RUN_CMD ln -sf ${pkgs.lunar-javascript}/lib/node_modules/lunar-javascript $VERBOSE_ARG ${agsPath}/node_modules/
-    $DRY_RUN_CMD ln -sf ${pkgs.ags}/share/ags/js/lib $VERBOSE_ARG ${agsPath}/node_modules/ags
-  '';
 
   home = {
     username = "lin";

@@ -49,12 +49,9 @@ in
     jetbrains.idea
 
     # cli
-    fzf
     fd
-    bat
     zip
     unzip
-    eza
     brightnessctl
     gemini-cli
     nodejs
@@ -73,9 +70,25 @@ in
     XCURSOR_SIZE = "32";
   };
 
+  programs = {
+    home-manager.enable = true;
+    btop.enable = true;
+    eza.enable = true;
+    bat.enable = true;
+  };
 
-  programs.home-manager.enable = true;
-  programs.btop.enable = true;
+  i18n.inputMethod = {
+    type = "fcitx5";
+    enable = true;
+    fcitx5 = {
+      waylandFrontend = true;
+      addons = with pkgs; [
+        fcitx5-rime
+        fcitx5-gtk
+        rime-data
+      ];
+    };
+  };
 
   services.cliphist = {
     enable = true;

@@ -4,7 +4,6 @@
   imports = [
      ./hardware-configuration.nix
      ./modules/sing-box.nix
-     ./modules/fcitx5.nix
      ./modules/keyd.nix
   ];
 
@@ -142,11 +141,16 @@
     fontDir.enable = true;
   };
 
-  catppuccin = {
-    enable = true;
-    flavor = "mocha";
-    accent = "lavender";
+  i18n = {
+    extraLocaleSettings = {
+      LC_TIME = "en_US.UTF-8"; # 或者 "zh_CN.UTF-8"
+    };
+    supportedLocales = [
+      "zh_CN.UTF-8/UTF-8"
+      "en_US.UTF-8/UTF-8"
+    ];
   };
+
 
   system.stateVersion = "25.11";
 }

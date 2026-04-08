@@ -1,9 +1,12 @@
 [submodule "config/emacs/site-lisp/lsp-bridge"]
 	path = config/emacs/site-lisp/lsp-bridge
 	url = https://github.com/manateelazycat/lsp-bridge
+  ignore = untracked
 [submodule "config/emacs/site-lisp/awesome-tab"]
 	path = config/emacs/site-lisp/awesome-tab
 	url = https://github.com/manateelazycat/awesome-tab
+  ignore = untracked
 [submodule "config/rime-data"]
 	path = config/rime-data
 	url = https://github.com/kchen0x/rime-crane.git
+  ignore = untracked

@@ -1,8 +1,6 @@
 { inputs, lib, config, pkgs, ... }: let
-  nvimPath = "${config.home.homeDirectory}/.config/nix-config/config/nvim/";
   keydPath = "${config.home.homeDirectory}/.config/nix-config/config/keyd/app.conf";
   agsPath = "${config.home.homeDirectory}/.config/nix-config/config/ags/";
-  ideaVimrcPath = "${config.home.homeDirectory}/.config/nix-config/config/ideavimrc";
 in
 {
   imports = [
@@ -15,12 +13,11 @@ in
     ./modules/ags.nix
     ./modules/fastfetch.nix
     ./modules/hypr.nix
+    ./modules/editor.nix
   ];
 
-  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink nvimPath;
   xdg.configFile."keyd/app.conf".source = config.lib.file.mkOutOfStoreSymlink keydPath;
   xdg.configFile."ags".source = config.lib.file.mkOutOfStoreSymlink agsPath;
-  home.file.".ideavimrc".source = config.lib.file.mkOutOfStoreSymlink ideaVimrcPath;
 
   home.activation.linkAgsModules = lib.hm.dag.entryAfter ["writeBoundary"] ''
     if [[ ! -d ${agsPath}/node_modules ]];then
@@ -41,7 +38,6 @@ in
 
   home.packages = with pkgs; [
     #gui
-    kitty
     inkscape
     wechat
     qqmusic

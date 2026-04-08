@@ -1,0 +1,6 @@
+[submodule "config/emacs/awesome-tab"]
+	path = config/emacs/awesome-tab
+	url = https://github.com/manateelazycat/awesome-tab
+[submodule "config/emacs/lsp-bridge"]
+	path = config/emacs/lsp-bridge
+	url = https://github.com/manateelazycat/lsp-bridge

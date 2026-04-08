@@ -90,7 +90,7 @@
 
   users.users = {
     lin = {
-      initialPassword = "1771312";
+      initialPassword = "123456";
       isNormalUser = true;
       extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input" ];
       shell = pkgs.zsh;

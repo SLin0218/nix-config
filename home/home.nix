@@ -63,7 +63,6 @@ in
     imagemagick    # 终端查看图片信息
     jq
     wl-clipboard
-    btop
 
   ];
 
@@ -76,6 +75,7 @@ in
 
 
   programs.home-manager.enable = true;
+  programs.btop.enable = true;
 
   services.cliphist = {
     enable = true;

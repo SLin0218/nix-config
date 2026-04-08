@@ -92,14 +92,12 @@
       (import ./pkgs pkgs) // { inherit (pkgs) ags; }
     );
 
-    formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
-
     nixosConfigurations = {
       inspiron-lin = nixpkgs.lib.nixosSystem {
 
-        system = "x86_64-linux";
         specialArgs = {inherit inputs;};
         modules = [
+          { nixpkgs.hostPlatform = "x86_64-linux"; }
           catppuccin.nixosModules.catppuccin
           agenix.nixosModules.default
           ./nixos/configuration.nix

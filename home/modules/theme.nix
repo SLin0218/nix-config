@@ -6,7 +6,6 @@
     flavor = "mocha";   # latte, frappe, macchiato, mocha
     accent = "lavender"; # blue, flamingo, green, pink, etc.
     brave.enable = true;
-    btop.enable = true;
     hyprlock = {
       enable = true;
       useDefaultConfig = false;

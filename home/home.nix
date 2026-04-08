@@ -44,7 +44,7 @@ in
     kitty
     inkscape
     wechat
-    qqmusic-sandbox
+    qqmusic
     antigravity-fhs
     jetbrains.idea
 

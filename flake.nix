@@ -75,7 +75,7 @@
     overlays = [
       (final: prev: {
         # 1. 注入最新的 AGS
-        ags = inputs.ags.packages.${prev.system}.default;
+        ags = inputs.ags.packages.${prev.stdenv.hostPlatform.system}.default;
       } // (import ./pkgs prev)) # 2. 注入本地自定义包
     ];
   in

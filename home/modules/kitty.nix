@@ -11,8 +11,6 @@ in
       size = 12.0;
     };
 
-    # themeFile = "Catppuccin-Macchiato";
-
     shellIntegration = {
       enableZshIntegration     = true;
       mode                     = "no-cursor";

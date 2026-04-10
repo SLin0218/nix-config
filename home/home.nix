@@ -14,6 +14,7 @@ in
     ./modules/fastfetch.nix
     ./modules/hypr.nix
     ./modules/editor.nix
+    ./modules/music.nix
   ];
 
   xdg.configFile."keyd/app.conf".source = config.lib.file.mkOutOfStoreSymlink keydPath;
@@ -30,7 +31,6 @@ in
     #gui
     inkscape
     wechat
-    qqmusic
     antigravity-fhs
     jetbrains.idea
 
@@ -46,6 +46,8 @@ in
     imagemagick    # 终端查看图片信息
     jq
     wl-clipboard
+    mpc
+    libnotify
 
   ];
 

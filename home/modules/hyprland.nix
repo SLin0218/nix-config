@@ -185,14 +185,15 @@ in
         "fcitx5 -d"
         "keyd-application-mapper -d"
         "ags run"
-        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"
+        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"
       ];
 
       windowrule = [
         "match:xwayland true, match:float true, no_blur on"
         "match:xwayland true, match:float true, border_size 0"
         "match:title Photos and Videos, match:xwayland true, float on"
+        "match:class org.gnome.Nautilus, float on"
       ];
 
       layerrule = [

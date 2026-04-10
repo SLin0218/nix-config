@@ -99,19 +99,19 @@
         #   on-timeout = "brightnessctl -sd rgb:kbd_backlight set 0";
         #   on-resume = "brightnessctl -rd rgb:kbd_backlight";
         # }
-        {
-          timeout = 600; # 10 mins
-          on-timeout = "loginctl lock-session";
-        }
-        {
-          timeout = 630; # 10.5 mins
-          on-timeout = "hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
-        }
-        {
-          timeout = 1800; # 30 mins
-          on-timeout = "systemctl suspend";
-        }
+        # {
+        #   timeout = 600; # 10 mins
+        #   on-timeout = "loginctl lock-session";
+        # }
+        # {
+        #   timeout = 630; # 10.5 mins
+        #   on-timeout = "hyprctl dispatch dpms off";
+        #   on-resume = "hyprctl dispatch dpms on";
+        # }
+        # {
+        #   timeout = 1800; # 30 mins
+        #   on-timeout = "systemctl suspend";
+        # }
       ];
     };
   };

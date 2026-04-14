@@ -34,6 +34,31 @@
   boot.extraModprobeConfig = ''
     options dell_smm_hwmon ignore_dmi=1
   '';
+  boot.kernelParams = [
+    "i915.enable_guc=3"      # 开启 GuC/HuC 提交和加载
+    "i915.force_probe=46a8"
+  ];
+
+  environment.sessionVariables = {
+    # 强制禁用 DRM 修改器，解决 DMA-BUF 协商失败
+    WLR_DRM_NO_MODIFIERS = "1";
+    # 确保使用 Intel Media Driver (iHD) 而不是旧的 i965
+    LIBVA_DRIVER_NAME = "iHD";
+
+    # 告诉应用在 Wayland 下运行，避免回退到 Xwayland 导致协商失败
+    NIXOS_OZONE_WL = "1";
+    GDK_BACKEND = "wayland";
+  };
+
+  # 开启硬件绘图支持
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver # 核心：适用于 Broadwell 及以后的 iHD 驱动
+      vpl-gpu-rt         # 适用于 Alder Lake+ 的 QuickSync 视频处理
+      libvdpau-va-gl # 可选：让 VDPAU 应用也能用 VA-API
+    ];
+  };
 
   networking.networkmanager.enable = true;
   networking.hostName = "inspiron-lin";
@@ -75,7 +100,6 @@
     ];
 
     variables.EDITOR = "nvim";
-
   };
 
 
@@ -103,6 +127,7 @@
       portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
     };
     zsh.enable = true;
+    gpu-screen-recorder.enable = true;
   };
 
   xdg.portal = {

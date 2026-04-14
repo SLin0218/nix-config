@@ -15,6 +15,7 @@ in
     ./modules/hypr.nix
     ./modules/editor.nix
     ./modules/music.nix
+    ./modules/lang.nix
   ];
 
   xdg.configFile."keyd/app.conf".source = config.lib.file.mkOutOfStoreSymlink keydPath;
@@ -48,6 +49,9 @@ in
     wl-clipboard
     mpc
     libnotify
+    mpv
+    rtkit
+    gdb
 
   ];
 
@@ -56,6 +60,8 @@ in
     NIXOS_OZONE_WL = "1"; # 为 Wayland 优化 Electron
     _JAVA_AWT_WM_NONREPARENTING = "1";
     XCURSOR_SIZE = "32";
+    # 强制 Wayland 合成器和客户端不使用复杂的显存修改器
+    WLR_DRM_NO_MODIFIERS = "1";
   };
 
   programs = {
@@ -63,30 +69,16 @@ in
     btop.enable = true;
     eza.enable = true;
     bat.enable = true;
-  };
-
-  i18n.inputMethod = {
-    type = "fcitx5";
-    enable = true;
-    fcitx5 = {
-      waylandFrontend = true;
-      ignoreUserConfig = true;
-      addons = with pkgs; [
-        fcitx5-rime
-        fcitx5-gtk
-        rime-data
+    obs-studio = {
+      enable = true;
+      plugins = with pkgs.obs-studio-plugins; [
+        wlrobs
+        obs-backgroundremoval
+        obs-pipewire-audio-capture
+        obs-vaapi #optional AMD hardware acceleration
+        obs-gstreamer
+        obs-vkcapture
       ];
-      settings = {
-        inputMethod = {
-          "Groups/0" = {
-            Name = "Default";
-            "Default Layout" = "us";
-            DefaultIM = "keyboard-us";
-          };
-          "Groups/0/Items/0".Name = "keyboard-us";
-          "Groups/0/Items/1".Name = "rime";
-        };
-      };
     };
   };
 

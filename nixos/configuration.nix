@@ -94,8 +94,6 @@
       neovim
       wget
       sing-box
-      keyd
-      upower
       lm_sensors # 传感器驱动
 
       docker-compose
@@ -109,9 +107,8 @@
 
   users.users = {
     lin = {
-      initialPassword = "123456";
       isNormalUser = true;
-      extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input"  "docker" ];
+      extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input" ];
       shell = pkgs.zsh;
     };
   };

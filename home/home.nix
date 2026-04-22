@@ -50,7 +50,6 @@ in
     mpc
     libnotify
     mpv
-    rtkit
 
     gdb
     python3
@@ -62,11 +61,8 @@ in
 
   home.sessionVariables = {
     EDITOR = "nvim";
-    NIXOS_OZONE_WL = "1"; # 为 Wayland 优化 Electron
     _JAVA_AWT_WM_NONREPARENTING = "1";
     XCURSOR_SIZE = "32";
-    # 强制 Wayland 合成器和客户端不使用复杂的显存修改器
-    WLR_DRM_NO_MODIFIERS = "1";
   };
 
   programs = {

@@ -2,10 +2,7 @@
   description = "Your new nix config";
 
    nixConfig = {
-    # override the default substituters
     substituters = [
-      # "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-      # "https://mirrors.cernet.edu.cn/nix-channels/store"
       "https://mirror.sjtu.edu.cn/nix-channels/store"
       "https://hyprland.cachix.org"
     ];
@@ -17,13 +14,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    elephant.url = "github:abenz1267/elephant";
-    walker = {
-      url = "github:abenz1267/walker";
-      inputs.elephant.follows = "elephant";
-    };
 
     hyprland = {
       url = "github:hyprwm/Hyprland";
@@ -59,13 +49,8 @@
   outputs = {
     self,
     nixpkgs,
-    home-manager,
-    catppuccin,
-    agenix,
-    ags,
     ...
   } @ inputs: let
-    inherit (self) packages;
     systems = [
       "x86_64-linux"
     ];
@@ -84,37 +69,36 @@
     packages = forAllSystems (system:
       let
         pkgs = import nixpkgs {
-          inherit system overlays; # 这里应用统一的 Overlay
+          inherit system overlays;
           config.allowUnfree = true;
         };
       in
-      # 导出本地包 + AGS，让命令行也能直接 build
-      (import ./pkgs pkgs) // { inherit (pkgs) ags; }
+      {
+        inherit (pkgs) ags lunar-javascript wechat;
+      }
     );
 
     nixosConfigurations = {
       inspiron-lin = nixpkgs.lib.nixosSystem {
-
-        specialArgs = {inherit inputs;};
+        specialArgs = { inherit inputs; };
         modules = [
           { nixpkgs.hostPlatform = "x86_64-linux"; }
-          catppuccin.nixosModules.catppuccin
-          agenix.nixosModules.default
+          inputs.catppuccin.nixosModules.catppuccin
+          inputs.agenix.nixosModules.default
           ./nixos/configuration.nix
 
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }
 
-          home-manager.nixosModules.home-manager
+          inputs.home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.users.lin = {
               imports = [
                 ./home/home.nix
-                catppuccin.homeModules.catppuccin
-                inputs.walker.homeManagerModules.default
-                ags.homeManagerModules.default
+                inputs.catppuccin.homeModules.catppuccin
+                inputs.ags.homeManagerModules.default
               ];
             };
             home-manager.extraSpecialArgs = { inherit inputs; };

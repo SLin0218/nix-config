@@ -172,6 +172,7 @@
   systemd.services.sing-box = {
     after = [ "agenix.service" ];
     # 允许普通用户查看日志
+    serviceConfig.RuntimeDirectory = "sing-box";
     serviceConfig.StateDirectoryMode = lib.mkForce "0711";
     serviceConfig.ExecStartPre = lib.mkAfter [
       (let

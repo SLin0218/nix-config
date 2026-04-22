@@ -3,7 +3,8 @@
 
    nixConfig = {
     substituters = [
-      "https://mirror.sjtu.edu.cn/nix-channels/store"
+      #"https://mirror.sjtu.edu.cn/nix-channels/store"
+      "https://mirrors.ustc.edu.cn/nix-channels/store"
       "https://hyprland.cachix.org"
     ];
     trusted-public-keys = [
@@ -44,6 +45,11 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -53,6 +59,7 @@
   } @ inputs: let
     systems = [
       "x86_64-linux"
+      "aarch64-darwin"
     ];
     forAllSystems = nixpkgs.lib.genAttrs systems;
 
@@ -96,9 +103,35 @@
             home-manager.useUserPackages = true;
             home-manager.users.lin = {
               imports = [
-                ./home/home.nix
+                ./home/linux.nix
                 inputs.catppuccin.homeModules.catppuccin
                 inputs.ags.homeManagerModules.default
+              ];
+            };
+            home-manager.extraSpecialArgs = { inherit inputs; };
+          }
+        ];
+      };
+    };
+
+    darwinConfigurations = {
+      fcdeMac-mini = inputs.darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./darwin/configuration.nix
+
+          # 直接引用上面定义的统一 Overlay
+          { nixpkgs.overlays = overlays; }
+
+          inputs.home-manager.darwinModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "before-nix";
+            home-manager.users.lin = {
+              imports = [
+                ./home/darwin.nix
+                inputs.catppuccin.homeModules.catppuccin
               ];
             };
             home-manager.extraSpecialArgs = { inherit inputs; };

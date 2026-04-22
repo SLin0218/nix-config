@@ -13,7 +13,7 @@
       "--height 100"
       "--border"
       "--no-separator"
-      "--bind 'alt-y:execute(echo -n {} | xclip -selection clipboard)'"
+      "--bind 'alt-y:execute(echo -n {} | ${if pkgs.stdenv.isDarwin then "pbcopy" else "xclip -selection clipboard"})'"
     ];
 
   };
@@ -25,9 +25,11 @@
 
   programs.zsh = {
     initContent = ''
+    ${if pkgs.stdenv.isLinux then ''
     if [ -z "$DISPLAY" ] && [ "$XDG_VTNR" -eq 1 ];then
       exec start-hyprland
     fi
+    '' else ""}
 
     zstyle ':completion:*:descriptions' format '[%d]'
     zstyle ':completion:*' list-colors ''${(s.:.)LS_COLORS}
@@ -40,9 +42,14 @@
     --color=marker:#B7BDF8,fg+:#CAD3F5,prompt:#C6A0F6,hl+:#ED8796 \
     --color=selected-bg:#494D64 \
     --color=border:#6E738D,label:#CAD3F5
+
+    # 修正 vi 模式下的 backspace 行为
+    bindkey '^?' backward-delete-char
     '';
 
     enable = true;
+    # 显式开启 vi 模式
+    defaultKeymap = "viins";
     # 支持..返回上一级目录
     autocd = true;
 
@@ -55,7 +62,7 @@
 
     # 别名设置
     shellAliases = {
-      update = "sudo nixos-rebuild switch --flake .";
+      update = if pkgs.stdenv.isDarwin then "darwin-rebuild switch --flake ." else "sudo nixos-rebuild switch --flake .";
       vim = "nvim";
       ls  = "eza";
       l   = "eza -l";
@@ -119,7 +126,7 @@
           owner = "ohmyzsh";
           repo = "ohmyzsh";
           rev = "master";
-          sha256 = "sha256-6smKgqY6hQOLrAZNf8zkhNvNQuWX9TWB4rvg3BmzpAU="; # 建议实际运行时根据报错更新 sha256
+          sha256 = "sha256-ZdimmwBKi9iBUQ8RLqzeKDhy1AAQm+bgd1E3IG0/e9I="; # 建议实际运行时根据报错更新 sha256
         };
         file = "plugins/sudo/sudo.plugin.zsh";
       }

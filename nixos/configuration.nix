@@ -34,10 +34,6 @@
   boot.extraModprobeConfig = ''
     options dell_smm_hwmon ignore_dmi=1
   '';
-  boot.kernelParams = [
-    "i915.enable_guc=3"      # 开启 GuC/HuC 提交和加载
-    "i915.force_probe=46a8"
-  ];
 
   environment.sessionVariables = {
     # 强制禁用 DRM 修改器，解决 DMA-BUF 协商失败

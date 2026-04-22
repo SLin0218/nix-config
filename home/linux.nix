@@ -20,7 +20,6 @@
   xdg.configFile."keyd/app.conf".source = ../config/keyd/app.conf;
 
   # 动态配置：Rime 需要写入用户数据（词频、同步等），保留 OutOfStoreSymlink
-  # 建议将仓库固定在 ~/.config/nix-config 以保证此链接有效
   home.file.".local/share/fcitx5/rime".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-data";
 
   home = {
@@ -78,7 +77,7 @@
         wlrobs
         obs-backgroundremoval
         obs-pipewire-audio-capture
-        obs-vaapi #optional AMD hardware acceleration
+        obs-vaapi
         obs-gstreamer
         obs-vkcapture
       ];

@@ -15,7 +15,7 @@ in
 
   programs.emacs = {
     enable = true;
-    package = pkgs.emacs-gtk;
+    package = if pkgs.stdenv.isDarwin then pkgs.emacs else pkgs.emacs-gtk;
   };
 
 }

@@ -8,7 +8,7 @@ in
 
     font = {
       name = "JetBrainsMono Nerd Font Mono";
-      size = 12.0;
+      size = if pkgs.stdenv.isDarwin then 16.0 else 12.0;
     };
 
     shellIntegration = {

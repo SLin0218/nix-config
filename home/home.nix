@@ -1,7 +1,5 @@
-{ inputs, lib, config, pkgs, ... }: let
-  keydPath = "${config.home.homeDirectory}/.config/nix-config/config/keyd/app.conf";
-  rimeDataPath = "${config.home.homeDirectory}/.config/nix-config/config/rime-data/";
-in
+{ inputs, lib, config, pkgs, ... }:
+
 {
   imports = [
     ./modules/zsh.nix
@@ -18,8 +16,12 @@ in
     ./modules/lang.nix
   ];
 
-  xdg.configFile."keyd/app.conf".source = config.lib.file.mkOutOfStoreSymlink keydPath;
-  home.file.".local/share/fcitx5/rime".source = config.lib.file.mkOutOfStoreSymlink rimeDataPath;
+  # 静态配置：放入 Nix Store，保证配置的自给自足
+  xdg.configFile."keyd/app.conf".source = ../config/keyd/app.conf;
+
+  # 动态配置：Rime 需要写入用户数据（词频、同步等），保留 OutOfStoreSymlink
+  # 建议将仓库固定在 ~/.config/nix-config 以保证此链接有效
+  home.file.".local/share/fcitx5/rime".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-data";
 
   home = {
     username = "lin";

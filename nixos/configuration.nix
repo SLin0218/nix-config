@@ -97,18 +97,21 @@
       keyd
       upower
       lm_sensors # 传感器驱动
+
+      docker-compose
     ];
 
     variables.EDITOR = "nvim";
   };
 
 
+  virtualisation.docker.enable = true;
 
   users.users = {
     lin = {
       initialPassword = "123456";
       isNormalUser = true;
-      extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input" ];
+      extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input"  "docker" ];
       shell = pkgs.zsh;
     };
   };

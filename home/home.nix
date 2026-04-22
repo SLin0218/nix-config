@@ -51,7 +51,12 @@ in
     libnotify
     mpv
     rtkit
+
     gdb
+    python3
+    cmake
+    gnumake
+    gcc
 
   ];
 

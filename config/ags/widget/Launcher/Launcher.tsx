@@ -19,12 +19,15 @@ type ClipItem = {
 async function fetchCliphist(): Promise<ClipItem[]> {
   try {
     // 过滤掉不可见的 Null 字符（\000），因为底层 GJS 解析 C-String 时遇到 Null 字符会直接截断后面的所有数据
-    const list = await execAsync('bash -c "cliphist list | tr -d \'\\000\'"');
+    const list = await execAsync('bash -c "cliphist -preview-width=40 list"');
     return list.split("\n").filter(Boolean).map(line => {
       const match = line.match(/^(\d+)\s+(.*)$/);
       if (match) {
         const id = match[1];
         let content = match[2];
+        if (content.length < 3) {
+          return null;
+        }
         const isImage = content.includes("[[ binary data");
         if (isImage) {
           const imgMatch = content.match(/\[\[ binary data ([\d.]+\s*[a-zA-Z]+)\s+[a-zA-Z]+\s+(\d+x\d+)\s*\]\]/);
@@ -39,6 +42,7 @@ async function fetchCliphist(): Promise<ClipItem[]> {
       return null;
     }).filter(Boolean) as ClipItem[];
   } catch (e) {
+    console.error(e);
     return [];
   }
 }

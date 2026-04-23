@@ -8,6 +8,7 @@
     ./modules/theme.nix
     ./modules/fastfetch.nix
     ./modules/editor.nix
+    ./modules/karabiner.nix
   ];
 
   home = {
@@ -31,6 +32,11 @@
     cmake
     gnumake
     gcc
+    mycli
+    mpc
+    httpie
+    #sing-box
+
   ];
 
   home.sessionVariables = {

@@ -20,6 +20,7 @@ in
 
       cursor_shape               = "underline";
       cursor_trail               = 1;
+      symbol_map                 = "U+4E00-U+9FFF,U+3400-U+4DBF,U+20000–U+323AF LXGW WenKai Mono";
 
       allow_remote_control       = true;
       listen_on                  = "unix:/tmp/kitty";

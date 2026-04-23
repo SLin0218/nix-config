@@ -68,6 +68,11 @@
       (final: prev: {
         # 1. 注入最新的 AGS
         ags = inputs.ags.packages.${prev.stdenv.hostPlatform.system}.default;
+        joker = prev.joker.overrideAttrs (oldAttrs: {
+          # 强制 Go 使用代理下载依赖，而不是信任本地 vendor 目录
+          proxyVendor = true;
+          vendorHash = "sha256-4wPiuX3SsLAkvKevptgVAKdg7MR2QdouqiB+FKqdZPM=";
+        });
       } // (import ./pkgs prev)) # 2. 注入本地自定义包
     ];
   in
@@ -81,7 +86,7 @@
         };
       in
       {
-        inherit (pkgs) ags lunar-javascript wechat;
+        inherit (pkgs) ags lunar-javascript wechat hammerspoon;
       }
     );
 

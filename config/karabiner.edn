@@ -1,0 +1,108 @@
+;; !  | means mandatory  |
+;; #  | means optional   |
+;; C  | left_command     |  ⌘
+;; T  | left_control     |  ⌃
+;; O  | left_option      |  ⌥
+;; S  | left_shift       |  ⇧
+;; F  | fn               |
+;; Q  | right_command    |  ⌘
+;; W  | right_control    |  ⌃
+;; E  | right_option     |  ⌥
+;; R  | right_shift      |  ⇧
+;; P  | caps_lock
+{
+ ;; launch application templates
+ :templates {:launch   "open -a '%s'"}
+ ;; BundleIdentifier eg /Applications/iTerm.app/Contents/Info.plist
+ :applications {
+                 :iterm     [ "^com\\.googlecode\\.iterm2$"        ]
+                 :terminal  [ "^net\\.kovidgoyal\\.kitty$"         ]
+                 :idea      [ "^com\\.jetbrains\\.intellij$"       ]
+                 :android   [ "^com\\.google\\.android\\.studio$"  ]
+                 :safari    [ "^com\\.apple\\.Safari$"             ]
+                 :browsers  [ "^com\\.apple\\.Safari$"
+                              "^com\\.brave\\.Browser$"
+                              "^org\\.mozilla\\.firefox$"
+                              "^org\\.mozilla\\.firefoxdeveloperedition$"
+                              "^com\\.kingsoft\\.wpsoffice\\.mac$" ]
+               }
+ :main [
+    ;;       _________________________________________________________________________________________________________________
+    ;;       |          <from>          |        <to>           |        <conditions>     |           <other options>        |
+    ;;       |------------------------- |-----------------------|-------------------------|----------------------------------|
+    {
+     :des "capsLock to control+shift+option+command"
+     :rules [[:##caps_lock              :!QWEright_shift         nil                       {:alone :escape}                 ]]
+    } {
+     :des "base mapping"
+     :rules [[:!C#Pq                    :q                       nil                       {:held {:key :!Cq :repeat false} }]
+             [:!QWERdelete_or_backspace :!Cdelete_or_backspace                                                               ]
+             [:!QWERu                   :!Tu                                                                                 ]
+             [:!QWERd                   :f11                                                                                 ]
+             ;; 排除 iterm2 ，使得 capslock + t = ⌃ + b c
+             [:!QWERt                   [:!Ct]                   [:!iterm]                                                   ]]
+    } {
+     :des "capsLock + hjkl to arrow"
+     :rules [[:!QWERk                   :up_arrow             ]
+             [:!QWERj                   :down_arrow           ]
+             [:!QWERh                   :left_arrow           ]
+             [:!QWERl                   :right_arrow          ]
+             ;; 映射 commoand + 方向键
+             [:!QWERCk                  :!Cup_arrow           ]
+             [:!QWERCj                  :!Cdown_arrow         ]
+             [:!QWERCh                  :!Cleft_arrow         ]
+             [:!QWERCl                  :!Cright_arrow        ]
+             ;; 映射 control + 方向键
+             [:!QWERTk                  :!Tup_arrow           ]
+             [:!QWERTj                  :!Tdown_arrow         ]
+             [:!QWERTh                  :!Tleft_arrow         ]
+             [:!QWERTl                  :!Tright_arrow        ]
+             ;; 映射 optional + 方向键
+             [:!QWEROk                  :!Oup_arrow           ]
+             [:!QWEROj                  :!Odown_arrow         ]
+             [:!QWEROh                  :!Oleft_arrow         ]
+             [:!QWEROl                  :!Oright_arrow        ]
+             ;; 映射 control + optional + 方向键
+             [:!QWERTOk                  :!TOup_arrow         ]
+             [:!QWERTOj                  :!TOdown_arrow       ]
+             [:!QWERTOh                  :!TOleft_arrow       ]
+             [:!QWERTOl                  :!TOright_arrow      ]]
+
+    } {
+     :des "only specified application"
+              ;; alacritty tmux switch windows
+     :rules [[:!QWERopen_bracket        [:!TSopen_bracket]       [:terminal]             ]
+             [:!QWERclose_bracket       [:!TSclose_bracket]      [:terminal]             ]
+
+             [:!QWERopen_bracket        [:!CSRopen_bracket ]     [:idea]                 ]
+             [:!QWERclose_bracket       [:!CSRclose_bracket]     [:idea]                 ]
+             [:!QWERopen_bracket        [:!CSRopen_bracket ]     [:android]              ]
+             [:!QWERclose_bracket       [:!CSRclose_bracket]     [:android]              ]
+
+              ;; iterm tmux switch windows
+             [:!QWERopen_bracket        [:!Tb :!Th]              [:iterm]                ]
+             [:!QWERclose_bracket       [:!Tb :!Tl]              [:iterm]                ]
+             [:!QWERt                   [:!Tb :c  ]              [:iterm]                ]
+             [:!Cw                      [:!Tb :!S7]              [:iterm]                ]
+             ;[:any :left_shift :left_shift]              [:iterm]:alacritty             ]
+             ;; browsers switch tab
+             [:!QWERopen_bracket        [:!TStab  ]              [:browsers]             ]
+             [:!QWERclose_bracket       [:!Ttab   ]              [:browsers]             ]]
+    } {
+     :des "launch application"
+     ;;      _________________________________________________________
+     ;;      |          <from>         |     <to shell_command>      |
+     ;;      |-------------------------|-----------------------------|
+     :rules [[:!QWERe                   [:launch "Finder"            ]]
+             [:!QWERg                   [:launch "Brave Browser"     ]]
+             [:!QWERi                   [:launch "kitty"             ]]
+             [:!QWERy                   [:launch "QQMusic"           ]]
+             [:!QWERs                   [:launch "System Preferences"]]
+             [:!QWERv                   [:launch "Notion"            ]]
+             [:!QWERu                   [:launch "WeChat"            ]]
+             [:!QWERo                   [:launch "企业微信"          ]]
+             [:!QWERn                   [:launch "IntelliJ IDEA Ultimate"     ]]
+             [:!QWERm                   [:launch "Mailspring"        ]]]
+    }
+  ]
+}

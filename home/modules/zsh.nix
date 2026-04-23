@@ -30,6 +30,10 @@
       exec start-hyprland
     fi
     '' else ""}
+    ${if pkgs.stdenv.isDarwin then ''
+      # Darwin specific zsh init code
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    '' else ""}
 
     zstyle ':completion:*:descriptions' format '[%d]'
     zstyle ':completion:*' list-colors ''${(s.:.)LS_COLORS}
@@ -62,7 +66,7 @@
 
     # 别名设置
     shellAliases = {
-      update = if pkgs.stdenv.isDarwin then "darwin-rebuild switch --flake ." else "sudo nixos-rebuild switch --flake .";
+      update = if pkgs.stdenv.isDarwin then "sudo -H darwin-rebuild switch --flake ." else "sudo nixos-rebuild switch --flake .";
       vim = "nvim";
       ls  = "eza";
       l   = "eza -l";

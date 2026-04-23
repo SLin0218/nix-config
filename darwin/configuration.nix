@@ -19,6 +19,7 @@
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
   system.stateVersion = 5;
+  system.primaryUser = "lin";
 
   # The platform the configuration will be used on.
   nixpkgs.hostPlatform = "aarch64-darwin";
@@ -30,11 +31,36 @@
     home = "/Users/lin";
   };
 
-  # Fonts
-  fonts.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-  ];
-
   # Add ability to used TouchID for sudo authentication
   security.pam.services.sudo_local.touchIdAuth = true;
+
+  homebrew = {
+    enable = true;
+    onActivation = {
+      cleanup = "zap";
+      autoUpdate = false;
+      upgrade = true;
+    };
+    global = {
+      brewfile = true;
+    };
+
+    brews = [
+      "sing-box"
+    ];
+
+    casks = [
+      "squirrel-app"
+      "hammerspoon"
+      "karabiner-elements"
+      "raycast"
+      "font-lxgw-wenkai"
+      "font-jetbrains-mono-nerd-font"
+    ];
+
+    taps = [
+    ];
+  };
 }
+
+

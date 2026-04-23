@@ -26,10 +26,20 @@
 
   networking.hostName = "fcdeMac-mini";
 
+  # Disable documentation to avoid build failures with mdbook
+  documentation.enable = false;
+  documentation.man.enable = false;
+
   users.users.lin = {
     name = "lin";
     home = "/Users/lin";
   };
+
+  # Fonts managed by Nix
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+    lxgw-wenkai
+  ];
 
   # Add ability to used TouchID for sudo authentication
   security.pam.services.sudo_local.touchIdAuth = true;
@@ -54,12 +64,8 @@
       "hammerspoon"
       "karabiner-elements"
       "raycast"
-      "font-lxgw-wenkai"
-      "font-jetbrains-mono-nerd-font"
     ];
 
-    taps = [
-    ];
   };
 }
 

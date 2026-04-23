@@ -31,8 +31,12 @@
     fi
     '' else ""}
     ${if pkgs.stdenv.isDarwin then ''
-      # Darwin specific zsh init code
-      eval "$(/opt/homebrew/bin/brew shellenv)"
+    # Darwin specific zsh init code
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+
+    export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
+    export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+    export HOMEBREW_PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"
     '' else ""}
 
     zstyle ':completion:*:descriptions' format '[%d]'
@@ -61,8 +65,8 @@
     enableCompletion = true;
     # 启用自动建议 (输入时灰色提示)
     autosuggestion.enable = true;
-    # 启用语法高亮
-    syntaxHighlighting.enable = true;
+    # 关闭语法高亮
+    syntaxHighlighting.enable = false;
 
     # 别名设置
     shellAliases = {

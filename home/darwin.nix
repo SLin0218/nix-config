@@ -6,6 +6,8 @@
     ./modules/karabiner.nix
   ];
 
+  home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-data";
+
   home = {
     homeDirectory = "/Users/lin";
   };

@@ -9,3 +9,4 @@
 [submodule "config/rime-data"]
 	path = config/rime-data
 	url = https://github.com/SLin0218/rime-xhup.git
+  ignore = untracked

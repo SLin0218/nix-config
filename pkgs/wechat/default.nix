@@ -1,4 +1,4 @@
-{ pkgs, lib }:
+{ pkgs }:
 
 let
   pname = "wechat";
@@ -59,7 +59,7 @@ let
       fi
     '';
 
-  meta = with lib; {
+  meta = with pkgs.lib; {
     description = "WeChat (Linux) with bubblewrap sandbox (Data isolated in ~/.local/share/wechat-sandbox)";
     homepage = "https://linux.weixin.qq.com/";
     license = licenses.unfree;

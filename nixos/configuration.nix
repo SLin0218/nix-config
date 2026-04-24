@@ -1,4 +1,4 @@
-{ inputs, config, lib, pkgs, ... }:
+{ inputs, config, lib, pkgs, age, ... }:
 
 {
   imports = [
@@ -172,6 +172,7 @@
     ];
   };
 
+  age.secrets.update-subscription.file = ../secrets/update-subscription.age;
 
   system.stateVersion = "24.11";
 }

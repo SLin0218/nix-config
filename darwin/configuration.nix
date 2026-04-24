@@ -1,10 +1,16 @@
-{ pkgs, ... }:
+{ pkgs, age, ... }:
 
 {
+
+  imports = [
+     ./modules/sing-box.nix
+  ];
+
   # List packages installed in system profile. To search by name, run:
   # $ nix-env -qaP | grep wget
   environment.systemPackages = [
     pkgs.neovim
+    pkgs.sing-box
   ];
 
   # Necessary for using flakes on this system.
@@ -67,6 +73,8 @@
     ];
 
   };
+
+  age.secrets.update-subscription.file = ../secrets/update-subscription.age;
 }
 
 

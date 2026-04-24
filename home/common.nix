@@ -22,6 +22,7 @@
     gemini-cli
     nodejs
     delta
+    update-singbox-sub
 
     # build tools
     gdb

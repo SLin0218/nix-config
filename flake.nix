@@ -124,6 +124,8 @@
       fcdeMac-mini = inputs.darwin.lib.darwinSystem {
         specialArgs = { inherit inputs; };
         modules = [
+          inputs.agenix.nixosModules.default
+
           ./darwin/configuration.nix
 
           # 直接引用上面定义的统一 Overlay

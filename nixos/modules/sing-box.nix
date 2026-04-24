@@ -1,4 +1,4 @@
-{ config, lib, pkgs, utils, age, ... }:
+{ config, lib, pkgs, utils, ... }:
 
 {
   services.sing-box = {
@@ -166,8 +166,6 @@
     };
 
   };
-
-  age.secrets.update-subscription.file = ../../secrets/update-subscription.age;
 
   systemd.services.sing-box = {
     after = [ "agenix.service" ];

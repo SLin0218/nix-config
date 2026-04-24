@@ -191,10 +191,10 @@
   (setq treemacs-follow-after-init t)
   (setq treemacs-width (* slin/font-size 5)))
 
-(use-package treemacs-all-the-icons
+(use-package treemacs-nerd-icons
   :after treemacs
   :config
-  (treemacs-load-theme "all-the-icons"))
+  (treemacs-load-theme "nerd-icons"))
 
 (use-package treemacs-icons-dired
   :hook (dired-mode . treemacs-icons-dired-enable-once))

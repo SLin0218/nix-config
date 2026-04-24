@@ -271,15 +271,10 @@
 
 
 (use-package org-roam
-  :after org
-  :config
-  (setq org-roam-directory (file-truename "~/org/docs"))
-  (setq org-roam-db-location (file-truename (expand-file-name "org-roam.db" org-roam-directory))))
-
-(use-package org-roam
   :ensure t
   :custom
   (org-roam-directory (file-truename "~/org/docs"))
+  (org-roam-db-location (file-truename (expand-file-name "org-roam.db" "~/org/docs")))
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
          ("C-c n g" . org-roam-graph)
@@ -288,7 +283,6 @@
          ;; Dailies
          ("C-c n j" . org-roam-dailies-capture-today))
   :config
-  ;; If you're using a vertical completion framework, you might want a more informative completion interface
   (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode))
 

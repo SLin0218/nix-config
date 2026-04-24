@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 
 {
 
@@ -6,7 +6,7 @@
     enable = true;
     settings = {
       logo = {
-        source = "~/.config/nix-config/config/logo.png";
+        source = "${config.home.homeDirectory}/.config/nix-config/config/logo.png";
         type = "kitty";
         width = 40;
         height = 16;

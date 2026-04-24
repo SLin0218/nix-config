@@ -21,6 +21,7 @@
     jq
     gemini-cli
     nodejs
+    delta
 
     # build tools
     gdb

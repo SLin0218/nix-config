@@ -60,9 +60,9 @@
   (setq doom-modeline-buffer-file-name-style 'truncate-nil))
 
 ;; 主题
-(use-package dracula-theme
+(use-package catppuccin-theme
   :config
-  (load-theme 'dracula t))
+  (load-theme 'catppuccin :no-confirm))
 
 ;; 启动仪表盘
 (use-package dashboard

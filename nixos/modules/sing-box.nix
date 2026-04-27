@@ -164,7 +164,6 @@
         };
       };
     };
-
   };
 
   systemd.services.sing-box = {

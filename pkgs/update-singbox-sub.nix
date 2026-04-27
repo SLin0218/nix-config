@@ -3,6 +3,12 @@
 pkgs.writeShellScriptBin "update-singbox-sub" ''
   export PATH="${pkgs.coreutils}/bin:${pkgs.curl}/bin:${pkgs.jq}/bin:$PATH"
 
+  if [ "$EUID" -ne 0 ]; then
+    echo "当前不是 root 权限，正在尝试提权..."
+    exec sudo "$0" "$@"
+    echo "现在的操作已获得 root 授权。"
+  fi
+
   if [[ "$(uname)" == "Darwin" ]]; then
     OUTBOUNDS_FILE="/etc/sing-box/outbounds.json"
   else
@@ -52,7 +58,8 @@ pkgs.writeShellScriptBin "update-singbox-sub" ''
               else { "tag": (.ps | capture("@(?<t>[0-9a-zA-Z]+)\\.").t // .ps // "unnamed"), "type": "vmess", "server": .add, "server_port": (.port | tonumber), "uuid": .id, "alter_id": (.aid | tonumber), "security": "auto" } end')
     fi
     if [ -n "$node" ]; then
-      NODES_JSON="''${NODES_JSON}''${node}"$'\n'
+      NODES_JSON="''${NODES_JSON}''${node}"
+      echo "Processed: $proto config"
     fi
   done <<EOF
 $(echo "$SUBS_RESP" | base64 -d 2>/dev/null || echo "")
@@ -66,5 +73,6 @@ EOF
           ($base | .[0].outbounds += $tags | .[1].outbounds += $tags) + $new_nodes |
           {outbounds: .}
       ' > "$OUTBOUNDS_FILE"
+    echo "Update successful."
   fi
 ''

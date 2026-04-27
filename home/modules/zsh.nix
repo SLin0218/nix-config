@@ -85,6 +85,7 @@
       bc  = "bc -ql";
 
       fetch = "fastfetch";
+      kssh  = "kitten ssh";
 
       # git
       gl     = "git pull";
@@ -102,7 +103,7 @@
       gcl    = "git clone";
       grv    = "git remote --verbose";
 
-      datetime  = "date '+%Y-%m-%d %H:%M:%S'";
+      datetime = "date '+%Y-%m-%d %H:%M:%S'";
     };
 
     # 历史记录配置

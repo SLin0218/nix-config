@@ -1,54 +1,12 @@
 { config, lib, pkgs, utils, ... }:
 
+let
+  sing-box-common = import ../../sing-box-common.nix { inherit lib; };
+in
 {
   services.sing-box = {
     enable = true;
-    settings = {
-      log = {
-        level = "info";
-        output = "box.log";
-      };
-      dns = {
-        servers = [
-          {
-            tag = "cf";
-            type = "tls";
-            server = "1.1.1.1";
-            detour = "proxy";
-          }
-          {
-            tag = "local";
-            type = "udp";
-            server = "223.5.5.5";
-          }
-        ];
-        rules = [
-          {
-            rule_set = "geosite-category-ads-all";
-            action = "reject";
-          }
-          {
-            rule_set = "geosite-geolocation-cn";
-            server = "local";
-          }
-          {
-            type = "logical";
-            mode = "and";
-            rules = [
-              {
-                rule_set = "geosite-geolocation-!cn";
-                invert = true;
-              }
-              {
-                rule_set = "geoip-cn";
-              }
-            ];
-            server = "local";
-          }
-        ];
-        strategy = "ipv4_only";
-        disable_cache = true;
-      };
+    settings = sing-box-common.mkSettings {
       inbounds = [
         {
           type = "mixed";
@@ -63,106 +21,6 @@
           listen_port = 9898;
         }
       ];
-      outbounds = [];
-      route = {
-        rules = [
-          {
-            clash_mode = "direct";
-            outbound = "direct";
-          }
-          {
-            clash_mode = "global";
-            outbound = "proxy";
-          }
-          {
-            action = "sniff";
-          }
-          {
-            type = "logical";
-            mode = "or";
-            rules = [
-              { protocol = "dns"; }
-              { port = 53; }
-            ];
-            action = "hijack-dns";
-          }
-          {
-            ip_is_private = true;
-            outbound = "direct";
-          }
-          {
-            domain_suffix = [ ".gstatic.com" ];
-            outbound = "proxy";
-          }
-          {
-            domain_suffix = [ ".yunbosoft.com" ];
-            outbound = "direct";
-          }
-          {
-            domain_keyword = [ "honeycom" ];
-            outbound = "direct";
-          }
-          {
-            rule_set = [ "geosite-geolocation-cn" ];
-            outbound = "direct";
-          }
-          {
-            type = "logical";
-            mode = "and";
-            rules = [
-              { rule_set = "geoip-cn"; }
-              {
-                rule_set = "geosite-geolocation-!cn";
-                invert = true;
-              }
-            ];
-            outbound = "direct";
-          }
-        ];
-        rule_set = [
-          {
-            type = "remote";
-            tag = "geosite-geolocation-cn";
-            format = "binary";
-            url = "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs";
-          }
-          {
-            type = "remote";
-            tag = "geoip-cn";
-            format = "binary";
-            url = "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs";
-          }
-          {
-            type = "remote";
-            tag = "geosite-category-ads-all";
-            format = "binary";
-            url = "https://raw.githubusercontent.com/SagerNet/sing-geosite/refs/heads/rule-set/geosite-category-ads-all.srs";
-          }
-          {
-            type = "remote";
-            tag = "geosite-geolocation-!cn";
-            format = "binary";
-            url = "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-!cn.srs";
-          }
-        ];
-        final = "proxy";
-        auto_detect_interface = true;
-        default_domain_resolver = {
-          server = "cf";
-          rewrite_ttl = 60;
-          client_subnet = "1.1.1.1";
-        };
-      };
-      experimental = {
-        cache_file = {
-          enabled = true;
-          store_rdrc = true;
-        };
-        clash_api = {
-          external_controller = "127.0.0.1:9090";
-          external_ui = "dashboard";
-        };
-      };
     };
   };
 

@@ -7,20 +7,21 @@ in
   environment.etc."sing-box/config.json".text = builtins.toJSON (sing-box-common.mkSettings {
     inbounds = [
       {
-        "type" = "mixed";
-        "tag" = "mixed-in";
-        "listen_port" = 7890;
+        type = "mixed";
+        tag = "mixed-in";
+        listen_port = 7890;
       }
       {
-        "type" = "tun";
-        "tag" = "tun-in";
-        "interface_name" = "utun99";
-        "address" = [ "172.18.0.1/30" ];
-        "mtu" = 9000;
-        "auto_route" = true;
-        "route_exclude_address" = [ "192.168.0.0/16" "172.168.0.0/16" "fc00::/7" ];
-        "strict_route" = true;
-        "stack" = "gvisor";
+        tag = "basic-in";
+        type = "tun";
+        interface_name = "utun99";
+        address = [ "172.18.0.1/30" ];
+        mtu = 9000;
+        auto_route = true;
+        # "172.16.0.0/12"
+        #route_exclude_address = [ "192.168.0.0/16"  "172.168.15.0/24" ];
+        strict_route = true;
+        stack = "gvisor";
       }
     ];
   });

@@ -45,7 +45,7 @@
         }
       ];
       strategy = "ipv4_only";
-      disable_cache = true;
+      disable_cache = false;
     };
     inbounds = inbounds;
     route = {
@@ -59,6 +59,7 @@
           outbound = "proxy";
         }
         {
+          inbound = "basic-in";
           action = "sniff";
         }
         {
@@ -71,8 +72,16 @@
           action = "hijack-dns";
         }
         {
+          ip_cidr = [ "172.16.90.0/24" ];
+          outbound = "tw";
+        }
+        {
           ip_is_private = true;
           outbound = "direct";
+        }
+        {
+          domain_keyword = [ "google" ];
+          outbound = "proxy";
         }
         {
           domain_suffix = [ ".gstatic.com" ];

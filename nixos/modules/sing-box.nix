@@ -16,7 +16,7 @@ in
         }
         {
           type = "tproxy";
-          tag = "tproxy-in";
+          tag = "basic-in";
           listen = "127.0.0.1";
           listen_port = 9898;
         }

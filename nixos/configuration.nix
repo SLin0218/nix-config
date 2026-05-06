@@ -90,6 +90,7 @@
       neovim
       wget
       sing-box
+      keyd
       lm_sensors # 传感器驱动
 
       docker-compose

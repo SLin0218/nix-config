@@ -65,11 +65,14 @@
       "sing-box"
     ];
 
+    taps = [ "d12frosted/emacs-plus" ];
+
     casks = [
       "squirrel-app"
       "hammerspoon"
       "karabiner-elements"
       "raycast"
+      "d12frosted/emacs-plus/emacs-plus-app"
     ];
   };
 

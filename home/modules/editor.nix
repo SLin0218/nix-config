@@ -16,9 +16,9 @@ in
     (require 'slin-emacs)
   '';
 
-  # 5. Emacs 软件包管理
+  # emacs-plus 使用 brew安装
   programs.emacs = {
-    enable = true;
-    package = if pkgs.stdenv.isDarwin then pkgs.emacs else pkgs.emacs-gtk;
+    enable = !pkgs.stdenv.isDarwin;
+    package = pkgs.emacs-gtk;
   };
 }

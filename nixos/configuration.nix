@@ -36,11 +36,6 @@
   '';
 
   environment.sessionVariables = {
-    # 强制禁用 DRM 修改器，解决 DMA-BUF 协商失败
-    WLR_DRM_NO_MODIFIERS = "1";
-    # 确保使用 Intel Media Driver (iHD) 而不是旧的 i965
-    LIBVA_DRIVER_NAME = "iHD";
-
     # 告诉应用在 Wayland 下运行，避免回退到 Xwayland 导致协商失败
     NIXOS_OZONE_WL = "1";
     GDK_BACKEND = "wayland";

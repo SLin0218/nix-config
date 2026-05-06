@@ -182,7 +182,6 @@ in
 
 
       exec-once = [
-        "fcitx5 -d"
         "keyd-application-mapper -d"
         "ags run"
         "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"

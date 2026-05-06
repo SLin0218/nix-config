@@ -1,11 +1,12 @@
 {pkgs, ...}:
+
 {
   i18n.inputMethod = {
     type = "fcitx5";
     enable = true;
     fcitx5 = {
       waylandFrontend = true;
-      ignoreUserConfig = true;
+      ignoreUserConfig = false;
       addons = with pkgs; [
         fcitx5-rime
         fcitx5-gtk

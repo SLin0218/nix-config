@@ -5,7 +5,7 @@ pkgs.writeShellScriptBin "update-singbox-sub" ''
 
   if [ "$EUID" -ne 0 ]; then
     echo "当前不是 root 权限，正在尝试提权..."
-    exec sudo "$0" "$@"
+    sudo "$0" "$@"
     echo "现在的操作已获得 root 授权。"
   fi
 

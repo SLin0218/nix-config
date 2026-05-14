@@ -118,6 +118,7 @@ in
         "$mod, G, exec, ${toggleApp} brave-browser brave"
         "$mod, U, exec, ${toggleApp} wechat wechat"
         "$mod, Y, exec, ${toggleApp} qqmusic qqmusic"
+        "$mod, M, exec, ${toggleApp} emacs emacs"
 
         "$mod, Q, killactive"
         "$mod, l, movefocus, l"

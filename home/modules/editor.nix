@@ -19,6 +19,6 @@ in
   # emacs-plus 使用 brew安装
   programs.emacs = {
     enable = !pkgs.stdenv.isDarwin;
-    package = pkgs.emacs-gtk;
+    package = pkgs.emacs-pgtk;
   };
 }

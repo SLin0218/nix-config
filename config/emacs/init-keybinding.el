@@ -56,10 +56,17 @@
 (use-package rime
   :custom
   (default-input-method "rime")
-  (rime-user-data-dir "~/Library/Rime")
+  (if (eq system-type 'darwin)
+      (rime-user-data-dir "~/Library/Rime")
+    (rime-user-data-dir "~/.local/share/fcitx5/rime"))
   (rime-show-candidate 'posframe)
   :config
-  (setq rime-librime-root "/opt/homebrew"))
+  (when (eq system-type 'darwin)
+    (setq rime-librime-root "/opt/homebrew")))
+
+(when (eq system-type 'darwin)
+  (setq mac-command-modifier 'meta
+	    mac-option-modifier 'super))
 
 ;;快捷键提示
 (use-package which-key

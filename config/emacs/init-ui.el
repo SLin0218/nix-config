@@ -36,7 +36,6 @@
 
 ;; org-table单独设置字体
 (with-eval-after-load 'org
-  (advice-add #'org-string-width :override #'org--string-width-1)
   (set-face-attribute 'org-table nil :family slin/font-family-cjk :height (* slin/font-size 10)))
 
 ;; 在图形界面下启动时最大化窗口（仅 macOS）

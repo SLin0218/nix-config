@@ -63,6 +63,8 @@
 
     brews = [
       "sing-box"
+      "librime"
+      "d12frosted/emacs-plus/emacs-plus"
     ];
 
     taps = [ "d12frosted/emacs-plus" ];
@@ -72,7 +74,6 @@
       "hammerspoon"
       "karabiner-elements"
       "raycast"
-      "d12frosted/emacs-plus/emacs-plus-app"
     ];
   };
 

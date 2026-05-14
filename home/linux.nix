@@ -40,6 +40,7 @@
     mpc
     libnotify
     mpv
+    librime
   ];
 
   home.sessionVariables = {

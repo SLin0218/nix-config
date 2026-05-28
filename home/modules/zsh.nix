@@ -53,6 +53,23 @@
 
     # 修正 vi 模式下的 backspace 行为
     bindkey '^?' backward-delete-char
+
+    function pyvenv_cd {
+      if [[ -n "$VIRTUAL_ENV" ]]; then
+        if [[ $PWD != "$${VIRTUAL_ENV}"* ]]; then
+          deactivate
+        fi
+      else
+        if [[ -d .venv ]]; then
+          source .venv/bin/activate
+          #export PATH="$PATH:$VIRTUAL_ENV/.venv/bin"
+        fi
+      fi
+    }
+
+    autoload -U add-zsh-hook
+    add-zsh-hook chpwd pyvenv_cd
+    [[ $PWD != ~ ]] && pyvenv_cd
     '';
 
     enable = true;

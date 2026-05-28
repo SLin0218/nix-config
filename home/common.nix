@@ -23,6 +23,7 @@
     nodejs
     delta
     update-singbox-sub
+    t
 
     # build tools
     gdb

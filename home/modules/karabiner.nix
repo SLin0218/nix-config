@@ -67,6 +67,7 @@ let
       { key = "o"; app = "企业微信"; }
       { key = "n"; app = "IntelliJ IDEA Ultimate"; }
       { key = "m"; app = "Emacs"; }
+      { key = "b"; app = "wpsoffice"; }
     ];
   };
 

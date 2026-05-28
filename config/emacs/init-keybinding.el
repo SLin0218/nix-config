@@ -56,9 +56,7 @@
 (use-package rime
   :custom
   (default-input-method "rime")
-  (if (eq system-type 'darwin)
-      (rime-user-data-dir "~/Library/Rime")
-    (rime-user-data-dir "~/.local/share/fcitx5/rime"))
+  (rime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
   (rime-show-candidate 'posframe)
   :config
   (if (eq system-type 'darwin)

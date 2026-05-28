@@ -78,6 +78,10 @@
   };
 
   age.secrets.update-subscription.file = ../secrets/update-subscription.age;
+  age.identityPaths = [
+    "/etc/ssh/ssh_host_ed25519_key"
+    "/Users/lin/.ssh/id_ed25519"
+  ];
 }
 
 

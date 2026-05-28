@@ -45,7 +45,7 @@
         }
       ];
       strategy = "ipv4_only";
-      disable_cache = false;
+      disable_cache = true;
     };
     inbounds = inbounds;
     route = {

@@ -62,7 +62,7 @@
   (if (eq system-type 'darwin)
       (setq rime-librime-root "/opt/homebrew")
     (setq rime-librime-root (shell-command-to-string "nix eval --raw nixpkgs#librime"))
-    (setq rime-emacs-module-header-root (concat (shell-command-to-string "nix eval --raw nixpkgs#emacs") "/include"))
+    (setq rime-emacs-module-header-root (concat (shell-command-to-string "nix eval --raw nixpkgs#emacs-pgtk") "/include"))
     (setq rime-share-data-dir (concat (shell-command-to-string "nix eval --raw nixpkgs#brise") "/share/rime-data"))))
 
 (when (eq system-type 'darwin)

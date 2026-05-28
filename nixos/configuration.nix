@@ -51,8 +51,14 @@
     ];
   };
 
-  networking.networkmanager.enable = true;
-  networking.hostName = "inspiron-lin";
+  networking = {
+    networkmanager = {
+      enable = true;
+    };
+    hostName = "inspiron-lin";
+  };
+
+
   time.timeZone = "Asia/Shanghai";
 
   nix = let
@@ -89,18 +95,32 @@
       lm_sensors # 传感器驱动
 
       docker-compose
+
+      virt-manager     # 图形化虚拟机管理器
+      qemu             # QEMU 模拟器后端
+      libvirt          # 虚拟化 API
+      dnsmasq          # 默认网络 NAT 所需的依赖
+      bridge-utils     # 网桥工具包
+
     ];
 
     variables.EDITOR = "nvim";
   };
 
 
-  virtualisation.docker.enable = true;
+  virtualisation = {
+    docker.enable = true;
+    libvirtd = {
+      enable = true;
+      # 可选：如果希望 libvirt 使用 qemu-bridge-helper 启用网桥联网，需额外配置
+      # qemu.vhostUserPackages = [ pkgs.qemu ];
+    };
+  };
 
   users.users = {
     lin = {
       isNormalUser = true;
-      extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input" ];
+      extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input" "libvirtd" ];
       shell = pkgs.zsh;
     };
   };

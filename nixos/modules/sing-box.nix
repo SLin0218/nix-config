@@ -35,9 +35,9 @@ in
   };
 
   # 1. 开启路由转发 (如果需要作为网关)
-  #boot.kernel.sysctl = {
-  #  "net.ipv4.conf.all.forwarding" = 1;
-  #};
+  boot.kernel.sysctl = {
+    "net.ipv4.conf.all.forwarding" = 1;
+  };
 
   # 配置策略路由 (iprule)
   networking.localCommands = ''
@@ -73,6 +73,7 @@ in
 
         chain prerouting {
           type filter hook prerouting priority mangle; policy accept;
+          iifname "virbr0" return
           udp dport 53 mark set 1 tproxy to 127.0.0.1:9898 accept
 		      ip daddr @reserved_clusters return
           #ip daddr $RESERVED_IP return
@@ -87,8 +88,30 @@ in
         }
       }
 
-      # 反向路径过滤放行 mark 1
+      table ip nat {
+        chain postrouting {
+          type nat hook postrouting priority srcnat; policy accept;
+          ip saddr 192.168.122.0/24 counter masquerade
+        }
+      }
+
+      # 允许来自虚拟网桥的流量
       table inet nixos-fw {
+        chain input {
+          type filter hook input priority filter;
+          iifname "virbr0" accept comment "allow KVM cluster input"
+        }
+        chain forward {
+          type filter hook forward priority filter;
+          iifname "virbr0" accept comment "allow KVM cluster forwarding"
+          oifname "virbr0" accept comment "allow KVM cluster forwarding"
+        }
+        chain rpfilter {
+          type filter hook prerouting priority mangle + 10;
+          iifname "virbr0" accept comment "allow KVM cluster rpfilter"
+          # 关键：对于返回流量，如果目标是虚拟机网段，也放行 rpfilter
+          ip daddr 192.168.122.0/24 accept comment "allow KVM return traffic rpfilter"
+        }
         chain rpfilter-allow {
           meta mark 1 accept comment "allow sing-box tproxy"
         }

@@ -50,7 +50,9 @@ M.mason = {
     "autopep8",
     "xmlformatter",
     "shellcheck",
-    "csharp-language-server",
+    -- .net不常用
+    -- "csharp-language-server",
+    "sqlfluff",
   },
 }
 

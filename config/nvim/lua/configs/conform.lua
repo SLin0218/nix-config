@@ -18,14 +18,8 @@ local options = {
     go = { "gofmt" },
 
     python = { "isort", "black" },
+    sql = { "sqlfluff" },
   },
-
-  -- formatters = {
-  --   xmlformatter = {
-  --     command = masonRegistry.get_package("xmlformatter"):get_install_path() .. "/venv/bin/xmlformat",
-  --     args = { "$FILENAME" },
-  --   },
-  -- },
 
   -- format_on_save = {
   --   -- These options will be passed to conform.format()

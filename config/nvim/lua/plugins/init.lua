@@ -75,7 +75,7 @@ return {
         port = 12345,
         app = { "kitty", "@", "launch", "--dont-take-focus", "--bias", "40", "awrit http://localhost:12345" },
       }
-      vim.api.nvim_create_user_command("PeekOpen",  require("peek").open, {})
+      vim.api.nvim_create_user_command("PeekOpen", require("peek").open, {})
       vim.api.nvim_create_user_command("PeekClose", require("peek").close, {})
     end,
   },
@@ -97,7 +97,27 @@ return {
   { "hrsh7th/nvim-cmp", cond = not vim.g.vscode },
   { "windwp/nvim-autopairs", cond = not vim.g.vscode },
   { "nvim-telescope/telescope.nvim", cond = not vim.g.vscode },
-  { "nvim-treesitter/nvim-treesitter", cond = not vim.g.vscode },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    cond = not vim.g.vscode,
+    ensure_installed = {
+      "lua",
+      "vim",
+      "vimdoc",
+      "query",
+      "typescript",
+      "javascript",
+      "tsx",
+      "html",
+      "css",
+      "c",
+      "cpp",
+      "go",
+      "python",
+      "rust",
+      "sql",
+    },
+  },
   { "saadparwaiz1/cmp_luasnip", cond = not vim.g.vscode },
   { "NvChad/NvChad", cond = not vim.g.vscode },
   { "hrsh7th/cmp-nvim-lua", cond = not vim.g.vscode },

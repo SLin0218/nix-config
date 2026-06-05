@@ -88,7 +88,7 @@ autocmd("FileType", {
 })
 
 -- File extension specific tabbing
-autocmd("Filetype", {
+autocmd("FileType", {
   pattern = "python",
   callback = function()
     vim.opt_local.expandtab = true
@@ -115,5 +115,20 @@ autocmd({ "BufRead", "BufNewFile" }, {
     vim.cmd("set filetype=rasi")
     vim.treesitter.language.register("css", "rasi")
     vim.cmd("set syntax=css")
+  end,
+})
+
+autocmd("BufReadPost", {
+  pattern = "*",
+  callback = function()
+    local line = vim.fn.line "'\""
+    if
+      line > 1
+      and line <= vim.fn.line "$"
+      and vim.bo.filetype ~= "commit"
+      and vim.fn.index({ "xxd", "gitrebase" }, vim.bo.filetype) == -1
+    then
+      vim.cmd 'normal! g`"'
+    end
   end,
 })

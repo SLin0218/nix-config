@@ -35,7 +35,7 @@ in
 
       tab_bar_margin_height      = "10 0";
       tab_bar_edge               = "top";
-      tab_bar_style              = "custom";
+      tab_bar_style              = "separator";
       tab_separator              = "\"\"";
       tab_title_template         = "\"{fmt.bg.default + fmt.fg._313244 + ('' if index == 1 else '┃')}{fmt.bg.default}{fmt.fg.color0} 󰄰 {(' ' + str(num_windows) + ' ') if layout_name == 'stack' else ''}{fmt.fg.color7}{title} {fmt.bg.default}\"";
       active_tab_title_template  = "\"{fmt.bg.default + fmt.fg._313244 + ('' if index == 1 else '┃')}{fmt.bg.color0}{fmt.fg._c6a0f6} 󰐾 {(fmt.fg.yellow + ' ' + str(num_windows) + ' ') if layout_name == 'stack' else ''}{fmt.fg.color6}{title} {fmt.bg.default}\"";

@@ -1,5 +1,4 @@
-{ inputs, pkgs, ...}:
-
+{ inputs, pkgs, lib, ...}:
 let
   toggleApp = pkgs.writeShellScript "toggle-app" ''
     HYPRCTL="${pkgs.hyprland}/bin/hyprctl"
@@ -8,209 +7,297 @@ let
     LAUNCH_CMD=$2
 
     if $HYPRCTL clients | $GREP -q "class: $APP_CLASS"; then
-        $HYPRCTL dispatch focuswindow "class:$APP_CLASS"
+        $HYPRCTL dispatch "hl.dsp.focus({ window = 'class:$APP_CLASS' })"
     else
-        $HYPRCTL dispatch exec "$LAUNCH_CMD"
+        $HYPRCTL dispatch "hl.dsp.exec_cmd('$LAUNCH_CMD')"
     fi
   '';
-in
 
+  toLua = x: lib.generators.mkLuaInline (lib.generators.toLua {} x);
+in
 {
 
   wayland.windowManager.hyprland = {
     enable = true;
+    configType = "lua";
     # set the flake package
     package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
     portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
     settings = {
 
+      mod._var = "SUPER";
+
       monitor = [
-        ",preferred,auto,auto"
-        "eDP-1,preferred,auto,1.6"
+        {
+          output = "eDP-1";
+          mode = "preferred";
+          position = "auto";
+          scale = "1.6";
+        }
+        {
+          output = "";
+          mode = "preferred";
+          position = "auto";
+          scale = "auto";
+        }
       ];
 
-      "$mod" = "SUPER";
-
-      input = {
-        touchpad = {
-          natural_scroll = true;
-          scroll_factor = 0.5;
-          clickfinger_behavior = true;
-        };
-        natural_scroll = false;
-      };
-
-      gesture = [
-        "3, horizontal, workspace"
+      config = [
+        {
+          input = {
+            kb_layout  = "us";
+            touchpad = {
+              natural_scroll = true;
+              scroll_factor = 0.5;
+              clickfinger_behavior = true;
+            };
+            natural_scroll = false;
+          };
+        }
+        {
+          general = {
+            gaps_in = 5;
+            gaps_out = 20;
+            border_size = 2;
+            col = {
+              active_border = (lib.generators.mkLuaInline "colors.lavender");
+              inactive_border = "rgba(595959aa)";
+            };
+            resize_on_border = false;
+            allow_tearing = false;
+            layout = "dwindle";
+          };
+        }
+        {
+          decoration = {
+             rounding = 5;
+             rounding_power = 2;
+             active_opacity = 1.0;
+             inactive_opacity = 1.0;
+             shadow = {
+                 enabled = true;
+                 range = 4;
+                 render_power = 3;
+                 color = "rgba(1a1a1aee)";
+             };
+             blur = {
+                 enabled = true;
+                 size = 3;
+                 passes = 1;
+                 vibrancy = 0.1696;
+             };
+          };
+        }
+        {
+          dwindle = {
+            preserve_split = true;
+          };
+        }
+        {
+          master = {
+            new_status = "master";
+          };
+        }
+        {
+          misc = {
+            force_default_wallpaper = -1;
+            disable_hyprland_logo = false;
+          };
+        }
+        {
+          xwayland = {
+            force_zero_scaling = true;
+          };
+        }
       ];
 
-      general = {
-        gaps_in = 5;
-        gaps_out = 20;
-        border_size = 2;
-        "col.active_border" = "$lavender";
-        "col.inactive_border" = "rgba(595959aa)";
-        resize_on_border = "false";
-        allow_tearing = "false";
-        layout = "dwindle";
+      gesture = {
+        fingers = 3;
+        direction = "horizontal";
+        action = "workspace";
       };
 
-      decoration = {
-          rounding = 5;
-          rounding_power = 2;
+      curve = [
+        { _args = [ "easeOutQuint"   (toLua { type = "bezier"; points = [ [0.23      1] [0.32     1] ]; }) ]; }
+        { _args = [ "easeInOutCubic" (toLua { type = "bezier"; points = [ [0.65   0.05] [0.36     1] ]; }) ]; }
+        { _args = [ "linear"         (toLua { type = "bezier"; points = [ [0         0] [1        1] ]; }) ]; }
+        { _args = [ "almostLinear"   (toLua { type = "bezier"; points = [ [0.5     0.5] [0.75     1] ]; }) ]; }
+        { _args = [ "quick"          (toLua { type = "bezier"; points = [ [0.15      0] [0.1      1] ]; }) ]; }
+        { _args = [ "macEaseOut"     (toLua { type = "bezier"; points = [ [0.15      0] [0        1] ]; }) ]; }
+        { _args = [ "macEaseIn"      (toLua { type = "bezier"; points = [ [0.42      0] [1        1] ]; }) ]; }
+        { _args = [ "macScale"       (toLua { type = "bezier"; points = [ [0.175 0.885] [0.32 1.275] ]; }) ]; }
+      ];
 
-          active_opacity = 1.0;
-          inactive_opacity = 1.0;
+      animation = [
+        { _args = [ (toLua { leaf =        "global"; enabled = true; speed =   10; bezier =        "default"; })]; }
+        { _args = [ (toLua { leaf =        "border"; enabled = true; speed = 5.39; bezier =   "easeOutQuint"; })]; }
+        { _args = [ (toLua { leaf =       "windows"; enabled = true; speed = 4.79; bezier =     "macEaseOut"; })]; }
+        { _args = [ (toLua { leaf =     "windowsIn"; enabled = true; speed = 4.79; bezier =     "macEaseOut"; style = "popin 50%"; })]; }
+        { _args = [ (toLua { leaf =    "windowsOut"; enabled = true; speed =  2.5; bezier =     "macEaseOut"; style = "popin 30%"; })]; }
+        { _args = [ (toLua { leaf =        "fadeIn"; enabled = true; speed = 1.73; bezier =   "almostLinear"; })]; }
+        { _args = [ (toLua { leaf =       "fadeOut"; enabled = true; speed = 1.46; bezier =   "almostLinear"; })]; }
+        { _args = [ (toLua { leaf =          "fade"; enabled = true; speed = 3.03; bezier =          "quick"; })]; }
+        { _args = [ (toLua { leaf =        "layers"; enabled = true; speed = 3.81; bezier =   "easeOutQuint"; })]; }
+        { _args = [ (toLua { leaf =      "layersIn"; enabled = true; speed =    4; bezier =   "easeOutQuint"; style = "fade"; })]; }
+        { _args = [ (toLua { leaf =     "layersOut"; enabled = true; speed =  1.5; bezier =         "linear"; style = "fade"; })]; }
+        { _args = [ (toLua { leaf =  "fadeLayersIn"; enabled = true; speed = 1.79; bezier =   "almostLinear"; })]; }
+        { _args = [ (toLua { leaf = "fadeLayersOut"; enabled = true; speed = 1.39; bezier =   "almostLinear"; })]; }
+        { _args = [ (toLua { leaf =    "workspaces"; enabled = true; speed = 1.94; bezier =   "almostLinear"; style = "slide"; })]; }
+        { _args = [ (toLua { leaf =  "workspacesIn"; enabled = true; speed = 1.21; bezier =   "almostLinear"; style = "slide"; })]; }
+        { _args = [ (toLua { leaf = "workspacesOut"; enabled = true; speed = 1.94; bezier =   "almostLinear"; style = "slide"; })]; }
+        { _args = [ (toLua { leaf =    "zoomFactor"; enabled = true; speed =    7; bezier =          "quick"; })]; }
+      ];
 
-          shadow = {
-              enabled = true;
-              range = 4;
-              render_power = 3;
-              color = "rgba(1a1a1aee)";
-          };
-
-          blur = {
-              enabled = true;
-              size = 3;
-              passes = 1;
-
-              vibrancy = 0.1696;
-          };
-      };
-
-      animations = {
-          enabled = true;
-
-          bezier = [
-            "easeOutQuint,   0.23,  1,     0.32, 1"
-            "easeInOutCubic, 0.65,  0.05,  0.36, 1"
-            "linear,         0,     0,     1,    1"
-            "almostLinear,   0.5,   0.5,   0.75, 1"
-            "quick,          0.15,  0,     0.1,  1"
-            "macEaseOut,     0.15,  0,     0,    1"
-            "macEaseIn,      0.42,  0,     1,    1"
-            "macScale,       0.175, 0.885, 0.32, 1.275"
-          ];
-
-          animation = [
-            "global,        1,     10,    default"
-            "border,        1,     5.39,  easeOutQuint"
-            "windows,       1,     4.79,  macEaseOut"
-            "windowsIn,     1,     4.79,  macEaseOut, popin 50%"
-            "windowsOut,    1,     2.5,   macEaseOut, popin 30%"
-            "fadeIn,        1,     1.73,  almostLinear"
-            "fadeOut,       1,     1.46,  almostLinear"
-            "fade,          1,     3.03,  quick"
-            "layers,        1,     3.81,  easeOutQuint"
-            "layersIn,      1,     4,     easeOutQuint, fade"
-            "layersOut,     1,     1.5,   linear,       fade"
-            "fadeLayersIn,  1,     1.79,  almostLinear"
-            "fadeLayersOut, 1,     1.39,  almostLinear"
-            "workspaces,    1,     1.94,  almostLinear, slide"
-            "workspacesIn,  1,     1.21,  almostLinear, slide"
-            "workspacesOut, 1,     1.94,  almostLinear, slide"
-            "zoomFactor,    1,     7,     quick"
-          ];
-      };
 
       bind = [
-        "$mod, I, exec, ${toggleApp} kitty kitty"
-        "$mod, G, exec, ${toggleApp} brave-browser brave"
-        "$mod, U, exec, ${toggleApp} wechat wechat"
-        "$mod, Y, exec, ${toggleApp} qqmusic qqmusic"
-        "$mod, M, exec, ${toggleApp} emacs emacs"
+        { _args = [ "SUPER + I" (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"${toggleApp} kitty kitty\")") ]; }
+        { _args = [ "SUPER + G" (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"${toggleApp} brave-browser brave\")") ]; }
+        { _args = [ "SUPER + U" (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"${toggleApp} wechat wechat\")") ]; }
+        { _args = [ "SUPER + Y" (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"${toggleApp} qqmusic qqmusic\")") ]; }
+        { _args = [ "SUPER + M" (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"${toggleApp} emacs emacs\")") ]; }
 
-        "$mod, Q, killactive"
-        "$mod, l, movefocus, l"
-        "$mod, h, movefocus, r"
-        "$mod, k, movefocus, u"
-        "$mod, n, movefocus, d"
+        { _args = [ "SUPER + Q" (lib.generators.mkLuaInline "hl.dsp.window.kill({ window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + L" (lib.generators.mkLuaInline "hl.dsp.focus({ direction = 'r' })") ]; }
+        { _args = [ "SUPER + H" (lib.generators.mkLuaInline "hl.dsp.focus({ direction = 'l' })") ]; }
+        { _args = [ "SUPER + K" (lib.generators.mkLuaInline "hl.dsp.focus({ direction = 'u' })") ]; }
+        { _args = [ "SUPER + J" (lib.generators.mkLuaInline "hl.dsp.focus({ direction = 'd' })") ]; }
 
-        "$mod, F, fullscreen"
-        "$mod, space, exec, ags request launcher app"
-        "CTRL SHIFT, V, exec, ags request launcher cliphist"
+        { _args = [ "SUPER + F" (lib.generators.mkLuaInline "hl.dsp.window.fullscreen({ window = 'activewindow', action = 'toggle' })") ]; }
+        { _args = [ "SUPER + SPACE" (lib.generators.mkLuaInline "hl.dsp.exec_cmd('ags request launcher app')") ]; }
+        { _args = [ "CTRL + SHIFT + V" (lib.generators.mkLuaInline "hl.dsp.exec_cmd('ags request launcher cliphist')") ]; }
 
-        "$mod, 1, workspace, 1"
-        "$mod, 2, workspace, 2"
-        "$mod, 3, workspace, 3"
-        "$mod, 4, workspace, 4"
-        "$mod, 5, workspace, 5"
-        "$mod, 6, workspace, 6"
-        "$mod, 7, workspace, 7"
-        "$mod, 8, workspace, 8"
-        "$mod, 9, workspace, 9"
-        "$mod, 0, workspace, 10"
+        { _args = [ "SUPER + SHIFT + A" (lib.generators.mkLuaInline "hl.dsp.exec_cmd('ags request launcher screenshot')") ]; }
+        { _args = [ "SUPER + SHIFT + L" (lib.generators.mkLuaInline "hl.dsp.exec_cmd('hyprlock')") ]; }
+        { _args = [ "SUPER + SHIFT + Q" (lib.generators.mkLuaInline "hl.dsp.exit()") ]; }
 
-        "$mod SHIFT, 1, movetoworkspace, 1"
-        "$mod SHIFT, 2, movetoworkspace, 2"
-        "$mod SHIFT, 3, movetoworkspace, 3"
-        "$mod SHIFT, 4, movetoworkspace, 4"
-        "$mod SHIFT, 5, movetoworkspace, 5"
-        "$mod SHIFT, 6, movetoworkspace, 6"
-        "$mod SHIFT, 7, movetoworkspace, 7"
-        "$mod SHIFT, 8, movetoworkspace, 8"
-        "$mod SHIFT, 9, movetoworkspace, 9"
-        "$mod SHIFT, 0, movetoworkspace, 10"
+        { _args = [ "SUPER + 1" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '1' })") ]; }
+        { _args = [ "SUPER + 2" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '2' })") ]; }
+        { _args = [ "SUPER + 3" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '3' })") ]; }
+        { _args = [ "SUPER + 4" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '4' })") ]; }
+        { _args = [ "SUPER + 5" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '5' })") ]; }
+        { _args = [ "SUPER + 6" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '6' })") ]; }
+        { _args = [ "SUPER + 7" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '7' })") ]; }
+        { _args = [ "SUPER + 8" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '8' })") ]; }
+        { _args = [ "SUPER + 9" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '9' })") ]; }
+        { _args = [ "SUPER + 0" (lib.generators.mkLuaInline "hl.dsp.focus({ workspace = '10' })") ]; }
 
-        "$mod SHIFT, A, exec, ags request screenshot"
-        "$mod SHIFT, L, exec, hyprlock"
+        { _args = [ "SUPER + SHIFT + 1" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '1', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 2" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '2', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 3" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '3', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 4" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '4', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 5" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '5', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 6" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '6', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 7" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '7', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 8" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '8', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 9" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '9', window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + SHIFT + 0" (lib.generators.mkLuaInline "hl.dsp.window.move({ workspace = '10', window = 'activewindow' })") ]; }
 
-        "$mod SHIFT, Q, exit"
+        { _args = [
+            "XF86AudioRaiseVolume"
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd('wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && ags request volume')")
+            { repeating = true; locked = true; }
+          ];
+        }
+        {
+          _args = [
+            "XF86AudioLowerVolume"
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd('wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && ags request volume')")
+            { repeating = true; locked = true; }
+          ];
+        }
+        {
+          _args = [
+            "XF86AudioMute"
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd('wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && ags request volume')")
+            { repeating = true; locked = true; }
+          ];
+        }
+        {
+          _args = [
+            "XF86AudioMicMute"
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd('wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggl && ags request volume')")
+            { repeating = true; locked = true; }
+          ];
+        }
+        {
+          _args = [
+            "XF86MonBrightnessUp"
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd('brightnessctl s 5%+ && ags request brightness')")
+            { repeating = true; locked = true; }
+          ];
+        }
+        {
+          _args = [
+            "XF86MonBrightnessDown"
+            (lib.generators.mkLuaInline "hl.dsp.exec_cmd('brightnessctl s 5%- && ags request brightness')")
+            { repeating = true; locked = true; }
+          ];
+        }
+
       ];
 
-      bindel = [
-        ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+ && ags request volume"
-        ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- && ags request volume"
-        ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && ags request volume"
-        ",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggl && ags request volumee"
-        ",XF86MonBrightnessUp, exec, brightnessctl s 5%+ && ags request brightness"
-        ",XF86MonBrightnessDown, exec, brightnessctl s 5%- && ags request brightness"
-      ];
-
-      dwindle = {
-        pseudotile = true;
-        preserve_split = true;
+      on = {
+        _args = [
+          "hyprland.start"
+          (lib.generators.mkLuaInline ''
+            function()
+              hl.exec_cmd("keyd-application-mapper -d")
+              hl.exec_cmd("ags run")
+              hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE")
+              hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE")
+            end
+          '')
+        ];
       };
 
-      master = {
-        new_status = "master";
-      };
-
-      misc = {
-        force_default_wallpaper = -1;
-        disable_hyprland_logo = false;
-      };
-
-
-      exec-once = [
-        "keyd-application-mapper -d"
-        "ags run"
-        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"
-        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE"
+      window_rule = [
+        {
+          name = "Xwayland Float no blur";
+          match = {
+            xwayland = true;
+            float = true;
+          };
+          no_blur = true;
+          border_size = 0;
+        }
+        {
+          name = "Wehchat Photos Float";
+          match = {
+            xwayland = true;
+            title = "Photos and Videos";
+          };
+          float = true;
+        }
+        {
+          name = "Nautilus Float";
+          match = {
+            class = "org.gnome.Nautilus";
+          };
+          float = true;
+        }
       ];
 
-      windowrule = [
-        "match:xwayland true, match:float true, no_blur on"
-        "match:xwayland true, match:float true, border_size 0"
-        "match:title Photos and Videos, match:xwayland true, float on"
-        "match:class org.gnome.Nautilus, float on"
+      layer_rule = [
+        {
+          # 通知中心 (Notification)
+          name = "notification";
+          match = {
+            namespace = "notification";
+          };
+          blur = true;
+          ignore_alpha = 0.5;
+          animation = "slide right";
+        }
+        {
+          name = "bar";
+          match = {
+            namespace = "bar";
+          };
+          blur_popups = true;
+          ignore_alpha = 0.5;
+          blur = true;
+        }
       ];
-
-      layerrule = [
-        # 通知中心 (Notification)
-        "blur on, match:namespace notification"
-        "ignore_alpha 0.5, match:namespace notification"
-        "animation slide right, match:namespace notification"
-
-        # 状态栏 (Bar)
-        "blur on, match:namespace bar"
-        "blur_popups on, match:namespace bar"
-        "ignore_alpha 0.5, match:namespace bar"
-      ];
-
-      xwayland = {
-        force_zero_scaling = true;
-      };
 
     };
   };

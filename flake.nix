@@ -96,7 +96,6 @@
         specialArgs = { inherit inputs; };
         modules = [
           { nixpkgs.hostPlatform = "x86_64-linux"; }
-          inputs.catppuccin.nixosModules.catppuccin
           inputs.agenix.nixosModules.default
           ./nixos/configuration.nix
 

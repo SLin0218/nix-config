@@ -2,6 +2,8 @@
 
 import json
 import os
+import platform
+import subprocess
 
 import requests
 from audioplayer import AudioPlayer
@@ -10,6 +12,7 @@ from rich.console import Console
 import db
 
 console = Console()
+
 
 class Translate:
     mp3_url: str = ""
@@ -73,13 +76,19 @@ class Translate:
                 print("无法播放发音")
                 return
         try:
-            player = AudioPlayer(path)
-            player.play(block=True)
+            if platform.uname().system == "Linux":
+                command_l = ["mpv", "--no-video", path]
+            else:
+                command_l = ["afplay", path];
+            subprocess.run(
+                command_l,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         except Exception:
             pass
         finally:
             self.play_finished = True
-
 
     def play_mp3(self):
         if self.mp3_url:

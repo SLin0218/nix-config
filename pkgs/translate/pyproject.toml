@@ -9,7 +9,6 @@ dependencies = [
   "cryptography>=44.0.0",
   "requests>=2.32.3",
   "rich>=13.9.4",
-  "audioplayer>=0.6",
 ]
 
 [tool.setuptools]

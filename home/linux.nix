@@ -39,6 +39,8 @@
     wl-clipboard
     libnotify
     librime
+    mpc
+    mpv
   ];
 
   home.sessionVariables = {

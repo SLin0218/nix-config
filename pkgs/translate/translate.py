@@ -6,7 +6,6 @@ import platform
 import subprocess
 
 import requests
-from audioplayer import AudioPlayer
 from rich.console import Console
 
 import db

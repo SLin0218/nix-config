@@ -84,7 +84,7 @@ class ICibaTranslate(Translate):
             self.sentence_url + self.sentence_signature(word), data=post_data
         )
         response = r.json()
-        if 'status' not in response or response['status'] != 1:
+        if 'error_code' in response:
             console.print(f"\n[red]{response}[/red]")
             return response
         response = self.decryptor(b"aahc3TfyfCEmER33", response["content"])
@@ -102,7 +102,7 @@ class ICibaTranslate(Translate):
         return r.json()
 
     def pretty_print(self, result):
-        if 'status' not in result or result['status'] != 1:
+        if 'error_code' in result:
             console.print(f"\n[red]{result}[/red]")
             return
         if "out" in result:

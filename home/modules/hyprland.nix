@@ -156,7 +156,7 @@ in
         { _args = [ "SUPER + Y" (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"${toggleApp} qqmusic qqmusic\")") ]; }
         { _args = [ "SUPER + M" (lib.generators.mkLuaInline "hl.dsp.exec_cmd(\"${toggleApp} emacs emacs\")") ]; }
 
-        { _args = [ "SUPER + Q" (lib.generators.mkLuaInline "hl.dsp.window.kill({ window = 'activewindow' })") ]; }
+        { _args = [ "SUPER + Q" (lib.generators.mkLuaInline "hl.dsp.window.close({ window = 'activewindow' })") ]; }
         { _args = [ "SUPER + L" (lib.generators.mkLuaInline "hl.dsp.focus({ direction = 'r' })") ]; }
         { _args = [ "SUPER + H" (lib.generators.mkLuaInline "hl.dsp.focus({ direction = 'l' })") ]; }
         { _args = [ "SUPER + K" (lib.generators.mkLuaInline "hl.dsp.focus({ direction = 'u' })") ]; }

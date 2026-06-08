@@ -37,9 +37,7 @@
     grim
     imagemagick
     wl-clipboard
-    mpc
     libnotify
-    mpv
     librime
   ];
 

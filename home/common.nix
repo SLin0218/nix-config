@@ -10,6 +10,8 @@
     ./modules/editor.nix
   ];
 
+  home.file.".sqlfluff".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/.sqlfluff";
+
   home = {
     username = "lin";
     stateVersion = "25.11";
@@ -24,6 +26,8 @@
     delta
     update-singbox-sub
     t
+    mpc
+    mpv
 
     # build tools
     gdb

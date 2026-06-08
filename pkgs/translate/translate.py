@@ -1,21 +1,25 @@
 #!/usr/bin/env python
 
-import _thread
 import json
 import os
-from sys import prefix
 
 import requests
+from audioplayer import AudioPlayer
+from rich.console import Console
 
 import db
 
+console = Console()
 
 class Translate:
     mp3_url: str = ""
     play_finished: bool = True
 
     def translate_print(self, word: str):
-        self.pretty_print(self.translate(word))
+        if word:
+            self.pretty_print(self.translate(word))
+        else:
+            console.print("输入不能为空")
 
     def translate(self, word: str):
         import re
@@ -40,7 +44,7 @@ class Translate:
         db.create(word, False, self.source(), json.dumps(r))
         return r
 
-    def translate_word(self, word: str, zh=False):
+    def translate_word(self, word: str):
         pass
 
     def translate_sentence(self, word: str, zh=False):
@@ -49,13 +53,13 @@ class Translate:
     def pretty_print(self, result):
         pass
 
-    def source(self):
-        pass
+    def source(self) -> int:
+        return 0
 
     def play_mp3_task(self):
-        prefix_dir = f"{os.getenv('HOME')}/.cache/translate/mp3/"
-        if not os.path.exists(prefix):
-            os.makedirs(prefix)
+        prefix_dir = os.path.expanduser("~/.cache/translate/mp3/")
+        if not os.path.exists(prefix_dir):
+            os.makedirs(prefix_dir)
 
         path = f"{prefix_dir}{self.mp3_url[self.mp3_url.rfind('/')+1:]}"
         if not os.path.exists(path):
@@ -67,13 +71,19 @@ class Translate:
                             file.write(chunk)
             else:
                 print("无法播放发音")
-        os.popen(f"mpv {path} 2>&1 >/dev/null").read()
-        self.play_finished = True
+                return
+        try:
+            player = AudioPlayer(path)
+            player.play(block=True)
+        except Exception:
+            pass
+        finally:
+            self.play_finished = True
+
 
     def play_mp3(self):
         if self.mp3_url:
+            import threading
+
             self.play_finished = False
-            _thread.start_new_thread(
-                self.play_mp3_task,
-                (),
-            )
+            threading.Thread(target=self.play_mp3_task, daemon=True).start()

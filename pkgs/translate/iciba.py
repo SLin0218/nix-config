@@ -7,16 +7,14 @@ import time
 from urllib.parse import quote, urlencode
 
 import requests
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from rich import print, console
-
-console = console.Console()
+from rich.console import Console
 
 from translate import Translate
 
+console = Console()
 
 class ICibaTranslate(Translate):
     url = "http://dict.iciba.com/dictionary/word/query/web"
@@ -24,6 +22,16 @@ class ICibaTranslate(Translate):
         "http://ifanyi.iciba.com/index.php"
         "?c=trans&m=fy&client=6&auth_user=key_web_new_fanyi&sign="
     )
+
+    # 类型映射常量
+    SYMBOL_TYPES = {"ph_en": "英", "ph_am": "美", "word_symbol": "中"}
+    EXCHANGE_TYPES = {
+        "word_pl": "复数",
+        "word_third": "第三人称单数",
+        "word_past": "过去式",
+        "word_done": "过去分词",
+        "word_ing": "现在分词",
+    }
 
     def source(self):
         return 1
@@ -42,9 +50,14 @@ class ICibaTranslate(Translate):
         return md5.hexdigest()
 
     def encryptor(self, key: str, data: str):
-        cipher = AES.new(key.encode("utf-8"), AES.MODE_ECB)
-        padded_data = pad(data.encode("utf-8"), AES.block_size)
-        encrypted_data = cipher.encrypt(padded_data)
+        # 使用 cryptography 统一实现 AES-ECB 加密
+        key_bytes = key.encode("utf-8")
+        padder = padding.PKCS7(128).padder()
+        padded_data = padder.update(data.encode("utf-8")) + padder.finalize()
+
+        cipher = Cipher(algorithms.AES(key_bytes), modes.ECB(), backend=default_backend())
+        encryptor = cipher.encryptor()
+        encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
         return base64.b64encode(encrypted_data).decode("utf-8")
 
     def decryptor(self, key: bytes, content: str):
@@ -53,7 +66,6 @@ class ICibaTranslate(Translate):
         decryptor = cipher.decryptor()
         decrypted_data = decryptor.update(content_bytes) + decryptor.finalize()
         decrypted_data = decrypted_data.decode("utf-8")
-        # } 后面有些无关的字符, 截取掉这部分数据
         decrypted_data = decrypted_data[: decrypted_data.rfind("}") + 1]
         return decrypted_data
 
@@ -72,6 +84,9 @@ class ICibaTranslate(Translate):
             self.sentence_url + self.sentence_signature(word), data=post_data
         )
         response = r.json()
+        if 'status' not in response or response['status'] != 1:
+            console.print(f"\n[red]{response}[/red]")
+            return response
         response = self.decryptor(b"aahc3TfyfCEmER33", response["content"])
         return json.loads(response)
 
@@ -86,92 +101,68 @@ class ICibaTranslate(Translate):
         r = requests.get(self.url + "?" + urlencode(query))
         return r.json()
 
-    def pretty_print(self, rj):
-        if "out" in rj:
-            print()
-            print(f"[red]{rj['out']}[/red]")
+    def pretty_print(self, result):
+        if 'status' not in result or result['status'] != 1:
+            console.print(f"\n[red]{result}[/red]")
+            return
+        if "out" in result:
+            console.print(f"\n[red]{result['out']}[/red]")
             return
 
-        message = rj["message"]
-        baes_info = message["baesInfo"]
+        message = result.get("message", {})
+        baes_info = message.get("baesInfo", {})
 
+        # 1. 解析音标和音频 URL
         if "symbols" in baes_info:
             symbols = baes_info["symbols"][0]
-            type_map = {"ph_en": "英", "ph_am": "美", "word_symbol": "中"}
-            sysbols_output = ""
-            for skey in symbols:
-                if skey in type_map:
-                    symbols_text = symbols[skey]
-                    if symbols_text:
-                        sysbols_output = (
-                            sysbols_output
-                            + f"{type_map[skey]} [[red]{symbols_text}[/]]   "
-                        )
-            if sysbols_output:
-                print(sysbols_output)
+            symbols_output = []
+            for skey, label in self.SYMBOL_TYPES.items():
+                if symbols.get(skey):
+                    symbols_output.append(f"{label} [[red]{symbols[skey]}[/]]")
 
-            if "ph_en_mp3" in symbols and symbols["ph_en_mp3"]:
-                self.mp3_url = symbols["ph_en_mp3"]
-            elif "ph_am_mp3" in symbols and symbols["ph_am_mp3"]:
-                self.mp3_url = symbols["ph_am_mp3"]
-            elif "ph_tts_mp3" in symbols and symbols["ph_tts_mp3"]:
-                self.mp3_url = symbols["ph_tts_mp3"]
+            if symbols_output:
+                console.print("   ".join(symbols_output))
 
-            self.play_mp3()
+            # 提取音频 URL
+            self.mp3_url = (
+                symbols.get("ph_en_mp3") or
+                symbols.get("ph_am_mp3") or
+                symbols.get("ph_tts_mp3")
+            )
 
-            print()
+        # 2. 解析释义
+        console.print()
+        if "fromSymbolsMean" in baes_info and baes_info["fromSymbolsMean"]:
+            for word_group in baes_info["fromSymbolsMean"]:
+                for item in word_group.get("word", []):
+                    for word_info in item.get("word", []):
+                        means = word_info["symbols"][0]["parts"][0]["means"]
+                        console.print(f"[blue]{word_info['word_name']}：{'；'.join(means)}[/]")
+        elif "symbols" in baes_info:
+            symbols = baes_info["symbols"][0]
+            for part in symbols.get("parts", []):
+                means = "；".join(part.get("means", []))
+                console.print(f"[blue]{part.get('part', '')} {means}[/]")
 
-            if "fromSymbolsMean" in baes_info:
-                if len(baes_info["fromSymbolsMean"]) > 0:
-                    fromSymbolsMean = baes_info["fromSymbolsMean"][0]
-                    for word_tmp in fromSymbolsMean["word"][0]["word"]:
-                        means = word_tmp["symbols"][0]["parts"][0]["means"]
-                        print(f"[blue]{word_tmp['word_name']}：{'；'.join(means)}[/]")
-            else:
-                for part in symbols["parts"]:
-                    print(f"[blue]{part['part']} {'；'.join(part['means'])}[/]")
-
+        # 3. 解析词形变化
         if "exchange" in baes_info:
             exchange = baes_info["exchange"]
-            print()
-            type_map = {
-                "word_pl": "复数",
-                "word_third": "第三人称单数",
-                "word_past": "过去式",
-                "word_done": "过去分词",
-                "word_ing": "现在分词",
-            }
-            exchange_output = ""
-            for skey in exchange:
-                if skey in type_map:
-                    print(
-                        exchange_output
-                        + f"{type_map[skey]}：[[red]{exchange[skey][0]}[/]]",
-                        end="  ",
-                    )
-            print(exchange_output)
+            exchange_output = []
+            for skey, label in self.EXCHANGE_TYPES.items():
+                if exchange.get(skey):
+                    val = exchange[skey]
+                    if isinstance(val, list) and val:
+                        val = val[0]
+                    exchange_output.append(f"{label}：[[red]{val}[/]]")
+            if exchange_output:
+                console.print("\n" + "  ".join(exchange_output))
 
-        # if "stems_affixes" in message:
-        #     for stems_affixes in message["stems_affixes"]:
-        #         print()
-        #         print(
-        #             f"{stems_affixes['type']}：[bold red]{stems_affixes['type_value']}[/]  {stems_affixes['type_exp']}"
-        #         )
-        #         print()
-        #         for word_part in stems_affixes["word_parts"]:
-        #             print(f"[bold grey70]{word_part['word_part']}[/]")
-        #             count = 1
-        #             for _stems_affixes in word_part["stems_affixes"]:
-        #                 print(
-        #                     f"    {_stems_affixes['value_en']}：{_stems_affixes['value_cn']}"
-        #                 )
-        #                 print(f"    [grey70]{_stems_affixes['word_buile']}[/]")
-        #                 if count >= 2:
-        #                     break
-        #                 count = count + 1
-        with console.status("[bold green]playing ...") as status:
-            while not self.play_finished:
-                time.sleep(0.1)
+        # 4. 最后播放音频并显示状态
+        if self.mp3_url:
+            self.play_mp3()
+            with console.status("[bold green]Playing..."):
+                while not self.play_finished:
+                    time.sleep(0.1)
 
 
 if __name__ == "__main__":

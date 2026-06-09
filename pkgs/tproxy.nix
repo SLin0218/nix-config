@@ -21,6 +21,7 @@ table ip singbox {
     type ipv4_addr
     flags interval
     elements = {
+      127.0.0.0/8,
       10.0.0.0/8,
       169.254.0.0/16,
       100.64.0.0/10,

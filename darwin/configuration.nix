@@ -3,14 +3,16 @@
 {
 
   imports = [
-     ./modules/sing-box.nix
+     # ./modules/sing-box.nix
+     ./modules/mihomo.nix
   ];
 
   # List packages installed in system profile. To search by name, run:
   # $ nix-env -qaP | grep wget
   environment.systemPackages = [
     pkgs.neovim
-    pkgs.sing-box
+    # pkgs.sing-box
+    pkgs.mihomo
   ];
 
   # Necessary for using flakes on this system.

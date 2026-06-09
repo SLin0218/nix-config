@@ -28,6 +28,7 @@
     t
     mpc
     mpv
+    android-tools
 
     # build tools
     gdb

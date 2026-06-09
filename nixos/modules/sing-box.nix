@@ -12,6 +12,7 @@ in
           type = "mixed";
           tag = "mixed-in";
           listen_port = 7890;
+          listen = "0.0.0.0";
           set_system_proxy = false;
         }
         {

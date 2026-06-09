@@ -30,6 +30,7 @@
     jetbrains.idea
 
     # linux cli
+    tproxy
     zip
     unzip
     brightnessctl

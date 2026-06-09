@@ -3,7 +3,8 @@
 {
   imports = [
      ./hardware-configuration.nix
-     ./modules/sing-box.nix
+     # ./modules/sing-box.nix
+     ./modules/mihomo.nix
      ./modules/keyd.nix
   ];
 
@@ -56,6 +57,10 @@
       enable = true;
     };
     hostName = "inspiron-lin";
+
+    nftables = {
+      enable = true;
+    };
   };
 
 
@@ -90,7 +95,8 @@
       git
       neovim
       wget
-      sing-box
+      # sing-box
+      mihomo
       keyd
       lm_sensors # 传感器驱动
 

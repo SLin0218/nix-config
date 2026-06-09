@@ -24,7 +24,7 @@
     gemini-cli
     nodejs
     delta
-    update-singbox-sub
+    # update-singbox-sub
     t
     mpc
     mpv

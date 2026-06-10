@@ -70,8 +70,6 @@ check_status() {
         echo "----------------------------------------"
         echo "简要规则统计:"
         nft list table ip singbox
-        nft list table ip nat
-        nft list table inet nixos-fw
     else
         echo "----------------------------------------"
         echo " 当前状态: 【 已关闭 】"

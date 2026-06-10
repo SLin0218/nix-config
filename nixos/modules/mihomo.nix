@@ -4,6 +4,7 @@ let
   mihomo-common = import ../../mihomo-common.nix { inherit lib; };
   settings = lib.recursiveUpdate (mihomo-common.mkSettings) {
     tun.enable = false;
+    rules = [ "DST-PORT,53,DNS" ] ++ mihomo-common.mkSettings.rules;
   };
   yamlFormat = pkgs.formats.yaml { };
   templateConfig = yamlFormat.generate "mihomo-config-template.yaml" settings;

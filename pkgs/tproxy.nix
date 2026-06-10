@@ -49,37 +49,6 @@ table ip singbox {
   }
 }
 
-# NAT 转换表（用于 KVM 虚拟机上网）
-table ip nat {
-  chain postrouting {
-    type nat hook postrouting priority srcnat; policy accept;
-    ip saddr 192.168.122.0/24 counter masquerade
-  }
-}
-
-# NixOS/系统 防火墙放行与反向路径过滤（rp_filter）兼容规则
-table inet nixos-fw {
-  chain input {
-    type filter hook input priority filter;
-    iifname "virbr0" accept comment "allow KVM cluster input"
-  }
-
-  chain forward {
-    type filter hook forward priority filter;
-    iifname "virbr0" accept comment "allow KVM cluster forwarding"
-    oifname "virbr0" accept comment "allow KVM cluster forwarding"
-  }
-
-  chain rpfilter {
-    type filter hook prerouting priority mangle + 10;
-    iifname "virbr0" accept comment "allow KVM cluster rpfilter"
-    ip daddr 192.168.122.0/24 accept comment "allow KVM return traffic rpfilter"
-  }
-
-  chain rpfilter-allow {
-    meta mark 1 accept comment "allow sing-box tproxy"
-  }
-}
 EOF
     echo "nftables 规则加载成功！[状态: 已开启]"
 }

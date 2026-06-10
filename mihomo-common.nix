@@ -37,6 +37,13 @@
       store-fake-ip = true;
     };
 
+    proxies = [
+      {
+        name = "DNS";
+        type = "dns";
+      }
+    ];
+
     proxy-providers = {
       JMS = {
         url = "https://jmssub.net/members/getsub.php?service=__JMS_SERVICE__&id=__JMS_ID__";
@@ -131,12 +138,14 @@
 
     rules = [
       "DOMAIN-SUFFIX,localhost,DIRECT"
-      "DOMAIN-SUFFIX,local,DIRECT"
       "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
       "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
       "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"
       "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
 
+      "DOMAIN-SUFFIX,jmssub.net,DIRECT"
+
+      "GEOIP,CN,DIRECT"
       "GEOSITE,category-ads-all,REJECT"
 
       "GEOSITE,CN,DIRECT"

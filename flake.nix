@@ -1,0 +1,166 @@
+{
+  description = "Your new nix config";
+
+   nixConfig = {
+    substituters = [
+      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+      # "https://mirrors.ustc.edu.cn/nix-channels/store"
+      "https://cache.nixos.org"
+      "https://hyprland.cachix.org"
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+    ];
+  };
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    hyprland = {
+      url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    astal = {
+      url = "github:aylur/astal";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    ags = {
+      url = "github:aylur/ags";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    catppuccin = {
+      url = "github:catppuccin/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    ...
+  } @ inputs: let
+    systems = [
+      "x86_64-linux"
+      "aarch64-darwin"
+    ];
+    forAllSystems = nixpkgs.lib.genAttrs systems;
+
+    # 统一管理所有的 Overlay
+    overlays = [
+      (final: prev: {
+        # 1. 注入最新的 AGS
+        ags = inputs.ags.packages.${prev.stdenv.hostPlatform.system}.default;
+        joker = prev.joker.overrideAttrs (oldAttrs: {
+          # 强制 Go 使用代理下载依赖，而不是信任本地 vendor 目录
+          proxyVendor = true;
+          vendorHash = "sha256-4wPiuX3SsLAkvKevptgVAKdg7MR2QdouqiB+FKqdZPM=";
+        });
+      } // (import ./pkgs prev)) # 2. 注入本地自定义包
+    ];
+  in
+  {
+    # 命令行直接使用的包 (nix build .#xxx)
+    packages = forAllSystems (system:
+      let
+        pkgs = import nixpkgs {
+          inherit system overlays;
+          config.allowUnfree = true;
+        };
+      in
+      {
+        inherit (pkgs) ags lunar-javascript wechat hammerspoon;
+      }
+    );
+
+    nixosConfigurations = {
+      inspiron-lin = nixpkgs.lib.nixosSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          { nixpkgs.hostPlatform = "x86_64-linux"; }
+          ./nixos/configuration.nix
+
+          # 直接引用上面定义的统一 Overlay
+          { nixpkgs.overlays = overlays; }
+
+          inputs.home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.lin = {
+              imports = [
+                ./home/linux.nix
+                inputs.catppuccin.homeModules.catppuccin
+                inputs.ags.homeManagerModules.default
+              ];
+            };
+            home-manager.extraSpecialArgs = { inherit inputs; };
+          }
+        ];
+      };
+    };
+
+    darwinConfigurations = {
+      fcdeMac-mini = inputs.darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+
+          ./darwin/configuration.nix
+
+          # 直接引用上面定义的统一 Overlay
+          { nixpkgs.overlays = overlays; }
+
+          inputs.home-manager.darwinModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "before-nix";
+            home-manager.users.lin = {
+              imports = [
+                ./home/darwin.nix
+                inputs.catppuccin.homeModules.catppuccin
+              ];
+            };
+            home-manager.extraSpecialArgs = { inherit inputs; };
+          }
+        ];
+      };
+      lindeMacBook-Pro = inputs.darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./darwin/configuration.nix
+
+          # 直接引用上面定义的统一 Overlay
+          { nixpkgs.overlays = overlays; }
+
+          inputs.home-manager.darwinModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "before-nix";
+            home-manager.users.lin = {
+              imports = [
+                ./home/darwin.nix
+                inputs.catppuccin.homeModules.catppuccin
+              ];
+            };
+            home-manager.extraSpecialArgs = { inherit inputs; };
+          }
+        ];
+      };
+    };
+  };
+}

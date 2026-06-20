@@ -149,11 +149,6 @@ let
         }
         {
           type = "basic";
-          from = { key_code = "u"; modifiers.mandatory = hyperModifiers; };
-          to = [ { key_code = "u"; modifiers = ["left_control"]; } ];
-        }
-        {
-          type = "basic";
           from = { key_code = "t"; modifiers.mandatory = hyperModifiers; };
           to = [ { key_code = "t"; modifiers = ["left_command"]; } ];
         }

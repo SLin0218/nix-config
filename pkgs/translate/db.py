@@ -1,15 +1,18 @@
 #!/usr/bin/env python
-
+import hashlib
 import json
 import os
 import sqlite3
 import time
-import hashlib
+from pathlib import Path
 
 prefix_dir = f"{os.getenv('HOME')}/.cache/translate/"
+db_file = prefix_dir + "/translate.db"
+
+Path(prefix_dir).mkdir(parents=True, exist_ok=True)
 
 def query_by_id(word: str, source: int):
-    conn = sqlite3.connect(prefix_dir + "/translate.db")
+    conn = sqlite3.connect(db_file)
     c = conn.cursor()
     cursor = c.execute(
         'SELECT count(*) FROM sqlite_master WHERE type = "table" AND name = "translate"'
@@ -22,9 +25,7 @@ def query_by_id(word: str, source: int):
     c = conn.cursor()
     m = hashlib.md5()
     m.update(f"{word}{source}".encode("utf-8"))
-    cursor = c.execute(
-        f'SELECT RESULT from translate WHERE ID = "{m.hexdigest()}"'
-    )
+    cursor = c.execute(f'SELECT RESULT from translate WHERE ID = "{m.hexdigest()}"')
     db_data = cursor.fetchone()
 
     if db_data:
@@ -32,7 +33,7 @@ def query_by_id(word: str, source: int):
 
 
 def create(word: str, sentence: bool, source: int, result: str):
-    conn = sqlite3.connect(prefix_dir + "/translate.db")
+    conn = sqlite3.connect(db_file)
     c = conn.cursor()
     m = hashlib.md5()
     m.update(f"{word}{source}".encode("utf-8"))

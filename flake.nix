@@ -96,6 +96,8 @@
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }
 
+          { networking.hostName = "inspiron-lin"; }
+
           inputs.home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -123,6 +125,8 @@
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }
 
+          { networking.hostName = "fcdeMac-mini"; }
+
           inputs.home-manager.darwinModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -142,6 +146,8 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./darwin/configuration.nix
+
+          { networking.hostName = "lindeMacBook-Pro"; }
 
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }

@@ -27,12 +27,8 @@
     inkscape
     wechat
     antigravity-fhs
-    jetbrains.idea
-    android-studio
-    jadx
 
     # linux cli
-    frida-tools
     tproxy
     zip
     unzip

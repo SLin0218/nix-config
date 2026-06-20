@@ -13,15 +13,13 @@
   };
 
   home.sessionVariables = {
-    __ETC_ZSHRC_SOURCED = "1";
+    __ETC_ZSHRC_SOURCED = 1;
+    HOMEBREW_INSTALL_CLEANUP = 1;
   };
 
   home.packages = with pkgs; [
     # darwin specific
-    fzf
     jdk21
     maven
-    mycli
-    httpie
   ];
 }

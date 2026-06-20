@@ -32,9 +32,6 @@
   # The platform the configuration will be used on.
   nixpkgs.hostPlatform = "aarch64-darwin";
 
-  #networking.hostName = "fcdeMac-mini";
-  networking.hostName = "lindeMacBook-Pro";
-
   # Disable documentation to avoid build failures with mdbook
   documentation.enable = false;
   documentation.man.enable = false;
@@ -66,17 +63,21 @@
 
     brews = [
       "librime"
-      #"d12frosted/emacs-plus/emacs-plus"
+      "d12frosted/emacs-plus/emacs-plus"
     ];
 
     taps = [ "d12frosted/emacs-plus" ];
 
     casks = [
+      "android-studio"
       "squirrel-app"
       "hammerspoon"
       "karabiner-elements"
       # "raycast"
+      "antigravity"
+      "antigravity-cli"
       "brave-browser"
+      "hiddenbar"
     ];
   };
 

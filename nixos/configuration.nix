@@ -63,7 +63,6 @@
     networkmanager = {
       enable = true;
     };
-    hostName = "inspiron-lin";
 
     nftables = {
       enable = true;

@@ -25,7 +25,15 @@
     nodejs
     pnpm
     delta
-    # update-singbox-sub
+    fzf
+    mycli
+    httpie
+
+    jadx
+    frida-tools
+    jetbrains.idea
+
+    # translate
     t
     mpc
     mpv

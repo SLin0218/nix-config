@@ -21,7 +21,6 @@
     # common cli
     fd
     jq
-    antigravity-cli
     nodejs
     pnpm
     delta

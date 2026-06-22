@@ -74,7 +74,7 @@
       "hammerspoon"
       "karabiner-elements"
       # "raycast"
-      "antigravity"
+      "antigravity-ide"
       "antigravity-cli"
       "brave-browser"
       "hiddenbar"

@@ -1,5 +1,7 @@
 { inputs, lib, config, pkgs, ... }:
-
+let
+  configDir = "${config.home.homeDirectory}/.config/nix-config/config/";
+in
 {
   imports = [
     ./modules/zsh.nix
@@ -10,7 +12,8 @@
     ./modules/editor.nix
   ];
 
-  home.file.".sqlfluff".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/.sqlfluff";
+  home.file.".sqlfluff".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/sqlfluff";
+  home.file.".gitconfig".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/gitconfig";
 
   home = {
     username = "lin";

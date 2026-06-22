@@ -36,6 +36,8 @@
     mpv
     android-tools
 
+    gnupg
+
     # build tools
     gdb
     python3
@@ -46,6 +48,7 @@
 
   home.sessionVariables = {
     EDITOR = "nvim";
+    SSH_AUTH_SOCK = "$(gpgconf --list-dir agent-ssh-socket)";
   };
 
   programs = {

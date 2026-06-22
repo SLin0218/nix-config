@@ -76,7 +76,6 @@
       "antigravity-ide"
       "antigravity-cli"
       "brave-browser"
-      "gpg-suite"
       "windows-app"
     ];
   };

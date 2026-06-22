@@ -4,7 +4,7 @@ let
 in
 {
   imports = [
-    ./common.nix
+    ../common.nix
     ./modules/karabiner.nix
   ];
 

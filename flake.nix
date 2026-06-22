@@ -102,7 +102,7 @@
             home-manager.useUserPackages = true;
             home-manager.users.lin = {
               imports = [
-                ./home/linux.nix
+                ./home/nixos
                 inputs.catppuccin.homeModules.catppuccin
                 inputs.ags.homeManagerModules.default
               ];
@@ -131,7 +131,7 @@
             home-manager.backupFileExtension = "before-nix";
             home-manager.users.lin = {
               imports = [
-                ./home/darwin.nix
+                ./home/darwin
                 inputs.catppuccin.homeModules.catppuccin
               ];
             };
@@ -155,7 +155,7 @@
             home-manager.backupFileExtension = "before-nix";
             home-manager.users.lin = {
               imports = [
-                ./home/darwin.nix
+                ./home/darwin
                 inputs.catppuccin.homeModules.catppuccin
               ];
             };

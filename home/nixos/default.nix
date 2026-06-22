@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./common.nix
+    ../common.nix
     ./modules/hyprland.nix
     ./modules/browser.nix
     ./modules/ags.nix

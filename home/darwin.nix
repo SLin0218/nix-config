@@ -1,12 +1,15 @@
 { inputs, lib, config, pkgs, ... }:
-
+let
+  configDir = "${config.home.homeDirectory}/.config/nix-config/config/";
+in
 {
   imports = [
     ./common.nix
     ./modules/karabiner.nix
   ];
 
-  home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-data";
+  home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/rime-data";
+  home.file.".hammerspoon".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/hammerspoon";
 
   home = {
     homeDirectory = "/Users/lin";

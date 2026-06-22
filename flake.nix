@@ -91,12 +91,10 @@
         specialArgs = { inherit inputs; };
         modules = [
           { nixpkgs.hostPlatform = "x86_64-linux"; }
-          ./nixos/configuration.nix
+          ./platforms/nixos/configuration.nix
 
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }
-
-          { networking.hostName = "inspiron-lin"; }
 
           inputs.home-manager.nixosModules.home-manager
           {
@@ -120,12 +118,11 @@
         specialArgs = { inherit inputs; };
         modules = [
 
-          ./darwin/configuration.nix
+          ./platforms/darwin/configuration.nix
+          ./hosts/fcdeMac-mini
 
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }
-
-          { networking.hostName = "fcdeMac-mini"; }
 
           inputs.home-manager.darwinModules.home-manager
           {
@@ -145,9 +142,8 @@
       lindeMacBook-Pro = inputs.darwin.lib.darwinSystem {
         specialArgs = { inherit inputs; };
         modules = [
-          ./darwin/configuration.nix
-
-          { networking.hostName = "lindeMacBook-Pro"; }
+          ./platforms/darwin/configuration.nix
+          ./hosts/lindeMacBook-Pro
 
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }

@@ -2,8 +2,6 @@
 
 {
   imports = [
-     ./hardware-configuration.nix
-     # ./modules/sing-box.nix
      ./modules/mihomo.nix
      ./modules/keyd.nix
   ];

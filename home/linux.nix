@@ -28,6 +28,9 @@
     wechat
     antigravity-fhs
 
+    jadx
+    frida-tools
+
     # linux cli
     tproxy
     zip

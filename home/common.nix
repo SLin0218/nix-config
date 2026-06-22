@@ -28,8 +28,6 @@
     mycli
     httpie
 
-    jadx
-    frida-tools
     jetbrains.idea
 
     # translate

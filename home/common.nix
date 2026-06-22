@@ -49,6 +49,7 @@
   home.sessionVariables = {
     EDITOR = "nvim";
     SSH_AUTH_SOCK = "$(gpgconf --list-dir agent-ssh-socket)";
+    GPG_TTY = "$(tty)";
   };
 
   programs = {

@@ -64,6 +64,7 @@
     brews = [
       "librime"
       "d12frosted/emacs-plus/emacs-plus"
+      "pinentry-mac"
     ];
 
     taps = [ "d12frosted/emacs-plus" ];

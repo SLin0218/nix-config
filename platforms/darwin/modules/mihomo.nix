@@ -16,27 +16,10 @@ let
     rules = [ "IP-CIDR,172.16.90.0/24,TW" ] ++ mihomo-common.mkSettings.rules;
   };
   yamlFormat = pkgs.formats.yaml { };
-  templateConfig = yamlFormat.generate "mihomo-config-template.yaml" settings;
+  mihomoConfig = yamlFormat.generate "mihomo-config.yaml" settings;
 in
 {
-
-  # 激活脚本：在系统激活阶段动态生成带有秘钥的配置文件
-  system.activationScripts.postActivation.text = ''
-    echo "Applying secrets to Mihomo config..."
-
-    # 确保目标目录存在
-    mkdir -p /etc/mihomo
-
-    # shellcheck disable=SC1091
-    source "/etc/mihomo/jmssub"
-
-    ${pkgs.gnused}/bin/sed \
-      -e "s/__SERVICE__/$SERVICE/g" \
-      -e "s/__ID__/$ID/g" \
-      "${templateConfig}" > /etc/mihomo/config.yaml
-
-    echo "Mihomo config generated successfully at /etc/mihomo/config.yaml"
-  '';
+  environment.etc."mihomo/config.yaml".source = mihomoConfig;
 
   launchd.daemons.mihomo = {
     serviceConfig = {

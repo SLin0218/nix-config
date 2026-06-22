@@ -156,6 +156,7 @@
             home-manager.users.lin = {
               imports = [
                 ./home/darwin
+                ./hosts/lindeMacBook-Pro/home.nix
                 inputs.catppuccin.homeModules.catppuccin
               ];
             };

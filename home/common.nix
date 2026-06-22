@@ -41,6 +41,8 @@ in
 
     gnupg
 
+    git-crypt
+
     # build tools
     gdb
     python3

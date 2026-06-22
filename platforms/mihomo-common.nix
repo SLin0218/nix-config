@@ -1,5 +1,7 @@
 { lib }:
-
+let
+  jmssub = import ./jmssub.nix;
+in
 {
   mkSettings = {
     tproxy-port = 9898;
@@ -41,7 +43,7 @@
 
     proxy-providers = {
       JMS = {
-        url = "https://jmssub.net/members/getsub.php?service=__SERVICE__&id=__ID__";
+        url = "https://jmssub.net/members/getsub.php?service=${jmssub.service}&id=${jmssub.id}";
         type = "http";
         interval = 86400;
         health-check = {

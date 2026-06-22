@@ -1,1 +1,1 @@
-./platforms/jmssub.nix filter=git-crypt diff=git-crypt
+platforms/jmssub.nix filter=git-crypt diff=git-crypt

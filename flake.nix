@@ -43,6 +43,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    home-manager-2605 = {
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs-2605";
+    };
+
     darwin = {
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -167,7 +172,10 @@
 
       lins-iMac = inputs.darwin.lib.darwinSystem {
         specialArgs = {
-          inputs = inputs // { nixpkgs = inputs.nixpkgs-2605; };
+          inputs = inputs // {
+            nixpkgs = inputs.nixpkgs-2605;
+            home-manager = inputs.home-manager-2605;
+          };
         };
         modules = [
           ({ lib, ... }: {
@@ -183,7 +191,7 @@
           # 直接引用上面定义的统一 Overlay
           { nixpkgs.overlays = overlays; }
 
-          inputs.home-manager.darwinModules.home-manager
+          inputs.home-manager-2605.darwinModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
@@ -195,7 +203,10 @@
               ];
             };
             home-manager.extraSpecialArgs = {
-              inputs = inputs // { nixpkgs = inputs.nixpkgs-2605; };
+              inputs = inputs // {
+                nixpkgs = inputs.nixpkgs-2605;
+                home-manager = inputs.home-manager-2605;
+              };
             };
           }
         ];

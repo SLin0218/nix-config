@@ -16,6 +16,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-2605.url = "github:nixos/nixpkgs/nixos-26.05";
 
     hyprland = {
       url = "github:hyprwm/Hyprland";
@@ -165,8 +166,17 @@
       };
 
       lins-iMac = inputs.darwin.lib.darwinSystem {
-        specialArgs = { inherit inputs; };
+        specialArgs = {
+          inputs = inputs // { nixpkgs = inputs.nixpkgs-2605; };
+        };
         modules = [
+          {
+            nixpkgs.pkgs = import inputs.nixpkgs-2605 {
+              system = "x86_64-darwin";
+              config.allowUnfree = true;
+              overlays = overlays;
+            };
+          }
           ./platforms/darwin/configuration.nix
           ./hosts/lins-iMac
 
@@ -184,7 +194,9 @@
                 inputs.catppuccin.homeModules.catppuccin
               ];
             };
-            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.extraSpecialArgs = {
+              inputs = inputs // { nixpkgs = inputs.nixpkgs-2605; };
+            };
           }
         ];
       };

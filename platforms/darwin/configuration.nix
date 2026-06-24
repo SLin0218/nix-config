@@ -29,9 +29,6 @@
   system.stateVersion = 5;
   system.primaryUser = "lin";
 
-  # The platform the configuration will be used on.
-  nixpkgs.hostPlatform = "aarch64-darwin";
-
   # Disable documentation to avoid build failures with mdbook
   documentation.enable = false;
   documentation.man.enable = false;

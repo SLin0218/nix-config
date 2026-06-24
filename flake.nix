@@ -90,7 +90,6 @@
       inspiron-lin = nixpkgs.lib.nixosSystem {
         specialArgs = { inherit inputs; };
         modules = [
-          { nixpkgs.hostPlatform = "x86_64-linux"; }
           ./platforms/nixos/configuration.nix
 
           # 直接引用上面定义的统一 Overlay
@@ -164,6 +163,32 @@
           }
         ];
       };
+
+      lins-iMac = inputs.darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./platforms/darwin/configuration.nix
+          ./hosts/lins-iMac
+
+          # 直接引用上面定义的统一 Overlay
+          { nixpkgs.overlays = overlays; }
+
+          inputs.home-manager.darwinModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "before-nix";
+            home-manager.users.lin = {
+              imports = [
+                ./home/darwin
+                inputs.catppuccin.homeModules.catppuccin
+              ];
+            };
+            home-manager.extraSpecialArgs = { inherit inputs; };
+          }
+        ];
+      };
+
     };
   };
 }

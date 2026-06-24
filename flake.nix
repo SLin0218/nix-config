@@ -170,13 +170,13 @@
           inputs = inputs // { nixpkgs = inputs.nixpkgs-2605; };
         };
         modules = [
-          {
-            nixpkgs.pkgs = import inputs.nixpkgs-2605 {
+          ({ lib, ... }: {
+            _module.args.pkgs = lib.mkForce (import inputs.nixpkgs-2605 {
               system = "x86_64-darwin";
               config.allowUnfree = true;
               overlays = overlays;
-            };
-          }
+            });
+          })
           ./platforms/darwin/configuration.nix
           ./hosts/lins-iMac
 

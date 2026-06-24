@@ -4,6 +4,30 @@ let
 in
 {
   mkSettings = {
+
+    proxy-providers = {
+      JMS = {
+        url = "https://jmssub.net/members/getsub.php?service=${jmssub.service}&id=${jmssub.id}";
+        type = "http";
+        proxy = "DIRECT";
+        # 2 小时更新一次
+        interval = 7200;
+        health-check = {
+          enable = true;
+          url = "https://www.gstatic.com/generate_204";
+          interval = 300;
+        };
+        override = {
+          proxy-name = [
+            {
+              pattern = ".*c10s(\\d{0,3}).*";
+              target = "jms-$1";
+            }
+          ];
+        };
+      };
+    };
+
     tproxy-port = 9898;
     tun = {
       enable = false;
@@ -40,27 +64,6 @@ in
     };
 
     proxies = [ ];
-
-    proxy-providers = {
-      JMS = {
-        url = "https://jmssub.net/members/getsub.php?service=${jmssub.service}&id=${jmssub.id}";
-        type = "http";
-        interval = 86400;
-        health-check = {
-          enable = true;
-          url = "https://www.gstatic.com/generate_204";
-          interval = 300;
-        };
-        override = {
-          proxy-name = [
-            {
-              pattern = ".*c10s(\\d{0,3}).*";
-              target = "jms-$1";
-            }
-          ];
-        };
-      };
-    };
 
     dns = {
       cache-algorithm = "arc";
@@ -139,8 +142,6 @@ in
       "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
       "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"
       "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve"
-
-      "DOMAIN-SUFFIX,jmssub.net,DIRECT"
 
       "GEOIP,CN,DIRECT"
       "GEOSITE,category-ads-all,REJECT"

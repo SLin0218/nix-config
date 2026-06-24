@@ -52,6 +52,11 @@
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    darwin-2605 = {
+      url = "github:LnL7/nix-darwin/nix-darwin-26.05";
+      inputs.nixpkgs.follows = "nixpkgs-2605";
+    };
   };
 
   outputs = {
@@ -59,38 +64,38 @@
     nixpkgs,
     ...
   } @ inputs: let
-    systems = [
-      "x86_64-linux"
-      "aarch64-darwin"
-    ];
-    forAllSystems = nixpkgs.lib.genAttrs systems;
-
     # 统一管理所有的 Overlay
     overlays = [
-      (final: prev: {
-        # 1. 注入最新的 AGS
-        ags = inputs.ags.packages.${prev.stdenv.hostPlatform.system}.default;
-        joker = prev.joker.overrideAttrs (oldAttrs: {
-          # 强制 Go 使用代理下载依赖，而不是信任本地 vendor 目录
-          proxyVendor = true;
-          vendorHash = "sha256-4wPiuX3SsLAkvKevptgVAKdg7MR2QdouqiB+FKqdZPM=";
-        });
-      } // (import ./pkgs prev)) # 2. 注入本地自定义包
+      (final: prev:
+        let
+          isLinux = prev.stdenv.hostPlatform.isLinux;
+          localPkgs = import ./pkgs prev;
+
+          # Linux 专属包和重载
+          linuxOverlays = {
+            ags = if inputs.ags.packages ? ${prev.stdenv.hostPlatform.system}
+                  then inputs.ags.packages.${prev.stdenv.hostPlatform.system}.default
+                  else prev.ags or null;
+            inherit (localPkgs) lunar-javascript wechat tproxy;
+            joker = prev.joker.overrideAttrs (oldAttrs: {
+              # 强制 Go 使用代理下载依赖，而不是信任本地 vendor 目录
+              proxyVendor = true;
+              vendorHash = "sha256-4wPiuX3SsLAkvKevptgVAKdg7MR2QdouqiB+FKqdZPM=";
+            });
+          };
+
+          # 跨平台通用包和重载
+          commonOverlays = {
+            inherit (localPkgs) t;
+          };
+        in
+        commonOverlays // (if isLinux then linuxOverlays else {})
+      )
     ];
   in
   {
     # 命令行直接使用的包 (nix build .#xxx)
-    packages = forAllSystems (system:
-      let
-        pkgs = import nixpkgs {
-          inherit system overlays;
-          config.allowUnfree = true;
-        };
-      in
-      {
-        inherit (pkgs) ags lunar-javascript wechat hammerspoon;
-      }
-    );
+    packages = {};
 
     nixosConfigurations = {
       inspiron-lin = nixpkgs.lib.nixosSystem {
@@ -170,11 +175,12 @@
         ];
       };
 
-      lins-iMac = inputs.darwin.lib.darwinSystem {
+      lins-iMac = inputs.darwin-2605.lib.darwinSystem {
         specialArgs = {
           inputs = inputs // {
             nixpkgs = inputs.nixpkgs-2605;
             home-manager = inputs.home-manager-2605;
+            darwin = inputs.darwin-2605;
           };
         };
         modules = [
@@ -206,6 +212,7 @@
               inputs = inputs // {
                 nixpkgs = inputs.nixpkgs-2605;
                 home-manager = inputs.home-manager-2605;
+                darwin = inputs.darwin-2605;
               };
             };
           }

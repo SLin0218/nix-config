@@ -135,6 +135,27 @@
         "type": "github"
       }
     },
+    "darwin-2605": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-2605"
+        ]
+      },
+      "locked": {
+        "lastModified": 1781772065,
+        "narHash": "sha256-xIbRSwDB1GBAUsWsQZUjudGfAGQt3BOpsWaO/ugVa4w=",
+        "owner": "LnL7",
+        "repo": "nix-darwin",
+        "rev": "adda04f0bf4819575b1978c2f8d78401b3c2be12",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LnL7",
+        "ref": "nix-darwin-26.05",
+        "repo": "nix-darwin",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -596,6 +617,7 @@
         "astal": "astal_2",
         "catppuccin": "catppuccin",
         "darwin": "darwin",
+        "darwin-2605": "darwin-2605",
         "home-manager": "home-manager",
         "home-manager-2605": "home-manager-2605",
         "hyprland": "hyprland",

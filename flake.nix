@@ -187,7 +187,10 @@
           ({ lib, ... }: {
             _module.args.pkgs = lib.mkForce (import inputs.nixpkgs-2605 {
               system = "x86_64-darwin";
-              config.allowUnfree = true;
+              config = {
+                allowUnfree = true;
+                allowBroken = true;
+              };
               overlays = overlays;
             });
           })

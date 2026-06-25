@@ -12,8 +12,8 @@ schema:
   dependencies:
     - flypydz
 
-punctuator:
-  import_preset: default
+# punctuator:
+  # import_preset: default
 
 switches:
   - name: ascii_mode
@@ -75,7 +75,7 @@ speller:
   auto_clear: max_length #manual|auto|max_length 空码按下一键确认清屏|空码自动清|达到最长码时后码顶上清屏
 
 translator:
-  dictionary: flypy
+  dictionary: luna_pinyin
   enable_charset_filter: false
   enable_sentence: false
   enable_completion: false # 编码提示开关
@@ -87,7 +87,7 @@ history:
    input: ;f
    size: 1 #重复前几次上屏
    initial_quality: 1 #首选
-   
+
 simplification:
   opencc_config: s2tw.json
   option_name: simplification
@@ -100,7 +100,7 @@ custom_phraseVD:
   enable_sentence: false
   enable_completion: false
   initial_quality: 0 #用户词和系统词重码 置顶
-  
+
 custom_phraseXT:
   dictionary: ""
   user_dict: flypy_sys
@@ -168,7 +168,7 @@ recognizer:
 
 menu:
   page_size: 5 #候选项数
-  
+
 style:
   text_orientation: horizontal
   candidate_list_layout: linear

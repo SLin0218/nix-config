@@ -10,9 +10,9 @@ in
 
   home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink (
     if pkgs.stdenv.isAarch64 then
-      "${configDir}/rime-crane";
+      "${configDir}/rime-crane"
     else
-      "${configDir}/rime-data";
+      "${configDir}/rime-data"
   );
   home.file.".hammerspoon".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/hammerspoon";
 

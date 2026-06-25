@@ -64,13 +64,10 @@
       "pinentry-mac"
     ];
 
-    taps = [ "d12frosted/emacs-plus" ];
-
     casks = [
       "squirrel-app"
       "hammerspoon"
       "karabiner-elements"
-      "raycast"
       "antigravity-ide"
       "antigravity-cli"
       "brave-browser"

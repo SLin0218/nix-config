@@ -32,13 +32,8 @@
     ${if pkgs.stdenv.hostPlatform.system == "aarch64-darwin" then ''
     eval "$(/opt/homebrew/bin/brew shellenv)"
     '' else ""}
-    ${if pkgs.stdenv.isDarwin then ''
-    # Darwin specific zsh init code
-    export HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
-    export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
-    export HOMEBREW_PIP_INDEX_URL="https://pypi.tuna.tsinghua.edu.cn/simple"
-    '' else ""}
 
+    zstyle ':completion:*' use-cache on
     zstyle ':completion:*:descriptions' format '[%d]'
     zstyle ':completion:*' list-colors ''${(s.:.)LS_COLORS}
     zstyle ':fzf-tab:*' default-color $'\033[34m'
@@ -75,13 +70,21 @@
     completionInit = ''
       autoload -Uz compinit
 
-      # 如果 24 小时内有缓存，直接用 -C 极速加载且不检查安全性 (-u)
-      # 这能完美解决 Nix store 路径过深导致的 compinit 极慢问题
-      if [[ -n $(find ~/.zcompdump -mtime -1 2>/dev/null) ]]; then
-        compinit -C -u
-      else
+      # 使用 Zsh 原生 Glob 检查文件时间（mh+24 代表修改时间超过 24 小时）
+      # (N) 代表如果文件不存在不报错
+      _comp_files=(~/.zcompdump(N.mh+24))
+
+      if (( $#_comp_files )); then
+        # 超过 24 小时了，或者是第一次启动，执行全量刷新并检查安全性 (-u)
         compinit -u
+        # 在后台静默编译成二进制，绝不阻塞你打开新终端的速度
+        zcompile ~/.zcompdump &!
+      else
+        # 24 小时以内，直接用 -C 极速读取缓存（去掉冲突的 -u）
+        compinit -C
       fi
+
+      unset _comp_files
     '';
 
     enable = true;

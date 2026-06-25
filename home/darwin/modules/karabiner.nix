@@ -65,7 +65,7 @@ let
       { key = "s"; app = "System Preferences"; }
       { key = "u"; app = "WeChat"; }
       { key = "o"; app = "企业微信"; }
-      { key = "n"; app = "IntelliJ IDEA Ultimate"; }
+      { key = "n"; app = "IntelliJ IDEA"; }
       { key = "m"; app = "Emacs"; }
       { key = "b"; app = "wpsoffice"; }
     ];

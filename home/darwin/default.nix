@@ -8,7 +8,12 @@ in
     ./modules/karabiner.nix
   ];
 
-  home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/rime-data";
+  home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink (
+    if pkgs.stdenv.isAarch64 then
+      "${configDir}/rime-crane";
+    else
+      "${configDir}/rime-data";
+  );
   home.file.".hammerspoon".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/hammerspoon";
 
   home = {

@@ -7,7 +7,7 @@
   homebrew = {
     casks = [
       "android-studio"
-      "hiddenbar"
+      "stats"
     ];
   };
 }

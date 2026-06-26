@@ -8,6 +8,8 @@ jmssub
 *.userdb/
 **/tmp/
 sync/
-build/
+
+config/rime-data/build/**
+
 installation.yaml
 user.yaml

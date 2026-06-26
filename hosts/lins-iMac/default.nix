@@ -1,6 +1,7 @@
 { pkgs, ... }:
 
 {
+  imports = [ ./modules/mihomo.nix ];
   networking.hostName = "lins-iMac";
   nixpkgs.hostPlatform = "x86_64-darwin";
 

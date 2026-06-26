@@ -1,26 +1,6 @@
 { config, pkgs, lib, ... }:
 
-let
-  mihomo-common = import ../../mihomo-common.nix { inherit lib; };
-  # 生成带有占位符的 JSON 模板（这个文件在 Nix Store 里，是只读的）
-  settings = lib.recursiveUpdate (mihomo-common.mkSettings) {
-    tun.enable = true;
-    proxies = [
-      {
-        name = "TW";
-        type = "http";
-        server = "192.168.1.100";
-        port = 8888;
-      }
-    ] ++ mihomo-common.mkSettings.proxies;
-    rules = [ "IP-CIDR,172.16.90.0/24,TW" ] ++ mihomo-common.mkSettings.rules;
-  };
-  yamlFormat = pkgs.formats.yaml { };
-  mihomoConfig = yamlFormat.generate "mihomo-config.yaml" settings;
-in
 {
-  environment.etc."mihomo/config.yaml".source = mihomoConfig;
-
   launchd.daemons.mihomo = {
     serviceConfig = {
       ProgramArguments = [
@@ -28,11 +8,12 @@ in
         "-d"
         "/etc/mihomo/"
       ];
-      KeepAlive = true;
+      KeepAlive = {
+        NetworkState = true;
+      };
       RunAtLoad = true;
       StandardOutPath = "/var/log/mihomo/info.log";
       StandardErrorPath = "/var/log/mihomo/error.log";
     };
   };
-
 }

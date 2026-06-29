@@ -62,6 +62,7 @@
       "librime"
       "d12frosted/emacs-plus/emacs-plus"
       "pinentry-mac"
+      "openvpn"
     ];
 
     casks = [
@@ -72,6 +73,7 @@
       "antigravity-cli"
       "brave-browser"
       "windows-app"
+      "readdle-spark"
     ];
   };
 

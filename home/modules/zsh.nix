@@ -134,6 +134,7 @@
       gbr    = "git br";
       gcl    = "git clone";
       grv    = "git remote --verbose";
+      ssh    = "kitty +kitten ssh";
 
       datetime = "date '+%Y-%m-%d %H:%M:%S'";
 

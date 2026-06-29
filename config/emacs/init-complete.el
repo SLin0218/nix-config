@@ -8,18 +8,15 @@
 (use-package lua-mode)
 (use-package yaml-mode)
 
-(use-package tree-sitter
-  :hook
-  (lua-mode . tree-sitter-mode)
-  (lua-mode . tree-sitter-hl-mode)
-  (yaml-mode . tree-sitter-mode)
-  (yaml-mode . tree-sitter-hl-mode)
-  (java-mode . tree-sitter-mode)
-  (java-mode . tree-sitter-hl-mode)
-  :config
-  (require 'tree-sitter-langs))
 
-(use-package tree-sitter-langs)
+(use-package treesit-auto
+  :ensure t
+  :custom
+  ;; 第一次打开某种语言文件时，会弹窗提示是否自动下载该语言的 Tree-sitter 驱动，输入 y 即可
+  (treesit-auto-install 'prompt)
+  :config
+  ;; 自动将传统的主模式（如 java-mode）重定向到内置的原生 ts 模式（如 java-ts-mode）
+  (treesit-auto-add-to-alist))
 
 (use-package yasnippet
   :config

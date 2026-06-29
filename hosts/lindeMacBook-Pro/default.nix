@@ -9,6 +9,7 @@
     casks = [
       "android-studio"
       "stats"
+      "steam"
     ];
   };
 }

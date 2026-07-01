@@ -8,6 +8,12 @@
     (setq undo-tree-history-directory-alist `(("." . ,hist-dir))
           undo-tree-auto-save-history t)))
 
+(use-package exec-path-from-shell
+  :ensure t
+  ; 仅在图形界面下生效
+  :if (memq window-system '(mac ns x pgtk))
+  :config
+  (exec-path-from-shell-copy-envs '("SSH_AUTH_SOCK" "GPG_TTY")))
 
 (setq auto-save-default nil)    ;关闭自动保存
 (setq create-lockfiles nil)     ;关闭锁文件

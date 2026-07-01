@@ -6,6 +6,10 @@
   nixpkgs.hostPlatform = "aarch64-darwin";
 
   homebrew = {
+    brews = [
+      "jadx"
+    ];
+
     casks = [
       "android-studio"
       "stats"

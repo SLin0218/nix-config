@@ -69,7 +69,7 @@
 
     brews = [
       "librime"
-      # "d12frosted/emacs-plus/emacs-plus"
+      "d12frosted/emacs-plus/emacs-plus@30"
       "pinentry-mac"
       "openvpn"
     ];

@@ -60,10 +60,7 @@
 
       nix_shell = {
         disabled = false;
-        format = "[$symbol$state( ($name))]($style)";
-        impure_msg = "[impure](bold red)";
-        pure_msg = "[pure](bold green)";
-        unknown_msg = "[unknown](bold yellow)";
+        format = "[$symbol($name)]($style) ";
         symbol = "☃️ ";
       };
     };

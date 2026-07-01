@@ -7,7 +7,6 @@
 
   homebrew = {
     brews = [
-      "jadx"
     ];
 
     casks = [

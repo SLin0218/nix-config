@@ -8,7 +8,7 @@
     settings = {
       add_newline = false;
 
-      format = "$username$hostname$directory$git_branch$git_state$git_status$cmd_duration$line_break$python$character";
+      format = "$username$hostname$directory$git_branch$git_state$git_status$cmd_duration$java$nix_shell$line_break$python$character";
 
       directory = {
         style = "blue";
@@ -52,6 +52,19 @@
         style = "bright-black";
         detect_extensions = [ ];
         detect_files = [ ];
+      };
+
+      java = {
+        format = "[$symbol($version )]($style)";
+      };
+
+      nix_shell = {
+        disabled = false;
+        format = "[$symbol$state( ($name))]($style)";
+        impure_msg = "[impure](bold red)";
+        pure_msg = "[pure](bold green)";
+        unknown_msg = "[unknown](bold yellow)";
+        symbol = "☃️ ";
       };
     };
   };

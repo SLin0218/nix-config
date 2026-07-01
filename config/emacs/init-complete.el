@@ -16,7 +16,7 @@
   (treesit-auto-install 'prompt)
   :config
   ;; 自动将传统的主模式（如 java-mode）重定向到内置的原生 ts 模式（如 java-ts-mode）
-  (treesit-auto-add-to-alist))
+  (global-treesit-auto-mode))
 
 (use-package yasnippet
   :config

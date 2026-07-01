@@ -44,6 +44,7 @@
 
 ;项目管理
 (use-package projectile
+  :ensure t
   :init
   (projectile-mode +1)
   :config
@@ -51,10 +52,14 @@
 
 
 ;;git相关
-(use-package magit)
+(use-package magit
+  :ensure t)
 (use-package diff-hl
+  :ensure t
   :config
+  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
   (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+  (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
   (global-diff-hl-mode))
 
 ;;高亮光标处相同变量

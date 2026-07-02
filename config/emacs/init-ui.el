@@ -13,7 +13,7 @@
 
 (defvar slin/font-size 12)
 (defvar slin/font-family "JetBrainsMono Nerd Font Mono")
-(defvar slin/font-family-cjk "LXGW WenKai Mono")
+(defvar slin/font-family-cjk "Maple Mono NF CN")
 
 (cond ((eq system-type 'darwin) (setq slin/font-size 16)))
 

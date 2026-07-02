@@ -50,7 +50,7 @@
   # Fonts managed by Nix
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
-    lxgw-wenkai
+    maple-mono.NF-CN-unhinted
   ];
 
   # Add ability to used TouchID for sudo authentication
@@ -86,7 +86,7 @@
       "brave-browser"
       "windows-app"
       "readdle-spark"
-      "emacs-app"
+      "emacs-plus-app"
     ];
   };
 

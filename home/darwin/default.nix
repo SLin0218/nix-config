@@ -5,8 +5,8 @@
     ./modules/karabiner.nix
   ];
 
-  home.file."/Library/Rime".source = ../../config/rime-crane;
-  home.file.".hammerspoon".source = config.lib.file.mkOutOfStoreSymlink ../../config/hammerspoon;
+  home.file.".hammerspoon".source = ../../config/hammerspoon;
+  home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-crane";
 
   home = {
     homeDirectory = "/Users/lin";

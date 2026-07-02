@@ -66,26 +66,26 @@
   (load-theme 'catppuccin :no-confirm))
 
 ;; 启动仪表盘
-(use-package dashboard
-  :init
-  (setq dashboard-center-content t)
-  (setq dashboard-vertically-center-content t)
-  :custom
-  (dashboard-footer-messages '(""))
-  :config
-  (dashboard-setup-startup-hook)
-  (setq dashboard-display-icons-p t)
-  (setq dashboard-icon-type 'nerd-icons)
-  (setq dashboard-set-heading-icons t)
-  (setq dashboard-set-file-icons t)
-  (dashboard-modify-heading-icons '((recents   . "nf-oct-file")
-                                    (bookmarks . "nf-oct-bookmark")
-                                    (projects  . "nf-oct-project")
-                                    (agenda    . "nf-oct-tasklist")))
-  (setq dashboard-items '((recents   . 15)
-                          (bookmarks .  5)
-                          (projects  .  5)
-                          (agenda    .  5))))
+;; (use-package dashboard
+;;   :init
+;;   (setq dashboard-center-content t)
+;;   (setq dashboard-vertically-center-content t)
+;;   :custom
+;;   (dashboard-footer-messages '(""))
+;;   :config
+;;   (dashboard-setup-startup-hook)
+;;   (setq dashboard-display-icons-p t)
+;;   (setq dashboard-icon-type 'nerd-icons)
+;;   (setq dashboard-set-heading-icons t)
+;;   (setq dashboard-set-file-icons t)
+;;   (dashboard-modify-heading-icons '((recents   . "nf-oct-file")
+;;                                     (bookmarks . "nf-oct-bookmark")
+;;                                     (projects  . "nf-oct-project")
+;;                                     (agenda    . "nf-oct-tasklist")))
+;;   (setq dashboard-items '((recents   . 15)
+;;                           (bookmarks .  5)
+;;                           (projects  .  5)
+;;                           (agenda    .  5))))
 
 ;; 标签栏
 (use-package awesome-tab

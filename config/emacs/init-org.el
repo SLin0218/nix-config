@@ -54,18 +54,21 @@
         '((sequence "TODO(t)" "NEXT(n)" "ACTIVITY(a)" "WAITING(w@/!)" "|" "DONE(d!)" "CANCELED(c@)")))
   (setq org-log-done 'time)
   (setq org-log-into-drawer t)     ; 日志放入 LOGBOOK drawer，保持整洁
-  (setq org-modern-todo-faces '(("TODO"     . (:foreground "#bd93f9" :background "#44475a" :height 1.3))
-                                ("NEXT"     . (:foreground "#ffb86c" :background "#44475a" :height 1.3 :weight bold))
-                                ("ACTIVITY" . (:foreground "#ff79c6" :background "#44475a" :height 1.3 :weight bold))
-                                ("WAITING"  . (:foreground "#8be9fd" :background "#44475a" :height 1.3))
-                                ("DONE"     . (:foreground "#50fa7b" :background "#44475a" :height 1.3))
-                                ("CANCELED" . (:foreground "#6272a4" :background "#44475a" :height 1.3 :strike-through t))))
-  (setq org-todo-keyword-faces '(("TODO"     . (:foreground "#bd93f9" :background "#44475a"))
-                                 ("NEXT"     . (:foreground "#ffb86c" :background "#44475a" :weight bold))
-                                 ("ACTIVITY" . (:foreground "#ff79c6" :background "#44475a" :weight bold))
-                                 ("WAITING"  . (:foreground "#8be9fd" :background "#44475a"))
-                                 ("DONE"     . (:foreground "#50fa7b" :background "#44475a"))
-                                 ("CANCELED" . (:foreground "#6272a4" :background "#44475a" :strike-through t))))
+
+  (setq org-modern-todo-faces
+      '(("TODO"     . (:foreground "#bd93f9" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil)))
+        ("NEXT"     . (:foreground "#ffb86c" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil) :weight bold))
+        ("ACTIVITY" . (:foreground "#ff79c6" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil) :weight bold))
+        ("WAITING"  . (:foreground "#8be9fd" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil)))
+        ("DONE"     . (:foreground "#50fa7b" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil)))
+        ("CANCELED" . (:foreground "#6272a4" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil) :strike-through t ))))
+
+  ;; (setq org-todo-keyword-faces '(("TODO"     . (:foreground "#bd93f9" :background "#44475a"))
+  ;;                                ("NEXT"     . (:foreground "#ffb86c" :background "#44475a" :weight bold))
+  ;;                                ("ACTIVITY" . (:foreground "#ff79c6" :background "#44475a" :weight bold))
+  ;;                                ("WAITING"  . (:foreground "#8be9fd" :background "#44475a"))
+  ;;                                ("DONE"     . (:foreground "#50fa7b" :background "#44475a"))
+  ;;                                ("CANCELED" . (:foreground "#6272a4" :background "#44475a" :strike-through t))))
 
   ;;latex 相关配置
   (setq org-latex-pdf-process

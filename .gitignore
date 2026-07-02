@@ -3,7 +3,3 @@ config/ags/@girs/
 .DS_store
 **/lazy-lock.json
 jmssub
-
-# rime
-*.userdb/
-**/tmp/

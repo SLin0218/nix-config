@@ -69,7 +69,6 @@
 
     brews = [
       "librime"
-      "d12frosted/emacs-plus/emacs-plus@32"
       "pinentry-mac"
       "openvpn"
     ];
@@ -87,6 +86,7 @@
       "brave-browser"
       "windows-app"
       "readdle-spark"
+      "emacs-app"
     ];
   };
 

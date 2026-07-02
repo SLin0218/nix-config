@@ -273,7 +273,6 @@
 
 
 (use-package org-roam
-  :ensure t
   :custom
   (org-roam-directory (file-truename "~/org/docs"))
   (org-roam-db-location (file-truename (expand-file-name "org-roam.db" "~/org/docs")))

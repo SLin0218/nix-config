@@ -89,6 +89,9 @@
 
 ;; 标签栏
 (use-package awesome-tab
+  :load-path "~/.config/slin-emacs/site-lisp/awesome-tab"
+  :init
+  (setq lexical-binding t)
   :ensure nil
   :config
   (setq awesome-tab-height (* slin/font-size 10))

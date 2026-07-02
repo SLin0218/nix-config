@@ -8,5 +8,5 @@
   ignore = untracked
 [submodule "config/rime-crane"]
 	path = config/rime-crane
-	url = https://github.com/kchen0x/rime-crane.git
+	url = https://github.com/SLin0218/rime-crane
   ignore = untracked

@@ -11,7 +11,6 @@
           undo-tree-auto-save-history t)))
 
 (use-package exec-path-from-shell
-  :ensure t
   ; 仅在图形界面下生效
   :if (memq window-system '(mac ns x pgtk))
   :config
@@ -50,7 +49,6 @@
 
 ;项目管理
 (use-package projectile
-  :ensure t
   :init
   (projectile-mode +1)
   :config
@@ -58,10 +56,8 @@
 
 
 ;;git相关
-(use-package magit
-  :ensure t)
+(use-package magit)
 (use-package diff-hl
-  :ensure t
   :config
   (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
   (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)

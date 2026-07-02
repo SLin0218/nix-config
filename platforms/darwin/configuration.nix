@@ -74,6 +74,10 @@
       "openvpn"
     ];
 
+    taps = [
+      "d12frosted/emacs-plus"
+    ];
+
     casks = [
       "squirrel-app"
       "hammerspoon"

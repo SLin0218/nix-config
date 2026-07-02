@@ -7,16 +7,3 @@ jmssub
 # rime
 *.userdb/
 **/tmp/
-sync/
-
-config/rime-data/build/default.yaml
-config/rime-data/build/flypy.schema.yaml
-config/rime-data/build/flypydz.prism.bin
-config/rime-data/build/flypydz.reverse.bin
-config/rime-data/build/flypydz.schema.yaml
-config/rime-data/build/flypydz.table.bin
-config/rime-data/build/luna_pinyin.prism.bin
-config/rime-data/build/squirrel.yaml
-
-installation.yaml
-user.yaml

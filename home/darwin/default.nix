@@ -1,20 +1,12 @@
 { inputs, lib, config, pkgs, ... }:
-let
-  configDir = "${config.home.homeDirectory}/.config/nix-config/config/";
-in
 {
   imports = [
     ../common.nix
     ./modules/karabiner.nix
   ];
 
-  home.file."/Library/Rime".source = config.lib.file.mkOutOfStoreSymlink (
-    if pkgs.stdenv.isAarch64 then
-      "${configDir}/rime-crane"
-    else
-      "${configDir}/rime-data"
-  );
-  home.file.".hammerspoon".source = config.lib.file.mkOutOfStoreSymlink "${configDir}/hammerspoon";
+  home.file."/Library/Rime".source = ../../config/rime-crane;
+  home.file.".hammerspoon".source = config.lib.file.mkOutOfStoreSymlink ../../config/hammerspoon;
 
   home = {
     homeDirectory = "/Users/lin";
@@ -22,11 +14,11 @@ in
 
   home.sessionVariables = {
     __ETC_ZSHRC_SOURCED = 1;
-    HOMEBREW_BREW_GIT_REMOTE  = "https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git";
-    HOMEBREW_CORE_GIT_REMOTE  = "https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git";
-    HOMEBREW_API_DOMAIN       = "https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api";
-    HOMEBREW_BOTTLE_DOMAIN    = "https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles";
-    HOMEBREW_PIP_INDEX_URL    = "https://pypi.tuna.tsinghua.edu.cn/simple";
+    # HOMEBREW_BREW_GIT_REMOTE  = "https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git";
+    # HOMEBREW_CORE_GIT_REMOTE  = "https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git";
+    # HOMEBREW_API_DOMAIN       = "https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api";
+    # HOMEBREW_BOTTLE_DOMAIN    = "https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles";
+    # HOMEBREW_PIP_INDEX_URL    = "https://pypi.tuna.tsinghua.edu.cn/simple";
     HOMEBREW_INSTALL_CLEANUP  = 1;
     HOMEBREW_INSTALL_FROM_API = 1;
   };

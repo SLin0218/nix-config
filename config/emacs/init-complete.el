@@ -11,7 +11,6 @@
 
 
 (use-package treesit-auto
-  :ensure t
   :custom
   ;; 第一次打开某种语言文件时，会弹窗提示是否自动下载该语言的 Tree-sitter 驱动，输入 y 即可
   (treesit-auto-install 'prompt)
@@ -24,8 +23,10 @@
   (yas-global-mode 1))
 
 (use-package lsp-bridge
+  :load-path "~/.config/slin-emacs/site-lisp/lsp-bridge"
   :ensure nil
   :init
+  (setq lexical-binding t)
   (setq lsp-bridge-jdtls-workspace-exclude
         '("target" "build" "node_modules" ".gradle"))
   (setq lsp-bridge-jdtls-auto-build nil)

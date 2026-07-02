@@ -17,6 +17,16 @@ let
         modifiers = [ "right_command" "right_control" "right_option" ];
       }];
       to_if_alone = [{ key_code = "escape"; }];
+    }
+    {
+      type = "basic";
+      from = {
+        key_code = "escape";
+        modifiers.optional = [ "any" ];
+      };
+      to = [{
+        key_code = "caps_lock";
+      }];
     }];
   };
 

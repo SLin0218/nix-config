@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (when (display-graphic-p)
   ;禁用滚动条
   (scroll-bar-mode -1)

@@ -1,4 +1,5 @@
-;(defconst user-emacs-cache-directory (expand-file-name ".cache" user-emacs-directory))             ;缓存文件存放位置 存放临时文件
+;; -*- lexical-binding: t; -*-
+                                        ;(defconst user-emacs-cache-directory (expand-file-name ".cache" user-emacs-directory))             ;缓存文件存放位置 存放临时文件
 ;(setq recentf-save-file (expand-file-name "recentf" user-emacs-cache-directory))                   ;最近打开文件 存放位置
 ;(setq savehist-file (expand-file-name "history" user-emacs-cache-directory))                       ;savehist文件位置
 ;(setq auto-save-list-file-prefix (expand-file-name "auto-save-list" user-emacs-cache-directory))   ;自动保存文件目录

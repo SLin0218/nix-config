@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 ;;撤销 重新打开文件时记住之前改动
 (use-package undo-tree
   :init
@@ -13,7 +15,11 @@
   ; 仅在图形界面下生效
   :if (memq window-system '(mac ns x pgtk))
   :config
-  (exec-path-from-shell-copy-envs '("SSH_AUTH_SOCK" "GPG_TTY")))
+  (exec-path-from-shell-initialize)
+  (exec-path-from-shell-copy-envs '("SSH_AUTH_SOCK" "GPG_TTY"))
+  ;; 重新把 my-paths 加回去，防止被覆盖并且保证优先级
+  (setenv "PATH" (concat my-paths-join ":" (getenv "PATH")))
+  (setq exec-path (append (mapcar #'expand-file-name my-paths) exec-path)))
 
 (setq auto-save-default nil)    ;关闭自动保存
 (setq create-lockfiles nil)     ;关闭锁文件

@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 ;;vim键位
 (use-package evil
   :custom

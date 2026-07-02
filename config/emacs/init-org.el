@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (setq org-agenda-files (list (expand-file-name "~/org/agenda/")))
 
 (with-eval-after-load 'org

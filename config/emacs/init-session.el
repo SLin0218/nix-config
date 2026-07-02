@@ -60,7 +60,9 @@
   (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
   (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
   (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
-  (global-diff-hl-mode))
+  (global-diff-hl-mode)
+  (diff-hl-margin-mode
+))
 
 ;;高亮光标处相同变量
 (use-package symbol-overlay

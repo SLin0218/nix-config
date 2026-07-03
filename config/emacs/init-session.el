@@ -18,7 +18,7 @@
           undo-tree-auto-save-history t)))
 
 (use-package exec-path-from-shell
-  :if (memq system-type '(darwin))  ; macOS 系统下总是生效，即使在 daemon 模式下
+  :if (and (memq system-type '(darwin)) (display-graphic-p))  ; 仅在 GUI 模式下生效，避免终端/非交互模式下启动慢
   :config
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-envs '("SSH_AUTH_SOCK" "GPG_TTY"))
@@ -62,16 +62,14 @@
   (if (string-equal system-type "darwin") (delete "WORKSPACE" projectile-project-root-files)))
 
 
-;;git相关
-(use-package magit)
+(use-package magit
+  :defer t)
 (use-package diff-hl
+  :hook ((prog-mode text-mode dired-mode) . diff-hl-mode)
   :config
   (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
   (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
-  (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
-  (global-diff-hl-mode)
-  (diff-hl-margin-mode
-   ))
+  (diff-hl-margin-mode))
 
 ;;高亮光标处相同变量
 (use-package symbol-overlay

@@ -42,7 +42,10 @@
 (require 'init-session)
 (require 'init-dired)
 (require 'init-complete)
-(require 'init-org)
+;; 自动启动 Emacs 服务，以便后续使用 emacsclient 瞬间打开文件
+(require 'server)
+(unless (server-running-p)
+  (server-start))
 
 (provide 'slin-emacs)
 ;;; slin-emacs.el ends here

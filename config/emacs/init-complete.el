@@ -30,7 +30,7 @@
                                                     (not (string-prefix-p "magit" name)))))))))))
 
   (defvar consult-source-temp-buffer
-    `(:name "System Buffers"
+    `(:name "System/Temp Buffers"
             :narrow ?s
             :category buffer
             :face consult-buffer
@@ -45,14 +45,18 @@
                                       (and (not (string-prefix-p " " name))
                                            (not (buffer-file-name buf))
                                            (or (string-prefix-p "*" name)
-                                               (string-prefix-p "magit" name))))))))))
+                                               (string-prefix-p "magit" name)))))))))
 
-(setq consult-buffer-sources
-      (append
-       '(consult-source-file-buffer
-         consult-source-temp-buffer)
-       (delq 'consult-source-recent-file
-             (delq 'consult-source-buffer consult-buffer-sources))))
+  (setq consult-buffer-sources
+        (append
+         '(consult-source-file-buffer
+           consult-source-temp-buffer)
+         (delq 'consult-source-recent-file
+               (delq 'consult-source-buffer consult-buffer-sources))))
+
+  (consult-customize
+   consult-ripgrep consult-git-grep consult-grep
+   consult-find consult-locate))
 
 (use-package orderless
   :config
@@ -63,8 +67,8 @@
         completion-category-overrides '((eglot (styles orderless basic))
                                         (file (styles partial-completion)))))
 
-(use-package lua-mode)
-(use-package yaml-mode)
+(use-package lua-mode :defer t)
+(use-package yaml-mode :defer t)
 
 
 (use-package treesit-auto
@@ -72,8 +76,9 @@
   ;; 第一次打开某种语言文件时，会弹窗提示是否自动下载该语言的 Tree-sitter 驱动，输入 y 即可
   (treesit-auto-install 'prompt)
   :config
-  ;; 自动将传统的主模式（如 java-mode）重定向到内置的原生 ts 模式（如 java-ts-mode）
-  (global-treesit-auto-mode))
+  ;; 避免使用在每次打开文件时全局扫描所有语言（导致打开文件慢）的 global-treesit-auto-mode。
+  ;; 改为在启动时一次性构建并设置内置的 major-mode-remap-alist，实现 0 延迟打开文件。
+  (setq major-mode-remap-alist (treesit-auto--build-major-mode-remap-alist)))
 
 (use-package yasnippet
   :config
@@ -178,9 +183,9 @@
   :config
   (apheleia-global-mode +1))
 
-(use-package markdown-mode)
+(use-package markdown-mode :defer t)
 
-(use-package nix-mode)
+(use-package nix-mode :defer t)
 
 ;; 开启 Emacs Lisp 的实时语法与错误检查（不用 LSP 也能画红线报错）
 (add-hook 'emacs-lisp-mode-hook #'flymake-mode)

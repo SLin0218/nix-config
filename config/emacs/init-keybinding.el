@@ -34,6 +34,9 @@
   (evil-define-key 'normal 'global (kbd "<leader>bk") 'kill-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bx") 'kill-current-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bs") 'save-buffer)
+  ;;搜索操作 (Fuzzy Search)
+  (evil-define-key 'normal 'global (kbd "<leader>sp") 'consult-ripgrep)
+  (evil-define-key 'normal 'global (kbd "<leader>ss") 'consult-line)
   ;;jump
   (evil-define-key 'normal 'global (kbd "<leader>kk") 'evil-avy-goto-line-above)
   (evil-define-key 'normal 'global (kbd "<leader>jj") 'evil-avy-goto-line-below)

@@ -24,6 +24,7 @@
     jq
     nixd
     nixfmt-rfc-style
+    ripgrep
     nodejs
     pnpm
     delta

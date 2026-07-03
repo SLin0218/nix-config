@@ -139,8 +139,8 @@
   (colorful-use-prefix t)
   (colorful-only-strings 'only-prog)
   (css-fontify-colors nil)
+  :hook ((css-mode html-mode emacs-lisp-mode) . colorful-mode)
   :config
-  (global-colorful-mode t)
   (add-to-list 'global-colorful-modes 'helpful-mode))
 
 (provide 'init-ui)

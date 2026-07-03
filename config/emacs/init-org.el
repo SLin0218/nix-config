@@ -193,8 +193,9 @@
 
 
 (use-package org-super-agenda
+  :commands org-super-agenda-mode
+  :hook (org-agenda-mode . org-super-agenda-mode)
   :config
-  (org-super-agenda-mode)
   (setq spacemacs-theme-org-agenda-height nil
         org-agenda-time-grid '((daily today require-timed) (600 1200 1800) " ···· " "---------------------")
         ;; org-agenda-time-grid '((daily) () "" "")
@@ -269,6 +270,7 @@
 (add-hook 'org-agenda-finalize-hook #'slin/close-empty-diary)
 
 (use-package cal-china-x
+  :after calendar
   :config
   (setq calendar-mark-holidays-flag t)
   (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
@@ -293,9 +295,13 @@
   (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode))
 
-(use-package org-roam-ui)
+(use-package org-roam-ui
+  :after org-roam)
 
-(use-package org-roam-bibtex)
+(use-package org-roam-bibtex
+  :after org-roam
+  :config
+  (org-roam-bibtex-mode +1))
 
 (provide 'init-org)
 ;;; init-org.el ends here

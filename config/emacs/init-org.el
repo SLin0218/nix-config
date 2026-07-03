@@ -3,13 +3,18 @@
 (setq org-agenda-files (list (expand-file-name "~/org/agenda/")))
 
 (with-eval-after-load 'org
-  (set-face-attribute 'org-level-1 nil :weight 'bold :height 1.25 :foreground "#ff6b6b")
-  (let ((colors '("#ffb86c" "#4ecdc4" "#a0c4ff" "#8be9fd" "#ffd6a5" "#ffadad")))
+  ;; 1. 标题层级保留彩虹前景色，供前面的 * 号（层级标识）和无 TODO 标题使用
+  (set-face-attribute 'org-level-1 nil :weight 'bold :height 1.25 :foreground (catppuccin-color 'red))
+  (let ((colors (list (catppuccin-color 'peach)
+                      (catppuccin-color 'yellow)
+                      (catppuccin-color 'green)
+                      (catppuccin-color 'blue)
+                      (catppuccin-color 'mauve))))
     (dolist (i (number-sequence 2 6))
       (set-face-attribute (intern (format "org-level-%d" i)) nil
 			  :weight 'bold
 			  :height (- 1.15 (* 0.03 (- i 2)))
-			  :foreground (nth (1- i) colors))))
+			  :foreground (nth (- i 2) colors))))
 
   ;开启标题缩进
   (setq org-startup-indented t)
@@ -56,19 +61,12 @@
   (setq org-log-into-drawer t)     ; 日志放入 LOGBOOK drawer，保持整洁
 
   (setq org-modern-todo-faces
-      '(("TODO"     . (:foreground "#bd93f9" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil)))
-        ("NEXT"     . (:foreground "#ffb86c" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil) :weight bold))
-        ("ACTIVITY" . (:foreground "#ff79c6" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil) :weight bold))
-        ("WAITING"  . (:foreground "#8be9fd" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil)))
-        ("DONE"     . (:foreground "#50fa7b" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil)))
-        ("CANCELED" . (:foreground "#6272a4" :background "#44475a" :height 1.2 :box (:line-width (0 . 1) :color "#1e1e2e" :style nil) :strike-through t ))))
-
-  ;; (setq org-todo-keyword-faces '(("TODO"     . (:foreground "#bd93f9" :background "#44475a"))
-  ;;                                ("NEXT"     . (:foreground "#ffb86c" :background "#44475a" :weight bold))
-  ;;                                ("ACTIVITY" . (:foreground "#ff79c6" :background "#44475a" :weight bold))
-  ;;                                ("WAITING"  . (:foreground "#8be9fd" :background "#44475a"))
-  ;;                                ("DONE"     . (:foreground "#50fa7b" :background "#44475a"))
-  ;;                                ("CANCELED" . (:foreground "#6272a4" :background "#44475a" :strike-through t))))
+      `(("TODO"     . (:foreground ,(catppuccin-color 'mauve)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
+        ("NEXT"     . (:foreground ,(catppuccin-color 'peach)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :weight bold))
+        ("ACTIVITY" . (:foreground ,(catppuccin-color 'red)      :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :weight bold))
+        ("WAITING"  . (:foreground ,(catppuccin-color 'sapphire) :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
+        ("DONE"     . (:foreground ,(catppuccin-color 'green)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
+        ("CANCELED" . (:foreground ,(catppuccin-color 'surface2) :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :strike-through t ))))
 
   ;;latex 相关配置
   (setq org-latex-pdf-process
@@ -233,7 +231,7 @@
                            ))))
             (alltodo "" ((org-agenda-overriding-header "")
                          (org-super-agenda-groups
-                          '((:name " Next to do"
+                          `((:name " Next to do"
                                    :todo "NEXT"
                                    :order 2)
                             (:name " Important"
@@ -245,12 +243,12 @@
                                    :order 1)
                             (:name " Due Soon"
                                    :deadline future
-                                   :face (:foreground "#f1fa8c")
+                                   :face (:foreground (catppuccin-color 'yellow))
                                    :order 10)
                             (:name "󰜡 Overdue"
                                    :deadline past
                                    :and(:not (:todo "DONE") :scheduled past)
-                                   :face (:foreground "#ff5555")
+                                   :face (:foreground (catppuccin-color 'red))
                                    :order 3)
                             (:discard (:anything t))
                             ))))))))

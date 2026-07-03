@@ -72,16 +72,6 @@
   (setq awesome-tab-cycle-scope 'tabs)
   (setq awesome-tab-dark-active-bar-color (catppuccin-color 'base))
   (setq awesome-tab-dark-selected-foreground-color (catppuccin-color 'teal))
-  (if (daemonp)
-      (add-hook 'after-make-frame-functions
-                (lambda (frame)
-                  (with-selected-frame frame
-                    (unless (display-graphic-p frame)
-                      (setq awesome-tab-display-icon nil)
-                      (setq frame-background-mode 'dark)))))
-    (when (not (display-graphic-p))
-      (setq awesome-tab-display-icon nil)
-      (setq frame-background-mode 'dark)))
   (defun awesome-tab-hide-tab (x)
     (let ((name (format "%s" x)))
       (or

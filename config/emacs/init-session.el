@@ -73,4 +73,7 @@
   ("M-n" . symbol-overlay-jump-next)
   ("M-p" . symbol-overlay-jump-prev))
 
+;; 记住上次打开文件时的光标位置
+(save-place-mode 1)
+
 (provide 'init-session)

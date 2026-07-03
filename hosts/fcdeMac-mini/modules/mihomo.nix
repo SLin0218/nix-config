@@ -1,7 +1,7 @@
-{ config, pkgs, lib, ... }:
+{ pkgs, lib, ... }:
 
 let
-  mihomo-common = import  ../../../platforms/mihomo-common.nix { inherit lib; };
+  mihomo-common = import ../../../platforms/mihomo-common.nix { inherit lib; };
   settings = lib.recursiveUpdate (mihomo-common.mkSettings) {
     tun.enable = true;
     proxies = [
@@ -11,7 +11,8 @@ let
         server = "192.168.1.100";
         port = 8888;
       }
-    ] ++ mihomo-common.mkSettings.proxies;
+    ]
+    ++ mihomo-common.mkSettings.proxies;
     rules = [ "IP-CIDR,172.16.90.0/24,TW" ] ++ mihomo-common.mkSettings.rules;
   };
   yamlFormat = pkgs.formats.yaml { };

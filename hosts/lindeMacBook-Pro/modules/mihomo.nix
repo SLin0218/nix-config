@@ -1,7 +1,7 @@
-{ config, pkgs, lib, ... }:
+{ pkgs, lib, ... }:
 
 let
-  mihomo-common = import  ../../../platforms/mihomo-common.nix { inherit lib; };
+  mihomo-common = import ../../../platforms/mihomo-common.nix { inherit lib; };
   settings = lib.recursiveUpdate (mihomo-common.mkSettings) {
     tun.enable = true;
   };

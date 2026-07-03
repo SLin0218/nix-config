@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ ... }:
 {
 
   services.mpd = {
@@ -15,16 +15,52 @@
   programs.ncmpcpp = {
     enable = true;
     bindings = [
-      { key = "9"; command = "show_help"; }
-      { key = "D"; command = "delete_playlist_items"; }
-      { key = "D"; command = "delete_browser_items"; }
-      { key = "D"; command = "delete_stored_playlist"; }
-      { key = "k"; command = "scroll_up"; }
-      { key = "K"; command = [ "select_item" "scroll_up" ]; }
-      { key = "j"; command = "scroll_down"; }
-      { key = "J"; command = [ "select_item" "scroll_down" ]; }
-      { key = "n"; command = "next_found_item"; }
-      { key = "N"; command = "previous_found_item"; }
+      {
+        key = "9";
+        command = "show_help";
+      }
+      {
+        key = "D";
+        command = "delete_playlist_items";
+      }
+      {
+        key = "D";
+        command = "delete_browser_items";
+      }
+      {
+        key = "D";
+        command = "delete_stored_playlist";
+      }
+      {
+        key = "k";
+        command = "scroll_up";
+      }
+      {
+        key = "K";
+        command = [
+          "select_item"
+          "scroll_up"
+        ];
+      }
+      {
+        key = "j";
+        command = "scroll_down";
+      }
+      {
+        key = "J";
+        command = [
+          "select_item"
+          "scroll_down"
+        ];
+      }
+      {
+        key = "n";
+        command = "next_found_item";
+      }
+      {
+        key = "N";
+        command = "previous_found_item";
+      }
     ];
 
     settings = {
@@ -61,7 +97,7 @@
       alternative_header_first_line_format = "$b$5«$/b$5« $b$8{%t}|{%f}$/b $5»$b$5»$/b";
       alternative_header_second_line_format = "{$b{$2%a$9}{ - $7%b$9}{ ($2%y$9)}}|{%D}";
       # Song list #
-      song_status_format= "$7%t";
+      song_status_format = "$7%t";
       song_list_format = "  %t $R%a %l  ";
       song_columns_list_format = "(53)[white]{tr} (45)[blue]{a}";
 

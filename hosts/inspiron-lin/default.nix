@@ -1,8 +1,8 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
   imports = [
-     ./hardware-configuration.nix
+    ./hardware-configuration.nix
   ];
   networking.hostName = "inspiron-lin";
 

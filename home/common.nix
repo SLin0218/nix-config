@@ -22,6 +22,8 @@
     # common cli
     fd
     jq
+    nixd
+    nixfmt-rfc-style
     nodejs
     pnpm
     delta

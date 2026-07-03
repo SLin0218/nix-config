@@ -1,4 +1,4 @@
-{ inputs, lib, config, pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   imports = [
@@ -15,12 +15,12 @@
   xdg.configFile."keyd/app.conf".source = ../config/keyd/app.conf;
 
   # 动态配置
-  home.file.".local/share/fcitx5/rime".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-data";
+  home.file.".local/share/fcitx5/rime".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-crane";
 
   home = {
     homeDirectory = "/home/lin";
   };
-
 
   home.packages = with pkgs; [
     # gui

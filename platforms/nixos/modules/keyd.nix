@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ ... }:
 
 {
 
@@ -24,9 +24,9 @@
 
   # Add CAP_SETGID so keyd can switch to keyd group (NixOS bug workaround)
   # https://github.com/NixOS/nixpkgs/issues/290161
-  users.groups.keyd = {};
+  users.groups.keyd = { };
 
   systemd.services.keyd = {
-    serviceConfig.CapabilityBoundingSet = ["CAP_SETGID"];
+    serviceConfig.CapabilityBoundingSet = [ "CAP_SETGID" ];
   };
 }

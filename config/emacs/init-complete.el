@@ -15,7 +15,8 @@
         orderless-component-separator "\\s-+")
   ;; 优化 eglot 模糊匹配的性能，防止大项目下卡顿
   (setq completion-category-defaults nil
-        completion-category-overrides '((eglot (styles orderless basic)))))
+        completion-category-overrides '((eglot (styles orderless basic))
+                                         (file (styles partial-completion)))))
 
 (use-package lua-mode)
 (use-package yaml-mode)
@@ -42,6 +43,9 @@
                 java-mode java-ts-mode
                 lua-mode yaml-mode nix-mode) . eglot-ensure)
   :config
+  ;; 显式配置 nix 语言服务器为 nixd
+  (add-to-list 'eglot-server-programs
+               '(nix-mode . ("nixd")))
   ;; 显式配置 python 语言服务器为 pyright-langserver
   (add-to-list 'eglot-server-programs
                `((python-mode python-ts-mode) . ("pyright-langserver" "--stdio")))
@@ -86,10 +90,15 @@
   ;; 启用 Corfu 的侧边文档弹出（提供类似 lsp-bridge 的文档预览体验）
   (corfu-popupinfo-mode 1)
   (setq corfu-popupinfo-delay 0.3)
-  ;; 不在字符串 (String) 或注释 (Comment) 中自动弹出补全，防止如 print(" 后干扰打字
+  ;; 不在普通的字符串 (String) 或注释 (Comment) 中自动弹出补全，防止如 print(" 后干扰打字
+  ;; 但是如果当前输入看起来像是一个文件路径（以 /、./、../ 或 ~/ 开头），则依然允许弹出，方便文件路径补全
   (setq corfu-auto-skip-predicates
         (list (lambda ()
-                (nth 8 (syntax-ppss))))))
+                (let ((state (syntax-ppss)))
+                  (and (nth 8 state)
+                       (not (string-match-p
+                             "\\(?:/\\|\\./\\|\\.\\./\\|~/\\)[^/[:space:]\"']*$"
+                             (buffer-substring-no-properties (nth 8 state) (point))))))))))
 
 ;; 补全源融合工具 Cape
 (use-package cape
@@ -108,7 +117,8 @@
     (require 'cape)
     (require 'yasnippet-capf)
     (setq-local completion-at-point-functions
-                (list (cape-capf-super
+                (list #'cape-file
+                      (cape-capf-super
                        #'eglot-completion-at-point
                        #'yasnippet-capf
                        #'cape-dabbrev))))

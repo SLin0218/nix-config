@@ -1,7 +1,10 @@
-{ pkgs, lib, config, ... }: let
-  tabBarPath = "${config.home.homeDirectory}/.config/nix-config/config/kitty/tab_bar.py";
-  sessionPath = "${config.home.homeDirectory}/.config/nix-config/config/kitty/default.s";
-in
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
+
 {
   programs.kitty = {
     enable = true;
@@ -12,38 +15,38 @@ in
     };
 
     shellIntegration = {
-      enableZshIntegration     = true;
-      mode                     = "no-cursor";
+      enableZshIntegration = true;
+      mode = "no-cursor";
     };
 
     settings = {
 
-      cursor_shape               = "underline";
-      cursor_trail               = 1;
-      symbol_map                 = "U+4E00-U+9FFF,U+3400-U+4DBF,U+20000–U+323AF Maple Mono NF CN";
+      cursor_shape = "underline";
+      cursor_trail = 1;
+      symbol_map = "U+4E00-U+9FFF,U+3400-U+4DBF,U+20000–U+323AF Maple Mono NF CN";
 
-      allow_remote_control       = true;
-      listen_on                  = "unix:/tmp/kitty";
+      allow_remote_control = true;
+      listen_on = "unix:/tmp/kitty";
 
-      enabled_layouts            = "Splits,Stack";
+      enabled_layouts = "Splits,Stack";
 
-      startup_session            = "~/.config/kitty/default.s";
+      startup_session = "~/.config/kitty/default.s";
 
-      window_padding_width       = 15.0;
-      window_margin_width        = 0;
-      update_check_interval      = 0;
+      window_padding_width = 15.0;
+      window_margin_width = 0;
+      update_check_interval = 0;
 
-      tab_bar_margin_height      = "10 0";
-      tab_bar_edge               = "top";
-      tab_bar_style              = "separator";
-      tab_separator              = "\"\"";
-      tab_title_template         = "\"{fmt.bg.default + fmt.fg._313244 + ('' if index == 1 else '┃')}{fmt.bg.default}{fmt.fg.color0} 󰄰 {(' ' + str(num_windows) + ' ') if layout_name == 'stack' else ''}{fmt.fg.color7}{title} {fmt.bg.default}\"";
-      active_tab_title_template  = "\"{fmt.bg.default + fmt.fg._313244 + ('' if index == 1 else '┃')}{fmt.bg.color0}{fmt.fg._c6a0f6} 󰐾 {(fmt.fg.yellow + ' ' + str(num_windows) + ' ') if layout_name == 'stack' else ''}{fmt.fg.color6}{title} {fmt.bg.default}\"";
+      tab_bar_margin_height = "10 0";
+      tab_bar_edge = "top";
+      tab_bar_style = "separator";
+      tab_separator = "\"\"";
+      tab_title_template = "\"{fmt.bg.default + fmt.fg._313244 + ('' if index == 1 else '┃')}{fmt.bg.default}{fmt.fg.color0} 󰄰 {(' ' + str(num_windows) + ' ') if layout_name == 'stack' else ''}{fmt.fg.color7}{title} {fmt.bg.default}\"";
+      active_tab_title_template = "\"{fmt.bg.default + fmt.fg._313244 + ('' if index == 1 else '┃')}{fmt.bg.color0}{fmt.fg._c6a0f6} 󰐾 {(fmt.fg.yellow + ' ' + str(num_windows) + ' ') if layout_name == 'stack' else ''}{fmt.fg.color6}{title} {fmt.bg.default}\"";
 
     };
 
     keybindings = {
-      "alt+v"       = "paste_from_clipboard";
+      "alt+v" = "paste_from_clipboard";
       "kitty_mod+]" = "next_tab";
       "kitty_mod+[" = "previous_tab";
       "kitty_mod+h" = "previous_window";
@@ -57,7 +60,7 @@ in
       "kitty_mod+d" = "scroll_page_down";
 
       "kitty_mod+m" = "create_marker";
-      "ctrl+m"      = "remove_marker";
+      "ctrl+m" = "remove_marker";
     };
 
     extraConfig = ''
@@ -78,7 +81,7 @@ in
 
   };
 
-  xdg.configFile."kitty/tab_bar.py".source = config.lib.file.mkOutOfStoreSymlink tabBarPath;
-  xdg.configFile."kitty/default.s".source = config.lib.file.mkOutOfStoreSymlink sessionPath;
+  xdg.configFile."kitty/tab_bar.py".source = ../../config/kitty/tab_bar.py;
+  xdg.configFile."kitty/default.s".source = ../../config/kitty/default.s;
 
 }

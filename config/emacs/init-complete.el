@@ -54,6 +54,21 @@
          (delq 'consult-source-recent-file
                (delq 'consult-source-buffer consult-buffer-sources))))
 
+  (defun my/consult-kill-buffer ()
+    "Kill a buffer, with grouping like `consult-buffer`."
+    (interactive)
+    (let ((sources (mapcar (lambda (src)
+                             (let ((copy (copy-sequence (eval src))))
+                               (plist-put copy :state nil)
+                               (plist-put copy :action #'kill-buffer)
+                               copy))
+                           '(consult-source-file-buffer
+                             consult-source-temp-buffer))))
+      (consult--multi sources
+                      :prompt "Kill buffer: "
+                      :require-match t
+                      :sort nil)))
+
   (consult-customize
    consult-ripgrep consult-git-grep consult-grep
    consult-find consult-locate))

@@ -7,7 +7,52 @@
 
 ;;; Code:
 
-(use-package consult)
+(use-package consult
+  :config
+  ;; 自定义 consult-buffer 数据源，区分用户打开的文件 Buffer 与系统只读/临时 Buffer
+  (defvar consult-source-file-buffer
+    `(:name "User Buffers"
+            :narrow ?b
+            :category buffer
+            :face consult-buffer
+            :history buffer-name-history
+            :state ,#'consult--buffer-state
+            :default t
+            :items ,(lambda ()
+                      (consult--buffer-query
+                       :sort 'visibility
+                       :as #'consult--buffer-pair
+                       :predicate (lambda (buf)
+                                    (let ((name (buffer-name buf)))
+                                      (and (not (string-prefix-p " " name))
+                                           (or (buffer-file-name buf)
+                                               (and (not (string-prefix-p "*" name))
+                                                    (not (string-prefix-p "magit" name)))))))))))
+
+  (defvar consult-source-temp-buffer
+    `(:name "System Buffers"
+            :narrow ?s
+            :category buffer
+            :face consult-buffer
+            :history buffer-name-history
+            :state ,#'consult--buffer-state
+            :items ,(lambda ()
+                      (consult--buffer-query
+                       :sort 'visibility
+                       :as #'consult--buffer-pair
+                       :predicate (lambda (buf)
+                                    (let ((name (buffer-name buf)))
+                                      (and (not (string-prefix-p " " name))
+                                           (not (buffer-file-name buf))
+                                           (or (string-prefix-p "*" name)
+                                               (string-prefix-p "magit" name))))))))))
+
+(setq consult-buffer-sources
+      (append
+       '(consult-source-file-buffer
+         consult-source-temp-buffer)
+       (delq 'consult-source-recent-file
+             (delq 'consult-source-buffer consult-buffer-sources))))
 
 (use-package orderless
   :config
@@ -16,7 +61,7 @@
   ;; 优化 eglot 模糊匹配的性能，防止大项目下卡顿
   (setq completion-category-defaults nil
         completion-category-overrides '((eglot (styles orderless basic))
-                                         (file (styles partial-completion)))))
+                                        (file (styles partial-completion)))))
 
 (use-package lua-mode)
 (use-package yaml-mode)
@@ -71,8 +116,6 @@
                   "--jvm-arg=-Xms100m"
                   "--jvm-arg=-Xlog:disable"
                   "--jvm-arg=-Daether.dependencyCollector.impl=bf"))))
-
-
 
 ;; 补全前端 Corfu
 (use-package corfu

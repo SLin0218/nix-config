@@ -1,4 +1,11 @@
-;; -*- lexical-binding: t; -*-
+;;; init-org.el --- Org-mode and GTD configurations  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; Org-mode 核心设置、Org-agenda、Org-roam 双链笔记以及美化排版配置。
+;;
+
+;;; Code:
 
 (setq org-agenda-files (list (expand-file-name "~/org/agenda/")))
 
@@ -291,3 +298,4 @@
 (use-package org-roam-bibtex)
 
 (provide 'init-org)
+;;; init-org.el ends here

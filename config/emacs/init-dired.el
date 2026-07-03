@@ -1,4 +1,12 @@
-;; -*- lexical-binding: t; -*-
+;;; init-dired.el --- Dired configurations  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; 目录管理 (Dired) 增强：忽略无用文件、文件高亮以及快捷搜索过滤。
+;;
+
+;;; Code:
+
 (use-package dired
   :ensure nil
   :hook
@@ -20,3 +28,4 @@
 
 
 (provide 'init-dired)
+;;; init-dired.el ends here

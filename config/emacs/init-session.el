@@ -1,4 +1,11 @@
-;; -*- lexical-binding: t; -*-
+;;; init-session.el --- General edit sessions, magit, and project settings  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; 撤销历史树 (undo-tree)、环境变量恢复、Magit、Projectile 项目管理等会话级设置。
+;;
+
+;;; Code:
 
 ;;撤销 重新打开文件时记住之前改动
 (use-package undo-tree
@@ -28,6 +35,7 @@
 (setq backup-by-copying t)      ;复制备份，保护硬链接
 
 (defun auto-save-delete-trailing-whitespace-except-current-line ()
+  "在自动保存前，删除除当前活动行以外的所有行尾空格."
   (interactive)
   (let ((begin (line-beginning-position))
         (end (point)))
@@ -76,3 +84,4 @@
 (save-place-mode 1)
 
 (provide 'init-session)
+;;; init-session.el ends here

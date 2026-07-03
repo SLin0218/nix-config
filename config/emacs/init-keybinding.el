@@ -1,4 +1,12 @@
-;; -*- lexical-binding: t; -*-
+;;; init-keybinding.el --- Evil and custom keybindings configuration  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; 自定义 Evil 键位、Rime 输入法、Avy、Ace-window 等快捷键与交互控制配置。
+;;
+
+;;; Code:
+
 ;;vim键位
 (use-package evil
   :custom
@@ -10,25 +18,22 @@
   (setq evil-want-keybinding nil)
   :config
   (dolist (mode '(dashboard-mode
-  	  help-mode
-  	  buffer-menu-mode
-  	  package-menu-mode))
-   (add-to-list 'evil-emacs-state-modes mode))
+  	              help-mode
+  	              buffer-menu-mode
+  	              package-menu-mode))
+    (add-to-list 'evil-emacs-state-modes mode))
   (evil-set-leader '(normal visual) (kbd "SPC") nil)
   ;;file操作
   (evil-define-key 'normal 'global (kbd "<leader>fr") 'recentf-open)
   (evil-define-key 'normal 'global (kbd "<leader>ff") 'find-file)
   (evil-define-key 'normal 'global (kbd "<leader>fd") 'dired)
+  (evil-define-key 'normal 'global (kbd "<leader>fj") 'dired-jump)
   ;;buffer操作
   (evil-define-key 'normal 'global (kbd "<leader>bb") 'switch-to-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bB") 'my/switch-to-star-buffers)
   (evil-define-key 'normal 'global (kbd "<leader>bk") 'kill-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bx") 'kill-current-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bs") 'save-buffer)
-  (evil-define-key 'normal 'global (kbd "<leader>bl") 'awesome-tab-forward-tab)
-  (evil-define-key 'normal 'global (kbd "<leader>bh") 'awesome-tab-backward-tab)
-  (evil-define-key 'normal 'global (kbd "<leader>b]") 'awesome-tab-forward-group)
-  (evil-define-key 'normal 'global (kbd "<leader>b[") 'awesome-tab-backward-group)
   ;;jump
   (evil-define-key 'normal 'global (kbd "<leader>kk") 'evil-avy-goto-line-above)
   (evil-define-key 'normal 'global (kbd "<leader>jj") 'evil-avy-goto-line-below)
@@ -47,6 +52,16 @@
   (evil-define-key 'normal 'global (kbd "<leader>wh") 'evil-window-left)
   (evil-define-key 'normal 'global (kbd "<leader>wq") 'delete-window)
   (evil-define-key 'normal 'global (kbd "<leader>ww") 'delete-other-windows)
+  ;;git diff-hl跳转
+  (evil-define-key 'normal 'global (kbd "<leader>vn") 'diff-hl-next-hunk)
+  (evil-define-key 'normal 'global (kbd "<leader>vp") 'diff-hl-previous-hunk)
+  ;;flymake错误跳转
+  (evil-define-key 'normal 'global (kbd "<leader>en") 'flymake-goto-next-error)
+  (evil-define-key 'normal 'global (kbd "<leader>ep") 'flymake-goto-prev-error)
+  ;;打开dired
+  (evil-define-key 'normal 'global (kbd "<leader>dj") 'dired-jump)
+  ;;打开magit
+  (evil-define-key 'normal 'global (kbd "<leader>mg") 'magit)
 
   (evil-mode 1))
 
@@ -55,9 +70,9 @@
 
 ;; evil相关扩展
 (use-package evil-collection
-   :after evil
-   :config
-   (evil-collection-init))
+  :after evil
+  :config
+  (evil-collection-init))
 
 ;;输入法配置
 (use-package rime
@@ -91,3 +106,4 @@
 (use-package evil-nerd-commenter)
 
 (provide 'init-keybinding)
+;;; init-keybinding.el ends here

@@ -1,14 +1,26 @@
-;; -*- lexical-binding: t; -*-
+;;; init-ui.el --- Fonts, themes and UI configurations  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; 字体、主题、Doom-modeline、awesome-tab、vertico (minibuffer增强) 等界面美化配置。
+;;
+
+;;; Code:
+
 (global-display-line-numbers-mode 1)     ;行号
 
-(defvar slin/font-size 12)
-(defvar slin/font-family "JetBrainsMono Nerd Font Mono")
-(defvar slin/font-family-cjk "Maple Mono NF CN")
+(defvar slin/font-size 12
+  "默认英文字体大小.")
+(defvar slin/font-family "JetBrainsMono Nerd Font Mono"
+  "默认英文字体族.")
+(defvar slin/font-family-cjk "Maple Mono NF CN"
+  "默认中文字体族.")
 
 (cond ((eq system-type 'darwin) (setq slin/font-size 16)))
 
 ;; 全局字体设置
 (defun load-font-setup (&optional frame)
+  "根据当前 FRAME 设置默认英文字体与中文字体映射."
   (when (display-graphic-p frame)
     (with-selected-frame (or frame (selected-frame))
       (cond
@@ -137,13 +149,14 @@
         cand))))
 
 (defvar my-buffer-filter-mode nil
-  "控制 Buffer 切换时的过滤模式：
-nil (默认) 表示只显示普通 Buffer（排除以 * 开头的）；
-'star-only 表示只显示以 * 开头的内部/系统 Buffer。")
+  "控制 Buffer 切换时的过滤模式:
+
+nil (默认) 表示只显示普通 Buffer（排除以 * 开头的）
+'star-only 表示只显示以 * 开头的内部/系统 Buffer.")
 
 ;; 切换 Buffer 时，过滤以 * 开头的内部/只读 Buffer（可通过打字手动切入，但不在列表中罗列）
 (defun my-read-buffer-filter-star (args)
-  "过滤 read-buffer 时候选词。"
+  "ARGS 为过滤 'read-buffer' 时候选词."
   (let ((prompt (nth 0 args))
         (default (nth 1 args))
         (require-match (nth 2 args))
@@ -167,7 +180,7 @@ nil (默认) 表示只显示普通 Buffer（排除以 * 开头的）；
 (advice-add 'read-buffer :filter-args #'my-read-buffer-filter-star)
 
 (defun my/switch-to-star-buffers ()
-  "切换 Buffer，只显示被排除的星号内部 Buffer。"
+  "切换 Buffer，只显示被排除的星号内部 Buffer."
   (interactive)
   (let ((my-buffer-filter-mode 'star-only))
     (call-interactively #'switch-to-buffer)))
@@ -193,29 +206,30 @@ nil (默认) 表示只显示普通 Buffer（排除以 * 开头的）；
   (global-colorful-mode t)
   (add-to-list 'global-colorful-modes 'helpful-mode))
 
-(use-package treemacs
-  :bind (("C-x C-n" . treemacs))
-  :config
-  (setq treemacs-indentation 1)
-  (setq treemacs-collapse-dirs 2)
-  (setq treemacs-width-is-initially-locked t)
-  (setq treemacs-follow-after-init t)
-  (setq treemacs-width (* slin/font-size 5)))
+;; (use-package treemacs
+;;   :bind (("C-x C-n" . treemacs))
+;;   :config
+;;   (setq treemacs-indentation 1)
+;;   (setq treemacs-collapse-dirs 2)
+;;   (setq treemacs-width-is-initially-locked t)
+;;   (setq treemacs-follow-after-init t)
+;;   (setq treemacs-width (* slin/font-size 5)))
 
-(use-package treemacs-nerd-icons
-  :after treemacs
-  :config
-  (treemacs-load-theme "nerd-icons"))
+;; (use-package treemacs-nerd-icons
+;;   :after treemacs
+;;   :config
+;;   (treemacs-load-theme "nerd-icons"))
 
-(use-package treemacs-icons-dired
-  :hook (dired-mode . treemacs-icons-dired-enable-once))
+;; (use-package treemacs-icons-dired
+;;   :hook (dired-mode . treemacs-icons-dired-enable-once))
 
-(use-package treemacs-projectile
-  :after (treemacs projectile)
-  :config
-  (treemacs-project-follow-mode t) )
+;; (use-package treemacs-projectile
+;;   :after (treemacs projectile)
+;;   :config
+;;   (treemacs-project-follow-mode t) )
 
-(use-package treemacs-magit
-  :after (treemacs magit))
+;; (use-package treemacs-magit
+;;   :after (treemacs magit))
 
 (provide 'init-ui)
+;;; init-ui.el ends here

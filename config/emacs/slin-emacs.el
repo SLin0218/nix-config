@@ -1,4 +1,11 @@
-;; -*- lexical-binding: t; -*-
+;;; slin-emacs.el --- Main Emacs configuration entry  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; 个人 Emacs 配置主入口：设置系统 PATH 环境变量，加载其余分步模块配置文件。
+;;
+
+;;; Code:
                                         ;(defconst user-emacs-cache-directory (expand-file-name ".cache" user-emacs-directory))             ;缓存文件存放位置 存放临时文件
 ;(setq recentf-save-file (expand-file-name "recentf" user-emacs-cache-directory))                   ;最近打开文件 存放位置
 ;(setq savehist-file (expand-file-name "history" user-emacs-cache-directory))                       ;savehist文件位置
@@ -38,3 +45,4 @@
 (require 'init-org)
 
 (provide 'slin-emacs)
+;;; slin-emacs.el ends here

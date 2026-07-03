@@ -1,4 +1,12 @@
-;; -*- lexical-binding: t; -*-
+;;; init-complete.el --- Autocomplete and formatting configuration  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;
+;; 自动补全、LSP (Eglot)、代码格式化 (Apheleia) 以及相关依赖包的自动安装配置。
+;;
+
+;;; Code:
+
 (use-package consult)
 
 (use-package orderless
@@ -123,7 +131,11 @@
 
 (use-package nix-mode)
 
+;; 开启 Emacs Lisp 的实时语法与错误检查（不用 LSP 也能画红线报错）
+(add-hook 'emacs-lisp-mode-hook #'flymake-mode)
+
 ;; 开启括号、引号自动成对闭合
 (electric-pair-mode 1)
 
 (provide 'init-complete)
+;;; init-complete.el ends here

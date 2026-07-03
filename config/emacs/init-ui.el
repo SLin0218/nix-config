@@ -1,17 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-
-(when (display-graphic-p)
-  ;禁用滚动条
-  (scroll-bar-mode -1)
-  (when (or (eq system-type 'darwin)
-            (eq system-type 'gnu/linux))
-    ;禁用工具栏
-    (tool-bar-mode -3)))
-
-(menu-bar-mode -1)                       ;禁用菜单栏
-
 (global-display-line-numbers-mode 1)     ;行号
-(setq-default display-line-numbers-width-start t)
 
 (defvar slin/font-size 12)
 (defvar slin/font-family "JetBrainsMono Nerd Font Mono")
@@ -20,39 +8,38 @@
 (cond ((eq system-type 'darwin) (setq slin/font-size 16)))
 
 ;; 全局字体设置
-(defun load-font-setup ()
-  (when (display-graphic-p)
-    (cond
-     ((eq window-system 'pgtk)
-      (set-face-attribute 'default nil :height (* slin/font-size 10) :family slin/font-family))
-     (t
-      (let* ((font-size slin/font-size)
-             (chinese-font slin/font-family-cjk)
-             (english-font slin/font-family))
-        ;; Set default font
-        (set-frame-font (format "%s-%d" english-font font-size) nil t)
-        ;; Set Chinese font for CJK characters
-        (dolist (charset '(han kana bopomofo cjk-misc symbol))
-          (set-fontset-font (frame-parameter nil 'font)
-                            charset
-                            (font-spec :family chinese-font))))))))
-(load-font-setup)
+(defun load-font-setup (&optional frame)
+  (when (display-graphic-p frame)
+    (with-selected-frame (or frame (selected-frame))
+      (cond
+       ((eq window-system 'pgtk)
+        (set-face-attribute 'default nil :height (* slin/font-size 10) :family slin/font-family))
+       (t
+        (let* ((font-size slin/font-size)
+               (chinese-font slin/font-family-cjk)
+               (english-font slin/font-family))
+          ;; Set default font
+          (set-frame-font (format "%s-%d" english-font font-size) nil t)
+          ;; Set Chinese font for CJK characters
+          (dolist (charset '(han kana bopomofo cjk-misc symbol))
+            (set-fontset-font (frame-parameter nil 'font)
+                              charset
+                              (font-spec :family chinese-font)))))))))
+
+(if (daemonp)
+    (add-hook 'after-make-frame-functions #'load-font-setup)
+  (load-font-setup))
 
 ;; org-table单独设置字体
 (with-eval-after-load 'org
   (set-face-attribute 'org-table nil :family slin/font-family-cjk :height (* slin/font-size 10)))
 
-;; 在图形界面下启动时最大化窗口（仅 macOS）
-(when (and (eq system-type 'darwin)
-           (display-graphic-p))
-  (add-to-list 'default-frame-alist '(fullscreen . maximized)))
 
 ;; 图标
 (use-package all-the-icons)
 
 ;; dired图标
 (use-package all-the-icons-dired
-  :if (display-graphic-p)
   :after (dired all-the-icons)
   :hook (dired-mode . all-the-icons-dired-mode))
 
@@ -65,7 +52,16 @@
 ;; 主题
 (use-package catppuccin-theme
   :config
-  (load-theme 'catppuccin :no-confirm))
+  (defvar slin/theme-loaded nil)
+  (defun slin/load-theme-once (frame)
+    (with-selected-frame frame
+      (when (and (display-graphic-p frame)
+                 (not slin/theme-loaded))
+        (load-theme 'catppuccin :no-confirm)
+        (setq slin/theme-loaded t))))
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions #'slin/load-theme-once)
+    (load-theme 'catppuccin :no-confirm)))
 
 ;; 标签栏
 (use-package awesome-tab
@@ -76,9 +72,16 @@
   (setq awesome-tab-cycle-scope 'tabs)
   (setq awesome-tab-dark-active-bar-color (catppuccin-color 'base))
   (setq awesome-tab-dark-selected-foreground-color (catppuccin-color 'teal))
-  (when (not (display-graphic-p))
-    (setq awesome-tab-display-icon nil)
-    (setq frame-background-mode 'dark))
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions
+                (lambda (frame)
+                  (with-selected-frame frame
+                    (unless (display-graphic-p frame)
+                      (setq awesome-tab-display-icon nil)
+                      (setq frame-background-mode 'dark)))))
+    (when (not (display-graphic-p))
+      (setq awesome-tab-display-icon nil)
+      (setq frame-background-mode 'dark)))
   (defun awesome-tab-hide-tab (x)
     (let ((name (format "%s" x)))
       (or

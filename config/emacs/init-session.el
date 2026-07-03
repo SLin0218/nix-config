@@ -11,8 +11,8 @@
           undo-tree-auto-save-history t)))
 
 (use-package exec-path-from-shell
-  ; 仅在图形界面下生效
-  :if (memq window-system '(mac ns x pgtk))
+  ; macOS 系统下总是生效，即使在 daemon 模式下
+  :if (memq system-type '(darwin))
   :config
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-envs '("SSH_AUTH_SOCK" "GPG_TTY"))

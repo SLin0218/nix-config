@@ -26,6 +26,8 @@
   (evil-define-key 'normal 'global (kbd "<leader>bs") 'save-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bl") 'awesome-tab-forward-tab)
   (evil-define-key 'normal 'global (kbd "<leader>bh") 'awesome-tab-backward-tab)
+  (evil-define-key 'normal 'global (kbd "<leader>b]") 'awesome-tab-forward-group)
+  (evil-define-key 'normal 'global (kbd "<leader>b[") 'awesome-tab-backward-group)
   ;;jump
   (evil-define-key 'normal 'global (kbd "<leader>kk") 'evil-avy-goto-line-above)
   (evil-define-key 'normal 'global (kbd "<leader>jj") 'evil-avy-goto-line-below)
@@ -46,6 +48,9 @@
   (evil-define-key 'normal 'global (kbd "<leader>ww") 'delete-other-windows)
 
   (evil-mode 1))
+
+;; 修改粘贴快捷键
+(global-set-key (kbd "M-v") 'yank)
 
 ;; evil相关扩展
 (use-package evil-collection

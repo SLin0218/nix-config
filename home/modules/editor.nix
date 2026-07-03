@@ -12,6 +12,7 @@ in
 
   # 3. Emacs 初始化引导
   xdg.configFile."emacs/init.el".text = ''
+    ;; -*- lexical-binding: t; -*-
     (add-to-list 'load-path "~/.config/slin-emacs")
     (require 'slin-emacs)
   '';

@@ -49,4 +49,6 @@
 
 (use-package markdown-mode)
 
+(use-package nix-mode)
+
 (provide 'init-complete)

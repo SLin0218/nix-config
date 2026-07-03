@@ -8,8 +8,10 @@
     ;禁用工具栏
     (tool-bar-mode -3)))
 
-(menu-bar-mode -1)                      ;禁用菜单栏
-(global-display-line-numbers-mode 1)    ;行号
+(menu-bar-mode -1)                       ;禁用菜单栏
+
+(global-display-line-numbers-mode 1)     ;行号
+(setq-default display-line-numbers-width-start t)
 
 (defvar slin/font-size 12)
 (defvar slin/font-family "JetBrainsMono Nerd Font Mono")
@@ -65,38 +67,15 @@
   :config
   (load-theme 'catppuccin :no-confirm))
 
-;; 启动仪表盘
-;; (use-package dashboard
-;;   :init
-;;   (setq dashboard-center-content t)
-;;   (setq dashboard-vertically-center-content t)
-;;   :custom
-;;   (dashboard-footer-messages '(""))
-;;   :config
-;;   (dashboard-setup-startup-hook)
-;;   (setq dashboard-display-icons-p t)
-;;   (setq dashboard-icon-type 'nerd-icons)
-;;   (setq dashboard-set-heading-icons t)
-;;   (setq dashboard-set-file-icons t)
-;;   (dashboard-modify-heading-icons '((recents   . "nf-oct-file")
-;;                                     (bookmarks . "nf-oct-bookmark")
-;;                                     (projects  . "nf-oct-project")
-;;                                     (agenda    . "nf-oct-tasklist")))
-;;   (setq dashboard-items '((recents   . 15)
-;;                           (bookmarks .  5)
-;;                           (projects  .  5)
-;;                           (agenda    .  5))))
-
 ;; 标签栏
 (use-package awesome-tab
   :load-path "~/.config/slin-emacs/site-lisp/awesome-tab"
-  :init
-  (setq lexical-binding t)
   :ensure nil
   :config
   (setq awesome-tab-height (* slin/font-size 10))
   (setq awesome-tab-cycle-scope 'tabs)
-  (setq awesome-tab-dark-active-bar-color "#6272a4")
+  (setq awesome-tab-dark-active-bar-color (catppuccin-color 'base))
+  (setq awesome-tab-dark-selected-foreground-color (catppuccin-color 'teal))
   (when (not (display-graphic-p))
     (setq awesome-tab-display-icon nil)
     (setq frame-background-mode 'dark))
@@ -113,9 +92,8 @@
        (and (string-prefix-p "magit" name)
             (not (file-name-extension name)))
        )))
-
   (set-face-attribute 'tab-line nil :inherit 'default)
-  (set-face-attribute 'awesome-tab-unselected-face nil :foreground "#6272a4" :distant-foreground "#6272a4")
+  (set-face-attribute 'awesome-tab-unselected-face nil :foreground (catppuccin-color 'base) :distant-foreground (catppuccin-color 'base))
   (awesome-tab-mode t))
 
 ;; 层级对齐线

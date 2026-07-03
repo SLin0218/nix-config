@@ -15,7 +15,4 @@
 
 (setq use-package-always-ensure t)
 
-(add-to-list 'load-path "~/.config/slin-emacs/site-lisp/awesome-tab")
-(add-to-list 'load-path "~/.config/slin-emacs/site-lisp/lsp-bridge")
-
 (provide 'init-package)

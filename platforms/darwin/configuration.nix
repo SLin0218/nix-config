@@ -86,7 +86,7 @@
       "brave-browser"
       "windows-app"
       "readdle-spark"
-      "emacs-plus-app"
+      "emacs-plus-app@master"
     ];
   };
 

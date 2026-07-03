@@ -37,6 +37,9 @@
 (use-package yasnippet-snippets
   :after yasnippet)
 
+(use-package yasnippet-capf
+  :after yasnippet)
+
 (use-package eglot
   :hook
   ((python-mode python-ts-mode
@@ -69,12 +72,7 @@
                   "--jvm-arg=-Xlog:disable"
                   "--jvm-arg=-Daether.dependencyCollector.impl=bf"))))
 
-;; 确保新添加的包已安装，防止 package-list 过期导致安装失败
-(dolist (pkg '(corfu cape apheleia yasnippet-capf kind-icon yasnippet-snippets))
-  (unless (package-installed-p pkg)
-    (unless package-archive-contents
-      (package-refresh-contents))
-    (package-install pkg)))
+
 
 ;; 补全前端 Corfu
 (use-package corfu

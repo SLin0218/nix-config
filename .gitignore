@@ -3,3 +3,4 @@ config/ags/@girs/
 .DS_store
 **/lazy-lock.json
 jmssub
+*.elc

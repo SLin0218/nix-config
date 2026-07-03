@@ -105,5 +105,11 @@
 ;; 注释
 (use-package evil-nerd-commenter)
 
+;; 多光标同步编辑 (evil-multiedit)
+(use-package evil-multiedit
+  :after evil
+  :config
+  (evil-multiedit-default-keybinds))
+
 (provide 'init-keybinding)
 ;;; init-keybinding.el ends here

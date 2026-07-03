@@ -64,30 +64,30 @@
     (load-theme 'catppuccin :no-confirm)))
 
 ;; 标签栏
-(use-package awesome-tab
-  :load-path "~/.config/slin-emacs/site-lisp/awesome-tab"
-  :ensure nil
-  :config
-  (setq awesome-tab-height (* slin/font-size 10))
-  (setq awesome-tab-cycle-scope 'tabs)
-  (setq awesome-tab-dark-active-bar-color (catppuccin-color 'base))
-  (setq awesome-tab-dark-selected-foreground-color (catppuccin-color 'teal))
-  (defun awesome-tab-hide-tab (x)
-    (let ((name (format "%s" x)))
-      (or
-       (string-prefix-p "*" name)
-       (string-prefix-p " *" name)
-       (string-prefix-p "diary" name)
-       (string-prefix-p "*Compile-Log*" name)
-       (string-prefix-p "*epc" name)
-       (string-prefix-p "*helm" name)
-       (string-prefix-p "*lsp" name)
-       (and (string-prefix-p "magit" name)
-            (not (file-name-extension name)))
-       )))
-  (set-face-attribute 'tab-line nil :inherit 'default)
-  (set-face-attribute 'awesome-tab-unselected-face nil :foreground (catppuccin-color 'base) :distant-foreground (catppuccin-color 'base))
-  (awesome-tab-mode t))
+;; (use-package awesome-tab
+;;   :load-path "~/.config/slin-emacs/site-lisp/awesome-tab"
+;;   :ensure nil
+;;   :config
+;;   (setq awesome-tab-height (* slin/font-size 10))
+;;   (setq awesome-tab-cycle-scope 'tabs)
+;;   (setq awesome-tab-dark-active-bar-color (catppuccin-color 'base))
+;;   (setq awesome-tab-dark-selected-foreground-color (catppuccin-color 'teal))
+;;   (defun awesome-tab-hide-tab (x)
+;;     (let ((name (format "%s" x)))
+;;       (or
+;;        (string-prefix-p "*" name)
+;;        (string-prefix-p " *" name)
+;;        (string-prefix-p "diary" name)
+;;        (string-prefix-p "*Compile-Log*" name)
+;;        (string-prefix-p "*epc" name)
+;;        (string-prefix-p "*helm" name)
+;;        (string-prefix-p "*lsp" name)
+;;        (and (string-prefix-p "magit" name)
+;;             (not (file-name-extension name)))
+;;        )))
+;;   (set-face-attribute 'tab-line nil :inherit 'default)
+;;   (set-face-attribute 'awesome-tab-unselected-face nil :foreground (catppuccin-color 'base) :distant-foreground (catppuccin-color 'base))
+;;   (awesome-tab-mode t))
 
 ;; 层级对齐线
 (use-package indent-bars
@@ -97,7 +97,7 @@
   (indent-bars-treesit-ignore-blank-lines-types '("module"))
   ;; Add other languages as needed
   (indent-bars-treesit-scope '((python function_definition class_definition for_statement
-	  if_statement with_statement while_statement)))
+	                                   if_statement with_statement while_statement)))
   ;; Note: wrap may not be needed if no-descend-list is enough
   ;;(indent-bars-treesit-wrap '((python argument_list parameters ; for python, as an example
   ;;				      list list_comprehension
@@ -106,11 +106,11 @@
   :hook ((python-base-mode yaml-mode) . indent-bars-mode)
   :config
   (setq
-    indent-bars-color '(highlight :face-bg t :blend 0.3)
-    indent-bars-pattern " . . . . ." ; play with the number of dots for your usual font size
-    ;;indent-bars-color-by-depth nil
-    indent-bars-width-frac 0.25
-    indent-bars-pad-frac 0.1))
+   indent-bars-color '(highlight :face-bg t :blend 0.3)
+   indent-bars-pattern " . . . . ." ; play with the number of dots for your usual font size
+   ;;indent-bars-color-by-depth nil
+   indent-bars-width-frac 0.25
+   indent-bars-pad-frac 0.1))
 
 ;; minibuffer 增强
 (use-package vertico
@@ -135,6 +135,42 @@
            #(" " 0 1 (display (left-fringe right-triangle vertico-current)))
            cand)
         cand))))
+
+(defvar my-buffer-filter-mode nil
+  "控制 Buffer 切换时的过滤模式：
+nil (默认) 表示只显示普通 Buffer（排除以 * 开头的）；
+'star-only 表示只显示以 * 开头的内部/系统 Buffer。")
+
+;; 切换 Buffer 时，过滤以 * 开头的内部/只读 Buffer（可通过打字手动切入，但不在列表中罗列）
+(defun my-read-buffer-filter-star (args)
+  "过滤 read-buffer 时候选词。"
+  (let ((prompt (nth 0 args))
+        (default (nth 1 args))
+        (require-match (nth 2 args))
+        (predicate (nth 3 args)))
+    (unless predicate
+      (setq predicate (lambda (buf)
+                        (let ((name (cond
+                                     ((stringp buf) buf)
+                                     ((bufferp buf) (buffer-name buf))
+                                     ((consp buf) (car buf))
+                                     (t ""))))
+                          (cond
+                           ;; star-only 模式：只保留以 * 开头的
+                           ((eq my-buffer-filter-mode 'star-only)
+                            (string-prefix-p "*" name))
+                           ;; 默认模式：排除以 * 开头的
+                           (t
+                            (not (string-prefix-p "*" name))))))))
+    (list prompt default require-match predicate)))
+
+(advice-add 'read-buffer :filter-args #'my-read-buffer-filter-star)
+
+(defun my/switch-to-star-buffers ()
+  "切换 Buffer，只显示被排除的星号内部 Buffer。"
+  (interactive)
+  (let ((my-buffer-filter-mode 'star-only))
+    (call-interactively #'switch-to-buffer)))
 
 ;; minbuffer 相关条目说明注解
 (use-package marginalia

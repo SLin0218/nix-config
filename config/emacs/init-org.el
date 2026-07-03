@@ -12,34 +12,32 @@
                       (catppuccin-color 'mauve))))
     (dolist (i (number-sequence 2 6))
       (set-face-attribute (intern (format "org-level-%d" i)) nil
-			  :weight 'bold
-			  :height (- 1.15 (* 0.03 (- i 2)))
-			  :foreground (nth (- i 2) colors))))
+			              :weight 'bold
+			              :height (- 1.15 (* 0.03 (- i 2)))
+			              :foreground (nth (- i 2) colors))))
 
-  ;开启标题缩进
-  (setq org-startup-indented t)
+
+  (setq org-startup-indented t)         ;开启标题缩进
   (global-org-modern-mode)
 
-  ;code按语言缩进
-  (setq org-src-tab-acts-natively t)
+  (setq org-src-tab-acts-natively t)    ;code按语言缩进
   (setq org-src-preserve-indentation nil)
   (setq org-blank-before-new-entry
-	'((heading . auto) (plain-list-item . auto)))
+	    '((heading . auto) (plain-list-item . auto)))
 
-  ;代码块高亮
-  (setq org-src-fontify-natively t)
+  (setq org-src-fontify-natively t)     ;代码块高亮
 
   (setq org-ellipsis "󱞣")
 
-  ;block执行代码 通用配置
-  (setq org-babel-default-header-args
+
+  (setq org-babel-default-header-args ;block执行代码 通用配置
         '((:session . "none")         ;是否启用持久会话
           (:exports . "code")         ;只导出代码
           (:results . "replace")))    ;替换结果
   ;; (setq org-modern-hide-stars nil
-      ;; org-modern-todo nil)
+  ;; org-modern-todo nil)
 
-  ;行间距
+                                        ;行间距
   (setq line-spacing 0.25)
 
   (setq org-use-property-inheritance t)
@@ -50,7 +48,7 @@
   (setq org-agenda-todo-list-sublevels t)
 
 
-  ;quote高亮
+                                        ;quote高亮
   (setq org-indent-indentation-per-level 2)
   (setq org-fontify-quote-and-verse-blocks t)
   (setq org-indent-mode-respect-standard-blocks t)
@@ -61,12 +59,12 @@
   (setq org-log-into-drawer t)     ; 日志放入 LOGBOOK drawer，保持整洁
 
   (setq org-modern-todo-faces
-      `(("TODO"     . (:foreground ,(catppuccin-color 'mauve)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
-        ("NEXT"     . (:foreground ,(catppuccin-color 'peach)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :weight bold))
-        ("ACTIVITY" . (:foreground ,(catppuccin-color 'red)      :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :weight bold))
-        ("WAITING"  . (:foreground ,(catppuccin-color 'sapphire) :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
-        ("DONE"     . (:foreground ,(catppuccin-color 'green)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
-        ("CANCELED" . (:foreground ,(catppuccin-color 'surface2) :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :strike-through t ))))
+        `(("TODO"     . (:foreground ,(catppuccin-color 'mauve)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
+          ("NEXT"     . (:foreground ,(catppuccin-color 'peach)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :weight bold))
+          ("ACTIVITY" . (:foreground ,(catppuccin-color 'red)      :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :weight bold))
+          ("WAITING"  . (:foreground ,(catppuccin-color 'sapphire) :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
+          ("DONE"     . (:foreground ,(catppuccin-color 'green)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
+          ("CANCELED" . (:foreground ,(catppuccin-color 'surface2) :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :strike-through t ))))
 
   ;;latex 相关配置
   (setq org-latex-pdf-process
@@ -168,8 +166,8 @@
   (setq org-hide-emphasis-markers t)
   (setq org-pretty-entities t)
   (setq org-modern-block-name
-	`(("src" . (,(nerd-icons-devicon "nf-dev-codeac" :face 'nerd-icons-blue-alt)
-		    ,(nerd-icons-devicon "nf-dev-codeac" :face 'org-block-end-line)))
+	    `(("src" . (,(nerd-icons-devicon "nf-dev-codeac" :face 'nerd-icons-blue-alt)
+		            ,(nerd-icons-devicon "nf-dev-codeac" :face 'org-block-end-line)))
           ("example" . (,(nerd-icons-mdicon "nf-md-information_outline" :face 'nerd-icons-blue)
                         ,(nerd-icons-mdicon "nf-md-information_outline" :face 'org-block-end-line)))
           ("quote" . (,(nerd-icons-mdicon "nf-md-comment_quote_outline" :face 'nerd-icons-orange)
@@ -213,8 +211,8 @@
                                    (tags     . "  %i %-12c")
                                    (search   . "  %i %-12c"))
 
-;; (setq org-agenda-deadline-leaders (quote ("!D!: " "D%2d: " "")))
-;; (setq org-agenda-scheduled-leaders (quote ("" "S%3d: ")))
+        ;; (setq org-agenda-deadline-leaders (quote ("!D!: " "D%2d: " "")))
+        ;; (setq org-agenda-scheduled-leaders (quote ("" "S%3d: ")))
         org-agenda-start-with-log-mode t
         org-agenda-category-icon-alist `(("work" ,(list (all-the-icons-material "computer" :height 0.8)) nil nil :ascent center)
                                          ("diary" ,(list (all-the-icons-faicon "pencil" :height 0.9)) nil nil :ascent center))

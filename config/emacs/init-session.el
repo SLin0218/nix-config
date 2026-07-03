@@ -11,8 +11,7 @@
           undo-tree-auto-save-history t)))
 
 (use-package exec-path-from-shell
-  ; macOS 系统下总是生效，即使在 daemon 模式下
-  :if (memq system-type '(darwin))
+  :if (memq system-type '(darwin))  ; macOS 系统下总是生效，即使在 daemon 模式下
   :config
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-envs '("SSH_AUTH_SOCK" "GPG_TTY"))
@@ -44,10 +43,10 @@
           (narrow-to-region end (point-max))
           (delete-trailing-whitespace))))))
 
-;保存前删除末尾空格
+;;保存前删除末尾空格
 (add-hook 'before-save-hook 'auto-save-delete-trailing-whitespace-except-current-line)
 
-;项目管理
+;;项目管理
 (use-package projectile
   :init
   (projectile-mode +1)
@@ -64,7 +63,7 @@
   (add-hook 'dired-mode-hook 'diff-hl-dired-mode)
   (global-diff-hl-mode)
   (diff-hl-margin-mode
-))
+   ))
 
 ;;高亮光标处相同变量
 (use-package symbol-overlay

@@ -6,7 +6,7 @@
 ;(setq package-user-dir (expand-file-name "elpa" user-emacs-cache-directory))                       ;ELPA目录
 ;(setq tutorial-directory (expand-file-name "tutorial" user-emacs-cache-directory))
 
-(setq read-process-output-max (* 1024 1024)) ; 提升进程输出读取上限，优化 lsp-bridge
+(setq read-process-output-max (* 1024 1024)) ; 提升进程输出读取上限，优化 eglot
 
 (setq backup-directory-alist `((".*" . ,(expand-file-name "backups" user-emacs-directory)))) ;备份文件存放位置
 

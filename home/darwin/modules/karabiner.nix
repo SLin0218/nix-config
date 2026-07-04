@@ -105,7 +105,6 @@ let
             extraFrom = [ "left_command" ];
             extraTo = [ "left_command" ];
           }
-          # 你可以按需继续通过列表生成控制键/Option键的组合...
         ];
   };
 
@@ -180,6 +179,7 @@ let
       "^com\\.google\\.android\\.studio$"
     ];
     kitty = [ "^net\\.kovidgoyal\\.kitty$" ];
+    emacs = [ "^org\\.gnu\\.Emacs$" ];
   };
 
   # ---------------------------------------------------------
@@ -321,6 +321,25 @@ let
           {
             type = "frontmost_application_if";
             bundle_identifiers = apps.browsers;
+          }
+        ];
+      }
+      {
+        type = "basic";
+        from = {
+          key_code = "spacebar";
+          modifiers.mandatory = hyperModifiers;
+        };
+        to = [
+          {
+            key_code = "backslash";
+            modifiers = [ "left_control" ];
+          }
+        ];
+        conditions = [
+          {
+            type = "frontmost_application_if";
+            bundle_identifiers = apps.emacs;
           }
         ];
       }

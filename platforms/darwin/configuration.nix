@@ -3,7 +3,7 @@
 {
 
   imports = [
-     ./modules/mihomo.nix
+    ./modules/mihomo.nix
   ];
 
   # List packages installed in system profile. To search by name, run:
@@ -28,7 +28,7 @@
   };
 
   # Create /etc/zshrc that loads the nix-darwin environment.
-  programs.zsh.enable = true;  # default shell on catalina
+  programs.zsh.enable = true; # default shell on catalina
 
   # Set Git commit hash for darwin-version.
   # system.configurationRevision = self.rev or self.dirtyRev or null;
@@ -88,6 +88,7 @@
       "readdle-spark"
       "emacs-plus-app@master"
       "flameshot"
+      "raycast"
     ];
   };
 

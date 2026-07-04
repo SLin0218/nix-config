@@ -180,6 +180,7 @@ let
     ];
     kitty = [ "^net\\.kovidgoyal\\.kitty$" ];
     emacs = [ "^org\\.gnu\\.Emacs$" ];
+    raycast = [ "^com\\.raycast\\.macos$" ];
   };
 
   # ---------------------------------------------------------
@@ -340,6 +341,46 @@ let
           {
             type = "frontmost_application_if";
             bundle_identifiers = apps.emacs;
+          }
+        ];
+      }
+      {
+        type = "basic";
+        from = {
+          key_code = "u";
+          modifiers = {
+            mandatory = [ "left_control" ];
+          };
+        };
+        to = [
+          {
+            key_code = "page_up";
+          }
+        ];
+        conditions = [
+          {
+            type = "frontmost_application_if";
+            bundle_identifiers = apps.raycast;
+          }
+        ];
+      }
+      {
+        type = "basic";
+        from = {
+          key_code = "d";
+          modifiers = {
+            mandatory = [ "left_control" ];
+          };
+        };
+        to = [
+          {
+            key_code = "page_down";
+          }
+        ];
+        conditions = [
+          {
+            type = "frontmost_application_if";
+            bundle_identifiers = apps.raycast;
           }
         ];
       }

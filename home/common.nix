@@ -1,4 +1,10 @@
-{ inputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -23,7 +29,7 @@
     fd
     jq
     nixd
-    nixfmt-rfc-style
+    nixfmt
     ripgrep
     nodejs
     pnpm

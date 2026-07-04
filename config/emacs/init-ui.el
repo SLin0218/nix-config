@@ -25,13 +25,16 @@
     (with-selected-frame (or frame (selected-frame))
       (cond
        ((eq window-system 'pgtk)
-        (set-face-attribute 'default nil :height (* slin/font-size 10) :family slin/font-family))
+        (set-face-attribute 'default nil :height (* slin/font-size 10) :family slin/font-family)
+        (set-face-attribute 'fixed-pitch nil :height (* slin/font-size 10) :family slin/font-family))
        (t
         (let* ((font-size slin/font-size)
                (chinese-font slin/font-family-cjk)
                (english-font slin/font-family))
           ;; Set default font
           (set-frame-font (format "%s-%d" english-font font-size) nil t)
+          ;; Set fixed-pitch font to match default
+          (set-face-attribute 'fixed-pitch nil :family english-font :height (* font-size 10))
           ;; Set Chinese font for CJK characters
           (dolist (charset '(han kana bopomofo cjk-misc symbol))
             (set-fontset-font (frame-parameter nil 'font)

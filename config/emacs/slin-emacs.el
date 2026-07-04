@@ -6,12 +6,12 @@
 ;;
 
 ;;; Code:
-                                        ;(defconst user-emacs-cache-directory (expand-file-name ".cache" user-emacs-directory))             ;缓存文件存放位置 存放临时文件
-;(setq recentf-save-file (expand-file-name "recentf" user-emacs-cache-directory))                   ;最近打开文件 存放位置
-;(setq savehist-file (expand-file-name "history" user-emacs-cache-directory))                       ;savehist文件位置
-;(setq auto-save-list-file-prefix (expand-file-name "auto-save-list" user-emacs-cache-directory))   ;自动保存文件目录
-;(setq package-user-dir (expand-file-name "elpa" user-emacs-cache-directory))                       ;ELPA目录
-;(setq tutorial-directory (expand-file-name "tutorial" user-emacs-cache-directory))
+;;(defconst user-emacs-cache-directory (expand-file-name ".cache" user-emacs-directory))             ;缓存文件存放位置 存放临时文件
+;;(setq recentf-save-file (expand-file-name "recentf" user-emacs-cache-directory))                   ;最近打开文件 存放位置
+;;(setq savehist-file (expand-file-name "history" user-emacs-cache-directory))                       ;savehist文件位置
+;;(setq auto-save-list-file-prefix (expand-file-name "auto-save-list" user-emacs-cache-directory))   ;自动保存文件目录
+;;(setq package-user-dir (expand-file-name "elpa" user-emacs-cache-directory))                       ;ELPA目录
+;;(setq tutorial-directory (expand-file-name "tutorial" user-emacs-cache-directory))
 
 (setq read-process-output-max (* 1024 1024)) ; 提升进程输出读取上限，优化 eglot
 
@@ -27,13 +27,13 @@
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
-;M+x历史命令保留
+;;M+x历史命令保留
 (savehist-mode 1)
 
-;(setenv "HTTP_PROXY" "http://myphone:7890")
-;(setenv "HTTPS_PROXY" "http://myphone:7890")
-;(setenv "ALL_PROXY" "socks5://myphone:7890")
-;(setenv "MAVEN_OPTS" "-Dhttp.proxyHost=myphone -Dhttp.proxyPort=7890 -Dhttps.proxyHost=myphone -Dhttps.proxyPort=7890")
+;;(setenv "HTTP_PROXY" "http://myphone:7890")
+;;(setenv "HTTPS_PROXY" "http://myphone:7890")
+;;(setenv "ALL_PROXY" "socks5://myphone:7890")
+;;(setenv "MAVEN_OPTS" "-Dhttp.proxyHost=myphone -Dhttp.proxyPort=7890 -Dhttps.proxyHost=myphone -Dhttps.proxyPort=7890")
 
 
 (require 'init-package)

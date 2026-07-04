@@ -12,7 +12,11 @@
   :hook
   (dired-mode . dired-omit-mode) ;隐藏 .git、.DS_Store 等
   :config
-  (setq dired-listing-switches "-alh"))
+  (setq dired-listing-switches "-alh")
+  ;; 退出 dired 时，自动杀死 (kill) 缓冲区而不仅是隐藏 (bury)
+  (define-key dired-mode-map (kbd "q") (lambda () (interactive) (quit-window t)))
+  ;; 深入新目录时，自动杀死旧目录的 Dired 缓冲区，防止堆积
+  (setq dired-kill-when-opening-new-dired-buffer t))
 
 ;文件类型高亮
 (use-package diredfl

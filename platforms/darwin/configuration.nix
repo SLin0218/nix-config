@@ -87,6 +87,7 @@
       "windows-app"
       "readdle-spark"
       "emacs-plus-app@master"
+      "flameshot"
     ];
   };
 

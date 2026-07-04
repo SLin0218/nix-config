@@ -198,7 +198,13 @@
   :config
   (apheleia-global-mode +1))
 
-(use-package markdown-mode :defer t)
+(use-package markdown-mode
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :config
+  ;; 开启代码块内原生语法高亮
+  (setq markdown-fontify-code-blocks-natively t))
 
 (use-package nix-mode :defer t)
 

@@ -24,7 +24,7 @@
     (add-to-list 'evil-emacs-state-modes mode))
   (evil-set-leader '(normal visual) (kbd "SPC") nil)
   ;;file操作
-  (evil-define-key 'normal 'global (kbd "<leader>fr") 'recentf-open)
+  (evil-define-key 'normal 'global (kbd "<leader>fr") 'consult-recent-file)
   (evil-define-key 'normal 'global (kbd "<leader>ff") 'find-file)
   (evil-define-key 'normal 'global (kbd "<leader>fd") 'dired)
   (evil-define-key 'normal 'global (kbd "<leader>fj") 'dired-jump)

@@ -78,6 +78,14 @@
   ("M-n" . symbol-overlay-jump-next)
   ("M-p" . symbol-overlay-jump-prev))
 
+;; 最近打开的文件记录
+(use-package recentf
+  :init
+  (recentf-mode 1)
+  :config
+  (setq recentf-max-saved-items 100
+        recentf-exclude '("/tmp/" "/ssh:" "\\.git/" "/elpa/")))
+
 ;; 记住上次打开文件时的光标位置
 (save-place-mode 1)
 

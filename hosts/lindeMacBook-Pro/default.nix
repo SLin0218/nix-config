@@ -13,6 +13,7 @@
       "android-studio"
       "stats"
       "steam"
+      "flameshot"
     ];
   };
 }

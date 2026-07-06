@@ -1,16 +1,39 @@
 { config, pkgs, ... }:
+let
+  rimeFiles = [
+    "build/flypy.prism.bin"
+    "build/flypy.reverse.bin"
+    "build/flypy.table.bin"
+    "default.custom.yaml"
+    "flypy.schema.yaml"
+    "flypy_full.txt"
+    "flypy_ok.txt"
+    "flypy_sys.txt"
+    "flypy_top.txt"
+    "flypy_user.txt"
+    "flypydz.dict.yaml"
+    "flypydz.schema.yaml"
+    "lua/calculator_translator.lua"
+    "rime.lua"
+    "squirrel.custom.yaml"
+  ];
+in
 {
   imports = [
     ../common.nix
     ./modules/karabiner.nix
   ];
 
-  home.file.".hammerspoon".source = ../../config/hammerspoon;
-  home.file."/Library/Rime".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-crane";
+  # 映射特定的 Rime 配置文件与 Hammerspoon 配置
+  home.file = {
+    ".hammerspoon".source = ../../config/hammerspoon;
+  } // builtins.listToAttrs (map (path: {
+    name = "Library/Rime/${path}";
+    value = { source = ../../config/rime-data + "/${path}"; };
+  }) rimeFiles);
 
   home = {
-    homeDirectory = "/Users/lin";
+    homeDirectory = "/Users/${config.home.username}";
   };
 
   home.sessionVariables = {
@@ -27,7 +50,6 @@
   home.packages = with pkgs; [
     jdk21
     maven
-    # docker
     docker
     colima
   ];

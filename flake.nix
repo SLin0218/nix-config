@@ -3,7 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-2605.url = "github:nixos/nixpkgs/nixos-26.05";
 
     hyprland = {
       url = "github:hyprwm/Hyprland";
@@ -30,19 +29,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    home-manager-2605 = {
-      url = "github:nix-community/home-manager/release-26.05";
-      inputs.nixpkgs.follows = "nixpkgs-2605";
-    };
-
     darwin = {
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    darwin-2605 = {
-      url = "github:LnL7/nix-darwin/nix-darwin-26.05";
-      inputs.nixpkgs.follows = "nixpkgs-2605";
     };
   };
 
@@ -134,56 +123,6 @@
                 ];
               };
               home-manager.extraSpecialArgs = { inherit inputs; };
-            }
-          ];
-        };
-
-        lins-iMac = inputs.darwin-2605.lib.darwinSystem {
-          specialArgs = {
-            inputs = inputs // {
-              nixpkgs = inputs.nixpkgs-2605;
-              home-manager = inputs.home-manager-2605;
-              darwin = inputs.darwin-2605;
-            };
-          };
-          modules = [
-            ({ lib, ... }: {
-              _module.args.pkgs = lib.mkForce (
-                import inputs.nixpkgs-2605 {
-                  system = "x86_64-darwin";
-                  config = {
-                    allowUnfree = true;
-                    allowBroken = true;
-                  };
-                  overlays = overlays;
-                }
-              );
-              homebrew.onActivation.cleanup = lib.mkForce "none";
-            })
-            ./platforms/darwin/configuration.nix
-            ./hosts/lins-iMac
-
-            # 直接引用上面定义的统一 Overlay
-            { nixpkgs.overlays = overlays; }
-
-            inputs.home-manager-2605.darwinModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.backupFileExtension = "before-nix";
-              home-manager.users.lin = {
-                imports = [
-                  ./home/darwin
-                  inputs.catppuccin.homeModules.catppuccin
-                ];
-              };
-              home-manager.extraSpecialArgs = {
-                inputs = inputs // {
-                  nixpkgs = inputs.nixpkgs-2605;
-                  home-manager = inputs.home-manager-2605;
-                  darwin = inputs.darwin-2605;
-                };
-              };
             }
           ];
         };

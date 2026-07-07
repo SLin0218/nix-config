@@ -184,6 +184,7 @@ let
     kitty = [ "^net\\.kovidgoyal\\.kitty$" ];
     emacs = [ "^org\\.gnu\\.Emacs$" ];
     raycast = [ "^com\\.raycast\\.macos$" ];
+    welink = [ "^com\\.huawei\\.cloud\\.welink$" ];
   };
 
   # ---------------------------------------------------------
@@ -384,6 +385,76 @@ let
           {
             type = "frontmost_application_if";
             bundle_identifiers = apps.raycast;
+          }
+        ];
+      }
+      # 4. WeLink 专用
+      {
+        type = "basic";
+        from = {
+          key_code = "f";
+          modifiers.mandatory = hyperModifiers;
+        };
+        to = [
+          {
+            key_code = "f";
+            modifiers = [
+              "left_control"
+              "left_option"
+              "left_command"
+            ];
+          }
+        ];
+        conditions = [
+          {
+            type = "frontmost_application_if";
+            bundle_identifiers = apps.welink;
+          }
+        ];
+      }
+      {
+        type = "basic";
+        from = {
+          key_code = "k";
+          modifiers.mandatory = hyperModifiers;
+        };
+        to = [
+          {
+            key_code = "k";
+            modifiers = [
+              "left_control"
+              "left_option"
+              "left_command"
+            ];
+          }
+        ];
+        conditions = [
+          {
+            type = "frontmost_application_if";
+            bundle_identifiers = apps.welink;
+          }
+        ];
+      }
+      {
+        type = "basic";
+        from = {
+          key_code = "j";
+          modifiers.mandatory = hyperModifiers;
+        };
+        to = [
+          {
+            key_code = "j";
+            modifiers = [
+              "left_control"
+              "left_option"
+              "left_command"
+            ];
+          }
+        ];
+        conditions = [
+          {
+            type = "frontmost_application_if";
+            bundle_identifiers = apps.welink;
           }
         ];
       }

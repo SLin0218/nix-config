@@ -53,8 +53,13 @@
     maple-mono.NF-CN-unhinted
   ];
 
-  # Add ability to used TouchID for sudo authentication
-  security.pam.services.sudo_local.touchIdAuth = true;
+  security = {
+    # Add ability to used TouchID for sudo authentication
+    pam.services.sudo_local.touchIdAuth = true;
+    sudo.extraConfig = ''
+      Defaults pwfeedback
+    '';
+  };
 
   homebrew = {
     enable = true;

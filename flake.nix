@@ -104,6 +104,7 @@
               home-manager.users.lin = {
                 imports = [
                   ./home/darwin
+                  ./hosts/fcdeMac-mini/home.nix
                   inputs.catppuccin.homeModules.catppuccin
                 ];
               };

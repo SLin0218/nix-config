@@ -16,15 +16,27 @@
   nixpkgs.config.allowUnfree = true;
 
   # Necessary for using flakes on this system.
-  nix.settings = {
-    experimental-features = "nix-command flakes";
-    substituters = [
-      "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-      "https://cache.nixos.org"
-    ];
-    trusted-public-keys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-    ];
+  nix = {
+    settings = {
+      experimental-features = "nix-command flakes";
+      substituters = [
+        "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+        "https://cache.nixos.org"
+      ];
+      trusted-public-keys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      ];
+    };
+    gc = {
+      automatic = true;
+      # 替代 dates = "weekly"; 规定在每周日 (Weekday = 0) 凌晨 3:00 执行
+      interval = {
+        Weekday = 0;
+        Hour = 3;
+        Minute = 0;
+      };
+      options = "--delete-older-than 7d";
+    };
   };
 
   # Create /etc/zshrc that loads the nix-darwin environment.

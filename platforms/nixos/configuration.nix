@@ -1,9 +1,15 @@
-{ inputs, config, lib, pkgs, ... }:
+{
+  inputs,
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
-     ./modules/mihomo.nix
-     ./modules/keyd.nix
+    ./modules/mihomo.nix
+    ./modules/keyd.nix
   ];
 
   nixpkgs.config.allowUnfree = true;
@@ -28,7 +34,10 @@
   };
   # 加载 Dell 专用的内核模块
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelModules = [ "coretemp" "dell_smm_hwmon" ];
+  boot.kernelModules = [
+    "coretemp"
+    "dell_smm_hwmon"
+  ];
   # 为模块添加参数以强制启用（部分 Dell 机型需要）
   boot.extraModprobeConfig = ''
     options dell_smm_hwmon ignore_dmi=1
@@ -52,7 +61,7 @@
     enable = true;
     extraPackages = with pkgs; [
       intel-media-driver # 核心：适用于 Broadwell 及以后的 iHD 驱动
-      vpl-gpu-rt         # 适用于 Alder Lake+ 的 QuickSync 视频处理
+      vpl-gpu-rt # 适用于 Alder Lake+ 的 QuickSync 视频处理
       libvdpau-va-gl # 可选：让 VDPAU 应用也能用 VA-API
     ];
   };
@@ -67,42 +76,42 @@
     };
   };
 
-
   time.timeZone = "Asia/Shanghai";
 
-  nix = let
-    flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
-  in {
-    settings = {
-      experimental-features = "nix-command flakes";
-      flake-registry = "";
-      nix-path = config.nix.nixPath;
-      trusted-users = [ "lin" ];
+  nix =
+    let
+      flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
+    in
+    {
+      settings = {
+        experimental-features = "nix-command flakes";
+        flake-registry = "";
+        nix-path = config.nix.nixPath;
+        trusted-users = [ "lin" ];
 
-      auto-optimise-store = true;
+        auto-optimise-store = true;
 
-      substituters = [
-        "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
-        "https://cache.nixos.org"
-        "https://hyprland.cachix.org"
-      ];
-      trusted-public-keys = [
-        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-        "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
-      ];
+        substituters = [
+          "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+          "https://cache.nixos.org"
+          "https://hyprland.cachix.org"
+        ];
+        trusted-public-keys = [
+          "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+          "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+        ];
+      };
+
+      channel.enable = false;
+
+      registry = lib.mapAttrs (_: flake: { inherit flake; }) flakeInputs;
+      nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
+      gc = {
+        automatic = true;
+        dates = "weekly";
+        options = "--delete-older-than 7d";
+      };
     };
-
-    channel.enable = false;
-
-    registry = lib.mapAttrs (_: flake: {inherit flake;}) flakeInputs;
-    nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 7d";
-    };
-  };
-
 
   environment = {
     systemPackages = with pkgs; [
@@ -117,17 +126,16 @@
 
       docker-compose
 
-      virt-manager     # 图形化虚拟机管理器
-      qemu             # QEMU 模拟器后端
-      libvirt          # 虚拟化 API
-      dnsmasq          # 默认网络 NAT 所需的依赖
-      bridge-utils     # 网桥工具包
+      virt-manager # 图形化虚拟机管理器
+      qemu # QEMU 模拟器后端
+      libvirt # 虚拟化 API
+      dnsmasq # 默认网络 NAT 所需的依赖
+      bridge-utils # 网桥工具包
 
     ];
 
     variables.EDITOR = "nvim";
   };
-
 
   virtualisation = {
     docker.enable = true;
@@ -141,7 +149,17 @@
   users.users = {
     lin = {
       isNormalUser = true;
-      extraGroups = [ "wheel" "video" "networkmanager" "audio" "docker" "etc" "keyd" "input" "libvirtd" ];
+      extraGroups = [
+        "wheel"
+        "video"
+        "networkmanager"
+        "audio"
+        "docker"
+        "etc"
+        "keyd"
+        "input"
+        "libvirtd"
+      ];
       shell = pkgs.zsh;
     };
   };
@@ -151,13 +169,14 @@
     upower.enable = true;
   };
 
-  security.pam.services.hyprlock = {};
+  security.pam.services.hyprlock = { };
 
   programs = {
     hyprland = {
       enable = true;
       package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-      portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+      portalPackage =
+        inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
     };
     zsh.enable = true;
     gpu-screen-recorder.enable = true;
@@ -189,9 +208,22 @@
       hinting.enable = true;
       hinting.autohint = true;
       defaultFonts = {
-        sansSerif = [ "Microsoft YaHei" "Noto Sans CJK SC" "Source Han Sans SC" "DejaVu Sans" ];
-        serif = [ "Noto Serif CJK SC" "Source Han Serif SC" "DejaVu Serif" ];
-        monospace = [ "Noto Sans Mono CJK SC" "Sarasa Mono SC" "DejaVu Sans Mono" ];
+        sansSerif = [
+          "Microsoft YaHei"
+          "Noto Sans CJK SC"
+          "Source Han Sans SC"
+          "DejaVu Sans"
+        ];
+        serif = [
+          "Noto Serif CJK SC"
+          "Source Han Serif SC"
+          "DejaVu Serif"
+        ];
+        monospace = [
+          "Noto Sans Mono CJK SC"
+          "Sarasa Mono SC"
+          "DejaVu Sans Mono"
+        ];
         emoji = [ "Noto Color Emoji" ];
       };
     };

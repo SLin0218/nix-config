@@ -55,11 +55,11 @@
 (add-hook 'before-save-hook 'auto-save-delete-trailing-whitespace-except-current-line)
 
 ;;项目管理
-(use-package projectile
-  :init
-  (projectile-mode +1)
-  :config
-  (if (string-equal system-type "darwin") (delete "WORKSPACE" projectile-project-root-files)))
+;; (use-package projectile
+;;   :init
+;;   (projectile-mode +1)
+;;   :config
+;;   (if (string-equal system-type "darwin") (delete "WORKSPACE" projectile-project-root-files)))
 
 
 (use-package magit

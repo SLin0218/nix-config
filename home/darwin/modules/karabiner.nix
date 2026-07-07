@@ -1,6 +1,9 @@
-{ ... }:
+{ osConfig, ... }:
 
 let
+  # company pc
+  mainChat = if osConfig.networking.hostName == "fcdeMac-mini" then "WeLink" else "WeChat";
+
   hyperModifiers = [
     "right_command"
     "right_control"
@@ -144,7 +147,7 @@ let
           }
           {
             key = "u";
-            app = "WeChat";
+            app = mainChat;
           }
           {
             key = "o";

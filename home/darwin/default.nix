@@ -1,7 +1,6 @@
 { config, pkgs, ... }:
 let
   rimeFiles = [
-    "build/flypy.prism.bin"
     "build/flypy.reverse.bin"
     "build/flypy.table.bin"
     "default.custom.yaml"
@@ -27,10 +26,15 @@ in
   # 映射特定的 Rime 配置文件与 Hammerspoon 配置
   home.file = {
     ".hammerspoon".source = ../../config/hammerspoon;
-  } // builtins.listToAttrs (map (path: {
-    name = "Library/Rime/${path}";
-    value = { source = ../../config/rime-data + "/${path}"; };
-  }) rimeFiles);
+  }
+  // builtins.listToAttrs (
+    map (path: {
+      name = "Library/Rime/${path}";
+      value = {
+        source = ../../config/rime-data + "/${path}";
+      };
+    }) rimeFiles
+  );
 
   home = {
     homeDirectory = "/Users/${config.home.username}";
@@ -51,6 +55,5 @@ in
     jdk21
     maven
     docker
-    colima
   ];
 }

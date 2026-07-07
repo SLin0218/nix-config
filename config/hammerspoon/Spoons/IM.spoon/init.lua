@@ -49,6 +49,7 @@ function obj:init()
 
 	-- 监听输入法切换事件（订阅系统通知，比 hs.keycodes.inputSourceChanged 更稳定）
 	local function inputSourceCallback(name, object, userInfo)
+		print(string.format("[IM] Debug Focus: name=%s, object=%s, userInfo=%s", name, object, userInfo))
 		local focusedWindow = hs.window.focusedWindow()
 		local focusedApp = focusedWindow and focusedWindow:application()
 		local focusedAppName = focusedApp and focusedApp:name() or "nil"
@@ -79,7 +80,12 @@ function obj:init()
 
 							-- 如果焦点已经不是这些面板应用了，说明面板已关闭或失焦
 							if currentAppName and not panelApps[currentAppName] then
-								print(string.format("[IM] Panel app lost focus. Restoring input source for active app: %s", currentAppName))
+								print(
+									string.format(
+										"[IM] Panel app lost focus. Restoring input source for active app: %s",
+										currentAppName
+									)
+								)
 								switchInputForApp(currentAppName)
 								-- 停止并清理定时器
 								obj.panelFocusTimer:stop()

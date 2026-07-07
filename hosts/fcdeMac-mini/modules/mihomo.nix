@@ -8,7 +8,7 @@ let
       {
         name = "TW";
         type = "http";
-        server = "192.168.1.100";
+        server = "172.16.11.94";
         port = 8888;
       }
     ]

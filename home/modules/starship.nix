@@ -1,4 +1,4 @@
-{ lib, ... }: {
+{ ... }: {
   programs.starship = {
     enable = true;
     # 自动将初始化脚本注入 zsh/bash/fish

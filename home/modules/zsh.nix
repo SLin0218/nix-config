@@ -33,6 +33,14 @@
     eval "$(/opt/homebrew/bin/brew shellenv)"
     '' else ""}
 
+    # 自动启动 gpg-agent 并更新 TTY
+    gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
+
+    # 如果在交互式终端内，要求 pinentry 脚本使用终端模式 (curses)
+    if [[ -t 0 ]]; then
+      export PINENTRY_USER_DATA="USE_CURSES=1"
+    fi
+
     zstyle ':completion:*' use-cache on
     zstyle ':completion:*:descriptions' format '[%d]'
     zstyle ':completion:*' list-colors ''${(s.:.)LS_COLORS}

@@ -1,7 +1,4 @@
 {
-  inputs,
-  lib,
-  config,
   pkgs,
   ...
 }:
@@ -47,6 +44,7 @@
     android-tools
 
     gnupg
+    pinentry-curses
 
     git-crypt
 

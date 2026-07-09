@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 --- === IM Auto Switch ===
 
 local obj = {}
@@ -38,7 +39,7 @@ function obj:switchInputForApp(appName)
 	if not appName then
 		return
 	end
-	local targetInput = obj.fixedApps[appName] or obj.appInputSources[appName] or obj.defaultLayout or "com.apple.keylayout.ABC"
+	local targetInput = obj.fixedApps[appName] or obj.appInputSources[appName] or obj.defaultLayout
 	local currentInput = hs.keycodes.currentSourceID()
 	if currentInput ~= targetInput then
 		logDebug("Auto Switch (%s): %s -> %s", "Focus/Activate", appName, targetInput)
@@ -57,10 +58,8 @@ local function applicationWatcher(appName, eventType, _)
 end
 
 -- 监听输入法切换事件（订阅系统通知，比 hs.keycodes.inputSourceChanged 更稳定）
-local function inputSourceCallback(name, object, userInfo)
-	logDebug("Debug Focus: name=%s, object=%s, userInfo=%s", name, object, userInfo)
-
-	-- 优先获取 frontmostApplication (非常快，避免调用慢速的 accessibility 接口)
+local function inputSourceCallback(_, _, _)
+	-- 优先获取 frontmostApplication (避免调用慢速的 accessibility 接口)
 	local frontApp = hs.application.frontmostApplication()
 	local frontAppName = frontApp and frontApp:name()
 

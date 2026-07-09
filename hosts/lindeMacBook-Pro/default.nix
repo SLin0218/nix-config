@@ -15,6 +15,7 @@
       "stats"
       "steam"
       "flameshot"
+      "readdle-spark"
     ];
   };
 }

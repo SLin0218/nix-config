@@ -159,8 +159,8 @@ in
       "GEOSITE,category-ads-all,REJECT"
 
       "GEOSITE,CN,DIRECT"
-      "GEOSITE,geolocation-!cn,AUTO"
-      "MATCH,AUTO"
+      "GEOSITE,geolocation-!cn,PROXY"
+      "MATCH,PROXY"
     ];
 
     proxy-groups = [
@@ -173,8 +173,9 @@ in
         tolerance = 50;
       }
       {
-        name = "SELECT";
+        name = "PROXY";
         type = "select";
+        proxies = [ "AUTO" ];
         use = [ "JMS" ];
       }
     ];

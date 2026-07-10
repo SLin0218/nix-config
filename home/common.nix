@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   ...
 }:
@@ -15,6 +16,16 @@
 
   home.file.".sqlfluff".source = ../config/sqlfluff;
   home.file.".gitconfig".source = ../config/gitconfig;
+  home.file.".gnupg/gpg-agent.conf".text = ''
+    default-cache-ttl 600
+    max-cache-ttl 7200
+    pinentry-program ${config.home.homeDirectory}/.gnupg/pinentry-wrapper.sh
+    enable-ssh-support
+  '';
+  home.file.".gnupg/pinentry-wrapper.sh" = {
+    source = ../config/gnupg/pinentry-wrapper.sh;
+    executable = true;
+  };
 
   home = {
     username = "lin";

@@ -7,14 +7,12 @@
 
   homebrew = {
     brews = [
-      "container"
     ];
 
     casks = [
       "android-studio"
       "stats"
       "steam"
-      "flameshot"
       "readdle-spark"
     ];
   };

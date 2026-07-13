@@ -86,6 +86,7 @@
 
     brews = [
       "librime"
+      "container"
       "pinentry-mac"
       "openvpn"
     ];
@@ -95,6 +96,7 @@
     ];
 
     casks = [
+      "flameshot"
       "squirrel-app"
       "hammerspoon"
       "karabiner-elements"

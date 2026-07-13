@@ -8,7 +8,7 @@ let
       {
         name = "TW";
         type = "http";
-        server = "172.16.11.94";
+        server = "tw-vpn";
         port = 8888;
       }
     ]

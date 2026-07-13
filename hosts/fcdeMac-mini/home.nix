@@ -1,7 +1,5 @@
 { pkgs, ... }:
 {
-  home.packages = with pkgs; [
-    docker
-    colima
-  ];
+  # home.packages = with pkgs; [
+  # ];
 }

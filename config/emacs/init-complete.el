@@ -208,11 +208,105 @@
 
 (use-package nix-mode :defer t)
 
+;; 动态从 ~/.myclirc 自动解析并加载所有数据库连接配置
+(defun my-load-db-connections-from-myclirc ()
+  "Dynamically parse database connections from ~/.myclirc and set alists."
+  (let ((file (expand-file-name "~/.myclirc"))
+        (sql-conns nil)
+        (clutch-conns nil))
+    (when (file-readable-p file)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (goto-char (point-min))
+        (when (re-search-forward "^\\[alias_dsn\\]" nil t)
+          (forward-line 1)
+          (let ((continue t))
+            (while (and continue (not (eobp)))
+              (let ((line (string-trim (buffer-substring-no-properties (line-beginning-position) (line-end-position)))))
+                (cond
+                 ;; Stop at another section
+                 ((string-match-p "^\\[" line)
+                  (setq continue nil))
+                 ;; Skip comments and empty lines
+                 ((or (string-empty-p line)
+                      (string-match-p "^[#;]" line))
+                  nil)
+                 ;; Parse connection line
+                 ((string-match "^\\([^#=; \t\n]+\\)[ \t]*=[ \t]*mysql://\\(?:\\([^:@/]+?\\)\\(?::\\(.*\\)\\)?@\\)?\\([^:@/ \t\n]+\\)\\(?::\\([0-9]+\\)\\)?\\(?:/\\([^? \t\n]*\\)\\)?$" line)
+                  (let* ((name (match-string 1 line))
+                         (user-raw (match-string 2 line))
+                         (pass-raw (match-string 3 line))
+                         (host (match-string 4 line))
+                         (port-str (match-string 5 line))
+                         (db-raw (match-string 6 line))
+                         ;; Process extracted match strings
+                         (user (or user-raw "root"))
+                         (pass (and pass-raw (url-unhex-string pass-raw)))
+                         (port (if port-str (string-to-number port-str) 3306))
+                         (db (if (or (null db-raw) (string-empty-p db-raw)) nil db-raw)))
+                    (push `(,name (sql-product 'mysql)
+                                  (sql-user ,user)
+                                  ,@(when pass `((sql-password ,pass)))
+                                  ,@(when db `((sql-database ,db)))
+                                  (sql-server ,host)
+                                  (sql-port ,port))
+                          sql-conns)
+                    (push `(,name . (:backend mysql
+                                     :host ,host
+                                     :port ,port
+                                     :user ,user
+                                     ,@(when pass `(:password ,pass))
+                                     ,@(when db `(:database ,db))))
+                          clutch-conns)))))
+              (forward-line 1))))))
+    (setq sql-connection-alist (nreverse sql-conns))
+    (setq clutch-connection-alist (nreverse clutch-conns))))
+
+(require 'url-util)
+(my-load-db-connections-from-myclirc)
+
+(use-package sql
+  :defer t
+  :bind (:map sql-mode-map
+              ("C-c C-c" . sql-send-paragraph)
+              ("C-c C-r" . sql-send-region)
+              ("C-c C-s" . sql-show-sqli-buffer))
+  :config
+  ;; 优化 SQL 交互窗口 (SQLi) 体验
+  (add-hook 'sql-interactive-mode-hook
+            (lambda ()
+              (toggle-truncate-lines t)
+              (setq-local show-trailing-whitespace nil)))
+
+  ;; 解决 MySQL/MariaDB 连接时的 SSL/TLS 自签名证书报错问题
+  (setq sql-mysql-options '("--skip-ssl")))
+
+(use-package sql-indent
+  :hook (sql-mode . sql-indent-enable))
+
+(use-package sqlformat
+  :defer t
+  :bind (:map sql-mode-map
+              ("C-c C-f" . sqlformat-buffer))
+  :init
+  ;; 默认格式化器使用 pgformatter，也可以根据喜好设为 'sqlfluff
+  (setq sqlformat-command 'pgformatter))
+
 ;; 开启 Emacs Lisp 的实时语法与错误检查（不用 LSP 也能画红线报错）
 (add-hook 'emacs-lisp-mode-hook #'flymake-mode)
 
 ;; 开启括号、引号自动成对闭合
 (electric-pair-mode 1)
+
+;; 现代化交互式数据库客户端 Clutch
+(use-package mysql :ensure t)
+(use-package clutch
+  :ensure t
+  :config
+  ;; 禁用结果、记录与详情缓冲区的行号显示，让表格布局更加整齐
+  (add-hook 'clutch-result-mode-hook (lambda () (display-line-numbers-mode -1)))
+  (add-hook 'clutch-record-mode-hook (lambda () (display-line-numbers-mode -1)))
+  (add-hook 'clutch-describe-mode-hook (lambda () (display-line-numbers-mode -1))))
 
 (provide 'init-complete)
 ;;; init-complete.el ends here

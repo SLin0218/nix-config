@@ -108,6 +108,7 @@
       "windows-app"
       "emacs-plus-app@master"
       "raycast"
+      "claude-code"
     ];
   };
 

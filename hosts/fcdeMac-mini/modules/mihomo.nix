@@ -8,7 +8,7 @@ let
       {
         name = "TW";
         type = "http";
-        server = "tw-vpn.docker";
+        server = "tw-vpn.container";
         port = 8888;
       }
     ]

@@ -57,6 +57,12 @@ enum ActiveWindow {
     AppArgsInput,
 }
 
+#[derive(Clone, PartialEq, Copy)]
+enum InputMode {
+    Normal,
+    Insert,
+}
+
 struct ProcessInfo {
     pid: u32,
     etime: String,
@@ -89,25 +95,28 @@ struct App {
     running_processes: HashMap<u32, ProcessInfo>,
     ports_cache: HashMap<u32, String>,
     app_status_cache: HashMap<String, JarState>,
-    
+
     // TUI States
     selected_idx: usize,
     active_window: ActiveWindow,
     status_message: String,
     status_message_time: Option<Instant>,
-    
+
     // Inputs & Prompts
     input_value: String,
+    input_cursor: usize, // char index into input_value
+    input_mode: InputMode,
+    input_count: Option<usize>, // for count-prefixed commands like 2h, 3l
     prompt_title: String,
     prompt_label: String,
-    
+
     // Log Viewer States
     log_lines: Vec<String>,
     log_scroll_offset: usize,
     log_search_query: Option<String>,
     log_match_indices: Vec<usize>,
     log_curr_match_ptr: usize,
-    
+
     // Nested Menu Indexing
     menu_idx: usize,
     nix_jdk_options: Vec<String>,
@@ -121,7 +130,7 @@ impl App {
     fn new() -> Self {
         let home = env::var("HOME").unwrap_or_else(|_| "/Users/lin".to_string());
         let config_dir = PathBuf::from(home).join(".config/jar-launcher");
-        
+
         App {
             config_dir,
             config: GlobalConfig {
@@ -138,6 +147,9 @@ impl App {
             status_message: String::new(),
             status_message_time: None,
             input_value: String::new(),
+            input_cursor: 0,
+            input_mode: InputMode::Insert,
+            input_count: None,
             prompt_title: String::new(),
             prompt_label: String::new(),
             log_lines: Vec::new(),
@@ -162,7 +174,7 @@ impl App {
 
     fn load_all_configs(&mut self) {
         fs::create_dir_all(&self.config_dir).ok();
-        
+
         let config_path = self.config_dir.join("config.json");
         if config_path.exists() {
             if let Ok(content) = fs::read_to_string(&config_path) {
@@ -317,7 +329,7 @@ impl App {
         if let Some(p) = proc {
             let mem_limit = parse_xmx(&p.command).or_else(|| parse_xmx(&jvm_args)).unwrap_or_else(|| "N/A".to_string());
             let mem_str = format!("{} ({})", format_memory(p.rss_mb), mem_limit);
-            
+
             return JarState {
                 path: jar_path.to_string(),
                 basename: Path::new(jar_path).file_name().unwrap_or_default().to_string_lossy().to_string(),
@@ -377,6 +389,56 @@ impl App {
     fn set_status(&mut self, msg: &str) {
         self.status_message = msg.to_string();
         self.status_message_time = Some(Instant::now());
+    }
+
+    // Begin a prompt input session: seed value, place cursor at end, enter Normal mode.
+    fn begin_input(&mut self, value: String) {
+        self.input_value = value;
+        self.input_cursor = self.input_value.chars().count();
+        self.input_mode = InputMode::Normal;
+        self.input_count = None;
+    }
+
+    // Cancel/close the current prompt input and return to the previous window.
+    fn cancel_input(&mut self) {
+        match self.active_window {
+            ActiveWindow::SearchPrompt => self.active_window = ActiveWindow::LogViewer,
+            ActiveWindow::EnvAddKeyPrompt | ActiveWindow::EnvAddValuePrompt => {
+                self.active_window = ActiveWindow::EnvEditor;
+                self.menu_idx = 0;
+            }
+            _ => self.active_window = ActiveWindow::MainList,
+        }
+    }
+
+    fn input_len(&self) -> usize {
+        self.input_value.chars().count()
+    }
+
+    // In Normal mode the cursor sits on a char (0..len-1); in Insert mode it sits between chars (0..len).
+    fn clamp_cursor(&mut self) {
+        let len = self.input_len();
+        match self.input_mode {
+            InputMode::Normal => {
+                if len == 0 {
+                    self.input_cursor = 0;
+                } else if self.input_cursor >= len {
+                    self.input_cursor = len - 1;
+                }
+            }
+            InputMode::Insert => {
+                if self.input_cursor > len {
+                    self.input_cursor = len;
+                }
+            }
+        }
+    }
+
+    // Display width (cells) of the text before the cursor, for terminal cursor positioning.
+    fn cursor_screen_offset(&self) -> usize {
+        let chars: Vec<char> = self.input_value.chars().collect();
+        let head: String = chars[..self.input_cursor.min(chars.len())].iter().collect();
+        str_width(&head)
     }
 
     fn get_merged_env(&self, jar_path: &str) -> HashMap<String, String> {
@@ -465,7 +527,7 @@ impl App {
             format!("java {} -jar \"{}\" {}", jvm_args, jar_path, app_args)
         };
 
-        let wrapped = format!("sh -c '{}; echo $? > \"{}\"'", java_cmd, exit_code_file.to_string_lossy());
+        let wrapped = format!("sh -c 'cd \"{}\" && {}; echo $? > \"{}\"'", self.config.jar_dir, java_cmd, exit_code_file.to_string_lossy());
         let cmd = format!("nohup {} > \"{}\" 2>&1", wrapped, log_file.to_string_lossy());
 
         let run_envs = self.get_merged_env(jar_path);
@@ -475,6 +537,8 @@ impl App {
             use std::os::unix::process::CommandExt;
             let mut spawn_cmd = Command::new("sh");
             spawn_cmd.arg("-c").arg(cmd);
+            // 设置工作目录为 scan_dir
+            spawn_cmd.current_dir(&self.config.jar_dir);
             for (k, v) in run_envs {
                 spawn_cmd.env(k, v);
             }
@@ -616,7 +680,7 @@ fn get_pid_ports(pid: u32) -> String {
     let result = Command::new("lsof")
         .args(["-a", "-iTCP", "-sTCP:LISTEN", "-P", "-n", "-p", &pid.to_string()])
         .output();
-    
+
     if let Ok(output) = result {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -634,7 +698,7 @@ fn get_pid_ports(pid: u32) -> String {
             ports.sort();
             ports.dedup();
             if !ports.is_empty() {
-                return ports[0].to_string();
+                return ports.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(",");
             }
         }
     }
@@ -664,7 +728,7 @@ fn get_pid_ports(pid: u32) -> String {
                 ports.sort();
                 ports.dedup();
                 if !ports.is_empty() {
-                    return ports[0].to_string();
+                    return ports.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(",");
                 }
             }
         }
@@ -693,7 +757,7 @@ fn get_running_processes() -> HashMap<u32, ProcessInfo> {
             let pid_str = words[0];
             let etime = words[1].to_string();
             let rss_str = words[2];
-            
+
             // Slice command to preserve any spaces in the Java command arguments
             let rss_pos = match line.find(rss_str) {
                 Some(pos) => pos + rss_str.len(),
@@ -844,7 +908,7 @@ fn gen_home_manager(jar_path: &str, jvm_args: &str, jdk_ver: &str, run_envs: &Ha
     let basename = Path::new(jar_path).file_name().unwrap().to_string_lossy();
     let name_no_ext = Path::new(jar_path).file_stem().unwrap().to_string_lossy();
     let clean_name = name_no_ext.chars().filter(|c| c.is_alphanumeric() || *c == '-' || *c == '_').collect::<String>().to_lowercase();
-    
+
     let is_darwin = cfg!(target_os = "macos");
     let mut env_lines = Vec::new();
     let content = if is_darwin {
@@ -908,7 +972,7 @@ fn gen_home_manager(jar_path: &str, jvm_args: &str, jdk_ver: &str, run_envs: &Ha
             clean_name, basename, jdk_ver, jvm_args, jar_path, log_file.to_string_lossy(), log_file.to_string_lossy(), env_nix
         )
     };
-    
+
     let path = config_dir.join(format!("service-{}.nix", clean_name));
     fs::write(&path, &content).ok();
     (content, path)
@@ -986,16 +1050,17 @@ impl App {
                 if !self.jars_list.is_empty() {
                     let jar = &self.jars_list[self.selected_idx];
                     let app_cfg = self.apps_config.get(jar).cloned().unwrap_or_default();
-                    self.input_value = if app_cfg.jvm_args.is_empty() { "-Xms128m -Xmx512m".to_string() } else { app_cfg.jvm_args };
+                    let val = if app_cfg.jvm_args.is_empty() { "-Xms128m -Xmx512m".to_string() } else { app_cfg.jvm_args };
                     self.prompt_title = format!("JVM Options: {}", Path::new(jar).file_name().unwrap().to_string_lossy());
                     self.prompt_label = "Enter JVM args (e.g. -Xms256m -Xmx1024m):".to_string();
+                    self.begin_input(val);
                     self.active_window = ActiveWindow::JvmArgsPrompt;
                 }
             }
             KeyCode::Char('d') => {
-                self.input_value = self.config.jar_dir.clone();
                 self.prompt_title = "Global Scan Directory".to_string();
                 self.prompt_label = "Enter JAR absolute path:".to_string();
+                self.begin_input(self.config.jar_dir.clone());
                 self.active_window = ActiveWindow::JarDirPrompt;
             }
             _ => {}
@@ -1022,7 +1087,7 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, mut app: Ap
         // Sticky Selection Sorting before frame render
         if !app.jars_list.is_empty() {
             let selected_jar = app.jars_list.get(app.selected_idx).cloned();
-            
+
             // Build status map to decouple from mutable borrow of app.jars_list
             let status_map: HashMap<String, (bool, String)> = app.jars_list.iter()
                 .map(|j| {
@@ -1037,10 +1102,10 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, mut app: Ap
             app.jars_list.sort_by(|a, b| {
                 let (running_a, uptime_a) = status_map.get(a).unwrap();
                 let (running_b, uptime_b) = status_map.get(b).unwrap();
-                
+
                 let run_a_val = if *running_a { 0 } else { 1 };
                 let run_b_val = if *running_b { 0 } else { 1 };
-                
+
                 let c1 = run_a_val.cmp(&run_b_val);
                 if c1 != std::cmp::Ordering::Equal {
                     return c1;
@@ -1146,9 +1211,9 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                     app.log_scroll_offset = app.log_lines.len().saturating_sub(20);
                 }
                 KeyCode::Char('/') => {
-                    app.input_value.clear();
                     app.prompt_title = "🔍 Search Logs".to_string();
                     app.prompt_label = "Enter search term (case-insensitive):".to_string();
+                    app.begin_input(String::new());
                     app.active_window = ActiveWindow::SearchPrompt;
                 }
                 KeyCode::Char('n') => {
@@ -1169,7 +1234,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
             }
         }
         ActiveWindow::SearchPrompt => {
-            handle_prompt_input(app, key, |app, val| {
+            handle_vim_input(app, key, |app, val| {
                 if !val.is_empty() {
                     app.log_search_query = Some(val.clone());
                     let mut matches = Vec::new();
@@ -1194,7 +1259,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
             });
         }
         ActiveWindow::JvmArgsPrompt => {
-            handle_prompt_input(app, key, |app, val| {
+            handle_vim_input(app, key, |app, val| {
                 if !app.jars_list.is_empty() {
                     let jar = app.jars_list[app.selected_idx].clone();
                     let mut app_cfg = app.apps_config.get(&jar).cloned().unwrap_or_default();
@@ -1207,7 +1272,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
             });
         }
         ActiveWindow::JarDirPrompt => {
-            handle_prompt_input(app, key, |app, val| {
+            handle_vim_input(app, key, |app, val| {
                 if Path::new(&val).is_dir() {
                     app.config.jar_dir = val;
                     app.save_global_config();
@@ -1258,7 +1323,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                             let basename = Path::new(&jar).file_name().unwrap().to_string_lossy();
                             let name_no_ext = Path::new(&*basename).file_stem().unwrap().to_string_lossy();
                             let log_file = app.get_log_dir().join(format!("{}.log", name_no_ext));
-                            
+
                             let (code, file_path) = gen_home_manager(&jar, &app_cfg.jvm_args, jdk, &run_envs, &log_file, &app.config_dir);
                             app.prompt_title = format!("Nix Code - {}", file_path.file_name().unwrap().to_string_lossy());
                             app.input_value = code; // Used to store HM code viewer text
@@ -1339,9 +1404,9 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                 }
                 KeyCode::Enter => {
                     if app.menu_idx == 0 {
-                        app.input_value.clear();
                         app.prompt_title = "Add Env Key".to_string();
                         app.prompt_label = "Enter variable key (e.g. PORT):".to_string();
+                        app.begin_input(String::new());
                         app.active_window = ActiveWindow::EnvAddKeyPrompt;
                     } else if app.menu_idx == options_cnt - 1 {
                         app.active_window = ActiveWindow::EnvSelectMenu;
@@ -1356,11 +1421,12 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
             }
         }
         ActiveWindow::EnvAddKeyPrompt => {
-            handle_prompt_input(app, key, |app, val| {
+            handle_vim_input(app, key, |app, val| {
                 if !val.is_empty() {
                     app.prompt_title = format!("Add Value for {}", val);
                     app.prompt_label = format!("Enter value for {}:", val);
                     app.env_selected_key = val; // Temp store new key in selected_key
+                    app.begin_input(String::new());
                     app.active_window = ActiveWindow::EnvAddValuePrompt;
                 } else {
                     app.active_window = ActiveWindow::EnvEditor;
@@ -1369,13 +1435,13 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
             });
         }
         ActiveWindow::EnvAddValuePrompt => {
-            handle_prompt_input(app, key, |app, val| {
+            handle_vim_input(app, key, |app, val| {
                 let jar = app.jars_list[app.selected_idx].clone();
                 let save_key = if app.env_selected_key == "__global__" { "__global__" } else { &jar };
                 let mut envs = app.load_env_by_key(save_key);
                 envs.insert(app.env_selected_key.clone(), val);
                 app.save_env_by_key(save_key, envs);
-                
+
                 app.reload_env_keys();
                 app.active_window = ActiveWindow::EnvEditor;
                 app.menu_idx = 0;
@@ -1399,14 +1465,14 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                     let target_key = app.env_keys_list[key_idx].clone();
                     let jar = app.jars_list[app.selected_idx].clone();
                     let save_key = if app.env_selected_key == "__global__" { "__global__" } else { &jar };
-                    
+
                     match app.menu_idx {
                         0 => {
                             let curr_val = app.env_dict_cache.get(&target_key).cloned().unwrap_or_default();
-                            app.input_value = curr_val;
                             app.prompt_title = format!("Edit {}", target_key);
                             app.prompt_label = format!("Enter value for {}:", target_key);
                             app.env_selected_key = target_key; // Temp cache key
+                            app.begin_input(curr_val);
                             app.active_window = ActiveWindow::EnvAddValuePrompt;
                         }
                         1 => {
@@ -1459,34 +1525,203 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
     Ok(())
 }
 
-fn handle_prompt_input<F>(app: &mut App, key: KeyCode, on_submit: F)
+// Vim-style modal input handler for prompt windows.
+//  - Insert mode: type to insert at cursor; arrows/Home/End/Backspace move & edit;
+//    Esc drops to Normal mode; Enter submits.
+//  - Normal mode: hjkl/0/^/$/w/b move (with count prefix like 2h); x deletes;
+//    i/a/A/I enter Insert; q cancels; Enter submits.
+fn handle_vim_input<F>(app: &mut App, key: KeyCode, on_submit: F)
 where
     F: FnOnce(&mut App, String),
 {
-    match key {
-        KeyCode::Esc => {
-            if app.active_window == ActiveWindow::SearchPrompt {
-                app.active_window = ActiveWindow::LogViewer;
-            } else if app.active_window == ActiveWindow::EnvAddKeyPrompt || app.active_window == ActiveWindow::EnvAddValuePrompt {
-                app.active_window = ActiveWindow::EnvEditor;
-            } else {
-                app.active_window = ActiveWindow::MainList;
+    match app.input_mode {
+        InputMode::Insert => match key {
+            KeyCode::Esc => {
+                app.input_mode = InputMode::Normal;
+                app.input_count = None;
+                app.clamp_cursor();
             }
-        }
-        KeyCode::Enter => {
-            let val = app.input_value.clone();
-            on_submit(app, val);
-        }
-        KeyCode::Backspace => {
-            app.input_value.pop();
-        }
-        KeyCode::Char(c) => {
-            if app.input_value.len() < 256 {
-                app.input_value.push(c);
+            KeyCode::Enter => {
+                let val = app.input_value.clone();
+                on_submit(app, val);
             }
-        }
-        _ => {}
+            KeyCode::Backspace => {
+                if app.input_cursor > 0 {
+                    let pos = app.input_cursor - 1;
+                    app.input_cursor = pos;
+                    let mut chars: Vec<char> = app.input_value.chars().collect();
+                    chars.remove(pos);
+                    app.input_value = chars.into_iter().collect();
+                }
+            }
+            KeyCode::Delete => {
+                let len = app.input_len();
+                if app.input_cursor < len {
+                    let mut chars: Vec<char> = app.input_value.chars().collect();
+                    chars.remove(app.input_cursor);
+                    app.input_value = chars.into_iter().collect();
+                }
+            }
+            KeyCode::Left => {
+                if app.input_cursor > 0 {
+                    app.input_cursor -= 1;
+                }
+            }
+            KeyCode::Right => {
+                if app.input_cursor < app.input_len() {
+                    app.input_cursor += 1;
+                }
+            }
+            KeyCode::Home => app.input_cursor = 0,
+            KeyCode::End => app.input_cursor = app.input_len(),
+            KeyCode::Char(c) => {
+                if app.input_len() < 256 {
+                    let mut chars: Vec<char> = app.input_value.chars().collect();
+                    chars.insert(app.input_cursor, c);
+                    app.input_value = chars.into_iter().collect();
+                    app.input_cursor += 1;
+                }
+            }
+            _ => {}
+        },
+        InputMode::Normal => match key {
+            KeyCode::Esc => { app.input_count = None; }
+            KeyCode::Char('q') => app.cancel_input(),
+            KeyCode::Enter => {
+                let val = app.input_value.clone();
+                on_submit(app, val);
+            }
+            // Count prefix: accumulate digits (0 acts as "home" when alone)
+            KeyCode::Char(d @ '1'..='9') => {
+                let digit = d as usize - '1' as usize + 1;
+                app.input_count = Some(match app.input_count {
+                    Some(count) => count * 10 + digit,
+                    None => digit,
+                });
+            }
+            KeyCode::Char('0') => {
+                // In vim: 0 alone moves to first column; 0 as count prefix is ignored
+                if app.input_count.is_some() {
+                    // Already building a count: multiply by 10 (e.g., 20 → 200)
+                    app.input_count = Some(app.input_count.unwrap() * 10);
+                } else {
+                    // Standalone 0: move to first column
+                    app.input_cursor = 0;
+                }
+            }
+            KeyCode::Home => {
+                app.input_cursor = 0;
+                app.input_count = None;
+            }
+            // Enter Insert mode
+            KeyCode::Char('i') => {
+                app.input_count = None;
+                app.input_mode = InputMode::Insert;
+            }
+            KeyCode::Char('a') => {
+                app.input_count = None;
+                if app.input_cursor < app.input_len() {
+                    app.input_cursor += 1;
+                }
+                app.input_mode = InputMode::Insert;
+            }
+            KeyCode::Char('A') => {
+                app.input_count = None;
+                app.input_cursor = app.input_len();
+                app.input_mode = InputMode::Insert;
+            }
+            KeyCode::Char('I') => {
+                app.input_count = None;
+                app.input_cursor = 0;
+                app.input_mode = InputMode::Insert;
+            }
+            // Movement (with count support)
+            KeyCode::Char('h') | KeyCode::Left => {
+                let count = app.input_count.unwrap_or(1);
+                app.input_cursor = app.input_cursor.saturating_sub(count);
+                app.input_count = None;
+            }
+            KeyCode::Char('l') | KeyCode::Right => {
+                let count = app.input_count.unwrap_or(1);
+                let len = app.input_len();
+                if len > 0 {
+                    app.input_cursor = (app.input_cursor + count).min(len - 1);
+                }
+                app.input_count = None;
+            }
+            KeyCode::Char('^') => {
+                // First non-whitespace
+                let chars: Vec<char> = app.input_value.chars().collect();
+                app.input_cursor = chars.iter().position(|c| !c.is_whitespace()).unwrap_or(0);
+                app.input_count = None;
+            }
+            KeyCode::Char('$') | KeyCode::End => {
+                if app.input_len() > 0 {
+                    app.input_cursor = app.input_len() - 1;
+                }
+                app.input_count = None;
+            }
+            KeyCode::Char('w') => {
+                let count = app.input_count.unwrap_or(1);
+                let mut cur = app.input_cursor;
+                for _ in 0..count {
+                    cur = next_word(&app.input_value, cur);
+                }
+                app.input_cursor = cur;
+                app.clamp_cursor();
+                app.input_count = None;
+            }
+            KeyCode::Char('b') => {
+                let count = app.input_count.unwrap_or(1);
+                let mut cur = app.input_cursor;
+                for _ in 0..count {
+                    cur = prev_word(&app.input_value, cur);
+                }
+                app.input_cursor = cur;
+                app.input_count = None;
+            }
+            // Editing
+            KeyCode::Char('x') | KeyCode::Delete => {
+                let count = app.input_count.unwrap_or(1);
+                let len = app.input_len();
+                let mut chars: Vec<char> = app.input_value.chars().collect();
+                for _ in 0..count.min(len - app.input_cursor) {
+                    if app.input_cursor < chars.len() {
+                        chars.remove(app.input_cursor);
+                    }
+                }
+                app.input_value = chars.into_iter().collect();
+                app.clamp_cursor();
+                app.input_count = None;
+            }
+            _ => { app.input_count = None; }
+        },
     }
+}
+
+fn next_word(s: &str, cursor: usize) -> usize {
+    let chars: Vec<char> = s.chars().collect();
+    let len = chars.len();
+    let mut i = cursor;
+    while i < len && !chars[i].is_whitespace() {
+        i += 1;
+    }
+    while i < len && chars[i].is_whitespace() {
+        i += 1;
+    }
+    i
+}
+
+fn prev_word(s: &str, cursor: usize) -> usize {
+    let chars: Vec<char> = s.chars().collect();
+    let mut i = cursor;
+    while i > 0 && chars[i - 1].is_whitespace() {
+        i -= 1;
+    }
+    while i > 0 && !chars[i - 1].is_whitespace() {
+        i -= 1;
+    }
+    i
 }
 
 impl App {
@@ -1503,7 +1738,7 @@ impl App {
 // GUI Drawing Component Implementation
 fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
     let size = f.size();
-    
+
     // Base Colors
     let (bg_color, accent_color, muted_color, border_color) = if app.config.theme == "catppuccin-mocha" {
         (
@@ -1532,7 +1767,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
     // 1. Render Header Layout
     let scan_info = format!("{} Scan Path: {}", ICON_FOLDER, app.config.jar_dir);
     let logs_info = format!("{} Logs Path: {}", ICON_LOG, app.get_log_dir().to_string_lossy());
-    
+
     let active_count = app.jars_list.iter().filter(|j| app.get_app_status(j).is_some()).count();
     let stats_str = format!(
         "{} Total Jars: {}  |  Running: {}  |  Stopped: {}",
@@ -1563,7 +1798,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
         Constraint::Length(1),      // │
         Constraint::Length(32),     // Jar File Name
         Constraint::Length(1),      // │
-        Constraint::Length(7),      // Port
+        Constraint::Length(18),     // Port
         Constraint::Length(1),      // │
         Constraint::Length(14),     // Status
         Constraint::Length(1),      // │
@@ -1826,22 +2061,157 @@ fn draw_menu_modal(f: &mut ratatui::Frame, app: &App, title: &str, options: &[&s
 }
 
 fn draw_input_modal(f: &mut ratatui::Frame, app: &App, border_color: Color, accent_color: Color) {
-    let area = centered_fixed_rect(60, 7, f.size());
+    let area = centered_fixed_rect(64, 9, f.size());
     f.render_widget(Clear, area);
 
+    // Create title with mode status right-aligned, with border line spanning full width
+    let mode_str = match app.input_mode {
+        InputMode::Insert => "INSERT",
+        InputMode::Normal => "NORMAL",
+    };
+    let mode_span = Span::styled(mode_str, Style::default().fg(accent_color).add_modifier(Modifier::BOLD));
+
+    // Calculate available width and positions
+    let title_area_width = area.width as usize - 4; // Account for borders
+    let title_text = format!(" {}", app.prompt_title);
+    let mode_text = format!(" {}", mode_str);
+
+    let title_width = str_width(&title_text);
+    let mode_width = str_width(&mode_text);
+
+    let title_line = if title_width + mode_width + 1 <= title_area_width {
+        // Enough space: title, border line, mode
+        let border_width = title_area_width - title_width - mode_width - 1; // -1 for spacing
+        let border_span = Span::styled("─".repeat(border_width), Style::default().fg(border_color));
+
+        Line::from(vec![
+            Span::styled(title_text, Style::default().fg(accent_color).add_modifier(Modifier::BOLD)),
+            Span::styled(" ", Style::default()), // Space before border
+            border_span,
+            Span::styled(" ", Style::default()), // Space before mode
+            mode_span,
+        ])
+    } else {
+        // Not enough space: truncate title
+        let available = title_area_width - mode_width - 3; // -3 for border line and spaces
+        if available > 3 {
+            let mut truncated_chars = app.prompt_title.chars().collect::<Vec<_>>();
+            truncated_chars.truncate(available);
+            let truncated_title = format!("{}...", truncated_chars.iter().collect::<String>());
+            let title_with_padding = format!(" {}", truncated_title);
+
+            let title_width = str_width(&title_with_padding);
+            let border_width = title_area_width - title_width - mode_width - 2; // -2 for spaces
+            let border_span = Span::styled("─".repeat(border_width), Style::default().fg(border_color));
+
+            Line::from(vec![
+                Span::styled(title_with_padding, Style::default().fg(accent_color).add_modifier(Modifier::BOLD)),
+                Span::styled(" ", Style::default()), // Space before border
+                border_span,
+                Span::styled(" ", Style::default()), // Space before mode
+                mode_span,
+            ])
+        } else {
+            // Very narrow: just show mode
+            Line::from(vec![
+                Span::styled(" ".repeat(title_area_width / 2), Style::default()),
+                mode_span,
+                Span::styled(" ".repeat(title_area_width / 2), Style::default()),
+            ])
+        }
+    };
+
+    // Modal outer block
     let block = Block::default()
-        .title(Span::styled(format!(" {} ", app.prompt_title), Style::default().fg(accent_color).add_modifier(Modifier::BOLD)))
+        .title(title_line)
         .borders(Borders::ALL)
         .border_style(Style::default().fg(border_color));
+    f.render_widget(block, area);
 
-    let content = vec![
-        Line::from(Span::raw(format!(" {}", app.prompt_label))),
-        Line::from(Span::raw("")),
-        Line::from(Span::styled(format!(" {}", app.input_value), Style::default().fg(Color::White).add_modifier(Modifier::UNDERLINED))),
+    // Inner content area (within borders)
+    let inner = Rect {
+        x: area.x + 1,
+        y: area.y + 1,
+        width: area.width - 2,
+        height: area.height - 2,
+    };
+
+    let field_bg = Color::Rgb(49, 50, 68); // Catppuccin Surface0
+    let cursor_bg = Color::Rgb(203, 166, 247); // Catppuccin Mauve
+    let cursor_fg = Color::Rgb(30, 30, 46); // Mocha Base
+
+    // Box layout: "│  content  │"
+    // Field content area width = inner.width - 2 (borders) - 2 (padding spaces)
+    let field_content_width = inner.width.saturating_sub(4) as usize;
+    let dash_len = inner.width.saturating_sub(2) as usize; // full width between corners
+    let field_spans = input_field_spans(app, field_content_width, field_bg, cursor_bg, cursor_fg);
+
+    // Render content: label, input box (3 lines with borders), mode indicator
+    let mut lines = vec![
+        Line::from(Span::styled(format!(" {}", app.prompt_label), Style::default().fg(Color::White))),
+        Line::from(""), // spacer
     ];
 
-    let paragraph = Paragraph::new(content).block(block);
-    f.render_widget(paragraph, area);
+    // Input box top border (rounded corners)
+    lines.push(Line::from(Span::styled(
+        format!("┌{}┐", "─".repeat(dash_len)),
+        Style::default().fg(border_color),
+    )));
+
+    // Input field line
+    let mut field_line_spans = vec![
+        Span::styled("│", Style::default().fg(border_color)),
+        Span::styled(" ", Style::default().fg(Color::White)), // padding
+    ];
+    field_line_spans.extend(field_spans);
+    field_line_spans.push(Span::styled(" ", Style::default().fg(Color::White))); // padding
+    field_line_spans.push(Span::styled("│", Style::default().fg(border_color)));
+    lines.push(Line::from(field_line_spans));
+
+    // Input box bottom border (rounded corners)
+    lines.push(Line::from(Span::styled(
+        format!("└{}┘", "─".repeat(dash_len)),
+        Style::default().fg(border_color),
+    )));
+
+    let paragraph = Paragraph::new(lines);
+    f.render_widget(paragraph, inner);
+}
+
+// Build the styled input field line: a filled "text box" with the vim block cursor
+// rendered on the current char (or a trailing block when the cursor is at the end).
+fn input_field_spans(app: &App, width: usize, field_bg: Color, cursor_bg: Color, cursor_fg: Color) -> Vec<Span<'_>> {
+    let chars: Vec<char> = app.input_value.chars().collect();
+    let cursor = app.input_cursor.min(chars.len());
+    let normal = Style::default().bg(field_bg).fg(Color::White);
+    let cur = Style::default().bg(cursor_bg).fg(cursor_fg).add_modifier(Modifier::BOLD);
+    let mut spans: Vec<Span> = Vec::new();
+    let mut used = 0usize;
+
+    if cursor > 0 {
+        let s: String = chars[..cursor].iter().collect();
+        used += str_width(&s);
+        spans.push(Span::styled(s, normal));
+    }
+    if cursor < chars.len() {
+        let cs: String = chars[cursor].to_string();
+        used += str_width(&cs);
+        spans.push(Span::styled(cs, cur));
+        if cursor + 1 < chars.len() {
+            let s: String = chars[cursor + 1..].iter().collect();
+            used += str_width(&s);
+            spans.push(Span::styled(s, normal));
+        }
+    } else {
+        // Cursor past the last char: render a block on an empty cell.
+        used += 1;
+        spans.push(Span::styled(" ", cur));
+    }
+
+    if used < width {
+        spans.push(Span::styled(" ".repeat(width - used), normal));
+    }
+    spans
 }
 
 fn draw_text_modal(f: &mut ratatui::Frame, app: &App, border_color: Color, _accent_color: Color) {
@@ -1860,7 +2230,7 @@ fn draw_text_modal(f: &mut ratatui::Frame, app: &App, border_color: Color, _acce
 fn draw_log_viewer(f: &mut ratatui::Frame, app: &mut App, bg_color: Color, accent_color: Color, muted_color: Color, border_color: Color) {
     let size = f.size();
     f.render_widget(Clear, size);
-    
+
     let main_block = Block::default().style(Style::default().bg(bg_color));
     f.render_widget(main_block, size);
 
@@ -1875,7 +2245,7 @@ fn draw_log_viewer(f: &mut ratatui::Frame, app: &mut App, bg_color: Color, accen
 
     let visible_lines = chunks[1].height as usize;
     app.last_visible_log_height = visible_lines;
-    
+
     let max_offset = app.log_lines.len().saturating_sub(visible_lines);
     if app.log_scroll_offset > max_offset {
         app.log_scroll_offset = max_offset;
@@ -1904,27 +2274,27 @@ fn draw_log_viewer(f: &mut ratatui::Frame, app: &mut App, bg_color: Color, accen
     // Console logs rendering with word regex highlights
     let visible_lines = chunks[1].height as usize;
     let mut log_spans_list = Vec::new();
-    
+
     for idx in 0..visible_lines {
         let l_idx = app.log_scroll_offset + idx;
         if l_idx < app.log_lines.len() {
             let line_content = app.log_lines[l_idx].replace('\t', "    ");
-            
+
             if let Some(ref q) = app.log_search_query {
                 if line_content.to_lowercase().contains(&q.to_lowercase()) {
                     let re = regex::Regex::new(&format!("(?i)({})", regex::escape(q))).unwrap();
                     let mut spans = Vec::new();
                     let mut last_pos = 0;
-                    
+
                     let is_curr_line = !app.log_match_indices.is_empty() && l_idx == app.log_match_indices[app.log_curr_match_ptr];
-                    
+
                     for mat in re.find_iter(&line_content) {
                         let start = mat.start();
                         let end = mat.end();
                         if start > last_pos {
                             spans.push(Span::styled(line_content[last_pos..start].to_string(), Style::default()));
                         }
-                        
+
                         let matched_word = &line_content[start..end];
                         let highlight_style = if is_curr_line {
                             Style::default().bg(Color::Rgb(203, 166, 247)).fg(Color::Rgb(30, 30, 46)).add_modifier(Modifier::BOLD)
@@ -1991,7 +2361,7 @@ fn main() -> Result<(), io::Error> {
 
     disable_raw_mode()?;
     crossterm::execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
+    // Don't show terminal cursor
 
     if let Err(err) = res {
         println!("[TUI ERROR] {}", err);

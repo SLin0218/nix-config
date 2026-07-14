@@ -344,7 +344,7 @@ impl App {
         if exit_code_file.exists() {
             if let Ok(code_str) = fs::read_to_string(exit_code_file) {
                 if let Ok(code) = code_str.trim().parse::<i32>() {
-                    if code != 0 {
+                    if code != 0 && code != 143 {
                         status_text = format!("ERROR({})", code);
                         status_color = Color::Rgb(243, 139, 168); // Catppuccin Red
                     }

@@ -3,4 +3,5 @@ pkgs: {
   wechat = import ./wechat { inherit pkgs; };
   tproxy = import ./tproxy.nix { inherit pkgs; };
   t = import ./translate { inherit pkgs; };
+  jar-launcher = import ./jar-launcher { inherit pkgs; };
 }

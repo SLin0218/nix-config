@@ -132,6 +132,7 @@
       dnsmasq # 默认网络 NAT 所需的依赖
       bridge-utils # 网桥工具包
 
+      jar-launcher
     ];
 
     variables.EDITOR = "nvim";

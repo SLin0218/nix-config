@@ -79,6 +79,7 @@ in
         "*.localhost"
         "*.test"
         "*.local"
+        "+.container"
         "*.home.arpa"
         "+.msftconnecttest.com"
         "+.msftncsi.com"
@@ -116,6 +117,10 @@ in
           "https://1.1.1.1/dns-query"
           "https://8.8.8.8/dns-query"
         ];
+        # 本地容器域名解析
+        "+.container" = [
+          "127.0.0.1:2053"
+        ];
       };
     };
 
@@ -150,6 +155,7 @@ in
 
     rules = [
       "DOMAIN-SUFFIX,localhost,DIRECT"
+      "DOMAIN-SUFFIX,container,DIRECT"
       "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve"
       "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve"
       "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve"

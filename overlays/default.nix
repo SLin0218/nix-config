@@ -20,7 +20,7 @@
 
       # 跨平台通用包和重载
       commonOverlays = {
-        inherit (localPkgs) t;
+        inherit (localPkgs) t jar-launcher;
       };
     in
     commonOverlays // (if isLinux then linuxOverlays else {})

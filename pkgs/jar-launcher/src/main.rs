@@ -1730,6 +1730,10 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
     // 4. Render Modals & Popups based on ActiveWindow state
     match app.active_window {
         ActiveWindow::LogViewer => draw_log_viewer(f, app, bg_color, accent_color, muted_color, border_color),
+        ActiveWindow::SearchPrompt => {
+            draw_log_viewer(f, app, bg_color, accent_color, muted_color, border_color);
+            draw_input_modal(f, app, border_color, accent_color);
+        }
         ActiveWindow::NixMenu => draw_menu_modal(f, app, "Nix Environment Manager", &["Nix Integration", "Select Nix JDK Package", "Generate Nix 'shell.nix' dev shell", "Generate Home-Manager Module", "Generate Nix Flake template (flake.nix)", "Back to Main Menu"], border_color, accent_color),
         ActiveWindow::EnvSelectMenu => draw_menu_modal(f, app, "🌱 Select Environment Mode", &["1. App-Specific Env Variables", "2. Global Env Variables (All Jars)", "3. Back to Main Menu"], border_color, accent_color),
         ActiveWindow::EnvEditor => {
@@ -1744,7 +1748,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
         }
         ActiveWindow::EnvActionSubmenu => draw_menu_modal(f, app, "Manage Variable", &["Edit Value", "Delete Variable", "Cancel"], border_color, accent_color),
         ActiveWindow::ThemeMenu => draw_menu_modal(f, app, "🎨 Switch Theme Profile", &["Catppuccin Mocha", "Default Curses System"], border_color, accent_color),
-        ActiveWindow::JvmArgsPrompt | ActiveWindow::JarDirPrompt | ActiveWindow::SearchPrompt | ActiveWindow::EnvAddKeyPrompt | ActiveWindow::EnvAddValuePrompt => {
+        ActiveWindow::JvmArgsPrompt | ActiveWindow::JarDirPrompt | ActiveWindow::EnvAddKeyPrompt | ActiveWindow::EnvAddValuePrompt => {
             draw_input_modal(f, app, border_color, accent_color);
         }
         ActiveWindow::AppArgsInput => {

@@ -1147,6 +1147,8 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                 }
                 KeyCode::Char('/') => {
                     app.input_value.clear();
+                    app.prompt_title = "🔍 Search Logs".to_string();
+                    app.prompt_label = "Enter search term (case-insensitive):".to_string();
                     app.active_window = ActiveWindow::SearchPrompt;
                 }
                 KeyCode::Char('n') => {
@@ -1755,6 +1757,26 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
 
 
 // Modal popups render utilities
+fn centered_fixed_rect(width: u16, height: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(r.height.saturating_sub(height) / 2),
+            Constraint::Length(height),
+            Constraint::Min(0),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Length(r.width.saturating_sub(width) / 2),
+            Constraint::Length(width),
+            Constraint::Min(0),
+        ])
+        .split(popup_layout[1])[1]
+}
+
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -1800,17 +1822,18 @@ fn draw_menu_modal(f: &mut ratatui::Frame, app: &App, title: &str, options: &[&s
 }
 
 fn draw_input_modal(f: &mut ratatui::Frame, app: &App, border_color: Color, accent_color: Color) {
-    let area = centered_rect(70, 20, f.size());
+    let area = centered_fixed_rect(60, 7, f.size());
     f.render_widget(Clear, area);
 
     let block = Block::default()
-        .title(app.prompt_title.as_str())
+        .title(Span::styled(format!(" {} ", app.prompt_title), Style::default().fg(accent_color).add_modifier(Modifier::BOLD)))
         .borders(Borders::ALL)
         .border_style(Style::default().fg(border_color));
 
     let content = vec![
-        Line::from(Span::styled(&app.prompt_label, Style::default().fg(accent_color))),
-        Line::from(Span::styled(&app.input_value, Style::default().add_modifier(Modifier::UNDERLINED))),
+        Line::from(Span::raw(format!(" {}", app.prompt_label))),
+        Line::from(Span::raw("")),
+        Line::from(Span::styled(format!(" {}", app.input_value), Style::default().fg(Color::White).add_modifier(Modifier::UNDERLINED))),
     ];
 
     let paragraph = Paragraph::new(content).block(block);

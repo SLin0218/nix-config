@@ -1079,6 +1079,9 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, mut app: Ap
 
         if event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
+                if key.kind == event::KeyEventKind::Release {
+                    continue;
+                }
                 if app.active_window == ActiveWindow::MainList && (key.code == KeyCode::Char('q') || key.code == KeyCode::Esc) {
                     break;
                 }
@@ -1460,7 +1463,13 @@ where
 {
     match key {
         KeyCode::Esc => {
-            app.active_window = ActiveWindow::MainList;
+            if app.active_window == ActiveWindow::SearchPrompt {
+                app.active_window = ActiveWindow::LogViewer;
+            } else if app.active_window == ActiveWindow::EnvAddKeyPrompt || app.active_window == ActiveWindow::EnvAddValuePrompt {
+                app.active_window = ActiveWindow::EnvEditor;
+            } else {
+                app.active_window = ActiveWindow::MainList;
+            }
         }
         KeyCode::Enter => {
             let val = app.input_value.clone();

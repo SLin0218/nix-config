@@ -1,120 +1,113 @@
 """draw kitty tab"""
+
 # pyright: reportMissingImports=false
 # pylint: disable=E0401,C0116,C0103,W0603,R0913
 
 from kitty.fast_data_types import Screen, get_options
-from kitty.tab_bar import (DrawData, ExtraData, TabBarData, as_rgb,
-                           draw_tab_with_powerline, draw_title)
+from kitty.tab_bar import DrawData, ExtraData, TabBarData, as_rgb
 from kitty.utils import color_as_int
 
 opts = get_options()
 
-ICON: str = " LIN "
-ICON_LENGTH: int = len(ICON)
-ICON_FG: int = as_rgb(color_as_int(opts.color16))
-ICON_BG: int = as_rgb(color_as_int(opts.color8))
 
-CLOCK_FG = 0
-CLOCK_BG = as_rgb(color_as_int(opts.color15))
-DATE_FG = 0
-DATE_BG =  as_rgb(color_as_int(opts.color8))
-
-
-def _draw_icon(screen: Screen, index: int) -> int:
-    if index != 1:
-        return screen.cursor.x
-
-    fg, bg, bold, italic = (
-        screen.cursor.fg,
-        screen.cursor.bg,
-        screen.cursor.bold,
-        screen.cursor.italic,
-    )
-    screen.cursor.bold, screen.cursor.italic, screen.cursor.fg, screen.cursor.bg = (
-        True,
-        False,
-        ICON_FG,
-        ICON_BG,
-    )
-    screen.draw(ICON)
-    # set cursor position
-    screen.cursor.x = ICON_LENGTH
-    # restore color style
-    screen.cursor.fg, screen.cursor.bg, screen.cursor.bold, screen.cursor.italic = (
-        fg,
-        bg,
-        bold,
-        italic,
-    )
-    return screen.cursor.x
+def get_color(color_val, fallback_rgb: int) -> int:
+    if color_val is None:
+        return as_rgb(fallback_rgb)  # type: ignore
+    try:
+        return as_rgb(color_as_int(color_val))  # type: ignore
+    except Exception:
+        return as_rgb(fallback_rgb)  # type: ignore
 
 
-def _draw_left_status(
-    draw_data: DrawData,
-    screen: Screen,
-    tab: TabBarData,
-    before: int,
-    max_title_length: int,
-    index: int,
-    is_last: bool,
-    extra_data: ExtraData,
-    use_kitty_render_function: bool = False,
-) -> int:
-    if use_kitty_render_function:
-        # Use `kitty` function render tab
-        end = draw_tab_with_powerline(
-            draw_data, screen, tab, before, max_title_length, index, is_last, extra_data
-        )
-        return end
-
-    if draw_data.leading_spaces:
-        screen.draw(" " * draw_data.leading_spaces)
-
-    # draw tab title
-    draw_title(draw_data, screen, tab, index)
-
-    trailing_spaces = min(max_title_length - 1, draw_data.trailing_spaces)
-    max_title_length -= trailing_spaces
-    extra = screen.cursor.x - before - max_title_length
-    if extra > 0:
-        screen.cursor.x -= extra + 1
-        # Don't change `ICON`
-        screen.cursor.x = max(screen.cursor.x, ICON_LENGTH)
-        screen.draw("…")
-    if trailing_spaces:
-        screen.draw(" " * trailing_spaces)
-
-    screen.cursor.bold = screen.cursor.italic = False
-    screen.cursor.fg = 0
-    if not is_last:
-        screen.cursor.bg = as_rgb(color_as_int(draw_data.inactive_bg))
-        screen.draw(draw_data.sep)
-    screen.cursor.bg = 0
-    return screen.cursor.x
+SUPERSCRIPTS = ["¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹", "¹⁰", "¹¹", "¹²", "¹³", "¹⁴", "¹⁵", "¹⁶"]
 
 
 def draw_tab(
-    draw_data: DrawData,
+    draw_data: DrawData,  # type: ignore
     screen: Screen,
-    tab: TabBarData,
+    tab: TabBarData,  # type: ignore
     before: int,
     max_title_length: int,
     index: int,
     is_last: bool,
-    extra_data: ExtraData,
+    extra_data: ExtraData,  # type: ignore
 ) -> int:
-    _draw_icon(screen, index)
-    # Set cursor to where `left_status` ends, instead `right_status`,
-    # to enable `open new tab` feature
-    end = _draw_left_status(
-        draw_data,
-        screen,
-        tab,
-        before,
-        max_title_length,
-        index,
-        is_last,
-        extra_data,
-        use_kitty_render_function=False,
-    )
-    return end
+    # 1. Draw tab separator (if not the first tab)
+    if index > 1:
+        old_fg = screen.cursor.fg
+        old_bg = screen.cursor.bg
+        screen.cursor.fg = as_rgb(0x313244)  # type: ignore
+        screen.cursor.bg = 0
+        screen.draw("┃")
+        screen.cursor.fg = old_fg
+        screen.cursor.bg = old_bg
+
+    # Save original cursor styling
+    old_fg = screen.cursor.fg
+    old_bg = screen.cursor.bg
+    old_bold = screen.cursor.bold
+    old_italic = screen.cursor.italic
+
+    # 2. Determine indicator and its foreground color
+    indicator = ""
+    indicator_fg = 0
+
+    if tab.is_active:  # type: ignore
+        if tab.layout_name == "stack":  # type: ignore
+            num = min(tab.num_windows, 16)  # type: ignore
+            indicator = f"{SUPERSCRIPTS[num - 1]} "
+        else:
+            indicator = "󰐾 "
+    else:
+        if tab.needs_attention:  # type: ignore
+            indicator = "󱅫 "
+            indicator_fg = as_rgb(color_as_int(opts.color3))  # type: ignore
+        elif tab.layout_name == "stack":  # type: ignore
+            num = min(tab.num_windows, 16)  # type: ignore
+            indicator = f"{SUPERSCRIPTS[num - 1]} "
+        else:
+            indicator = "󰄰 "
+
+    # 3. Calculate max length for title to prevent overflow
+    # decoration length: leading space (1) + indicator length + trailing space (1)
+    decoration_len = 2 + len(indicator)
+    max_allowed_title_len = max_title_length - decoration_len
+
+    title = tab.title  # type: ignore
+    if len(title) > max_allowed_title_len:
+        title = title[: max(5, max_allowed_title_len - 1)] + "…"
+
+    # 4. Draw tab content
+    if tab.is_active:  # type: ignore
+        # Active Tab styling: bg = color0, fg for indicator = #c6a0f6, fg for title = color6
+        screen.cursor.bg = as_rgb(color_as_int(opts.color0))  # type: ignore
+        screen.cursor.fg = as_rgb(0xC6A0F6)  # type: ignore
+        screen.draw(" ")
+        screen.draw(indicator)
+
+        screen.cursor.fg = as_rgb(color_as_int(opts.color6))  # type: ignore
+        screen.draw(title)
+
+        screen.draw(" ")
+        screen.cursor.bg = 0
+    else:
+        # Inactive Tab styling: bg = default (0), fg for indicator = indicator_fg or color0, fg for title = color7
+        screen.cursor.bg = 0
+        screen.cursor.fg = (
+            indicator_fg if indicator_fg else as_rgb(color_as_int(opts.color0))  # type: ignore
+        )
+        screen.draw(" ")
+        screen.draw(indicator)
+
+        screen.cursor.fg = as_rgb(color_as_int(opts.color7))  # type: ignore
+        screen.draw(title)
+
+        screen.draw(" ")
+
+    # Restore cursor styling
+    screen.cursor.fg = old_fg
+    screen.cursor.bg = old_bg
+    screen.cursor.bold = old_bold
+    screen.cursor.italic = old_italic
+
+    return screen.cursor.x

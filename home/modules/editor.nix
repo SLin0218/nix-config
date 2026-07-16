@@ -63,8 +63,8 @@
                   (set-frame-parameter frame 'menu-bar-lines 0)
                   (set-frame-parameter frame 'tool-bar-lines 0))))
 
-    ;; 8. 早期重定向 custom-file
-    (setq custom-file "/dev/null")
+    ;; 8. 将 custom-file 指向可写的本地文件，避免污染 init.el 且避免新版 Emacs 因 /dev/null 报错
+    (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
   '';
 
   # emacs-plus 使用 brew安装

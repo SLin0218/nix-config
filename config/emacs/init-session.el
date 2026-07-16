@@ -33,6 +33,8 @@
 (setq kept-old-versions 2)      ;保留最早的 2 个版本
 (setq version-control t)        ;开启编号备份（即 filename.~1~, filename.~2~）
 (setq backup-by-copying t)      ;复制备份，保护硬链接
+;; 仅启用 Git 版本控制后端，避免在非 Git 目录（或上层目录）打开文件时因为向上逐级探测老旧 VCS 系统（如 SVN, CVS, RCS 等）导致的严重假死与卡顿。
+(setq vc-handled-backends '(Git))
 
 (defun auto-save-delete-trailing-whitespace-except-current-line ()
   "在自动保存前，删除除当前活动行以外的所有行尾空格."
@@ -63,7 +65,13 @@
 
 
 (use-package magit
-  :defer t)
+  :defer t
+  :init
+  (setq magit-auto-revert-mode nil))
+
+;; 启用 Emacs 内置的高性能、纯异步文件变更监听（在 macOS 上使用系统的 FSEvents 机制）
+;; 完美替代 magit-auto-revert 的功能，且完全不引入任何文件打开时的同步加载开销。
+(global-auto-revert-mode 1)
 (use-package diff-hl
   :hook ((prog-mode text-mode dired-mode) . diff-hl-mode)
   :config

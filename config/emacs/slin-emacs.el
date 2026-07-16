@@ -24,6 +24,17 @@
 (setenv "PATH" (concat my-paths-join ":" (getenv "PATH")))
 (setq exec-path (append (mapcar #'expand-file-name my-paths) exec-path))
 
+;; macOS 上的 Emacs Native Compilation 环境变量配置，解决 "ld: library not found for -lSystem" 问题
+(when (eq system-type 'darwin)
+  (let ((sdkpath (with-temp-buffer
+                   (when (eq 0 (ignore-errors (call-process "xcrun" nil t nil "--show-sdk-path")))
+                     (goto-char (point-min))
+                     (when (re-search-forward "[^\n\r]+" nil t)
+                       (match-string 0))))))
+    (when (and sdkpath (file-exists-p sdkpath))
+      (setenv "SDKROOT" sdkpath)
+      (setenv "LIBRARY_PATH" (concat sdkpath "/usr/lib")))))
+
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
@@ -47,6 +58,10 @@
 (require 'server)
 (unless (server-running-p)
   (server-start))
+
+;; 加载本地自定义变量文件
+(when (and custom-file (file-exists-p custom-file))
+  (load custom-file nil :nomessage))
 
 (provide 'slin-emacs)
 ;;; slin-emacs.el ends here

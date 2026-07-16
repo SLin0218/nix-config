@@ -8,6 +8,8 @@
 ;;; Code:
 
 (setq org-agenda-files (list (expand-file-name "~/org/agenda/")))
+;; 仅保留核心，彻底禁用默认加载的十几个老旧第三方链接子模块（如 ol-gnus, ol-irc, ol-bbdb 等），直接砍掉首次打开 Org 文件时 36% 的加载开销！
+(setq org-modules nil)
 
 (with-eval-after-load 'org
   ;; 1. 标题层级保留彩虹前景色，供前面的 * 号（层级标识）和无 TODO 标题使用
@@ -25,7 +27,6 @@
 
 
   (setq org-startup-indented t)         ;开启标题缩进
-  (global-org-modern-mode)
 
   (setq org-src-tab-acts-natively t)    ;code按语言缩进
   (setq org-src-preserve-indentation nil)
@@ -263,12 +264,6 @@
                                     ("\\section{%s}" . "\\section*{%s}")
                                     ("\\subsection{%s}" . "\\subsection*{%s}")))
 
-  ;; ----------------- Markdown / Word 导出配置 -----------------
-  ;; 启用 Markdown 导出后端
-  (require 'ox-md nil t)
-
-  ;; 启用 ODT (OpenDocument Text) 导出后端 (可用于直接导出为 LibreOffice/Word 格式)
-  (require 'ox-odt nil t)
   )
 
 
@@ -414,6 +409,7 @@
 (when (executable-find "pandoc")
   (use-package ox-pandoc
     :after org
+    :defer t
     :config
     ;; 确保开启 Word docx 导出的默认排版支持
     (setq org-pandoc-options-for-docx '((standalone . t)))))

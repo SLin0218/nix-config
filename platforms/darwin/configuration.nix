@@ -87,6 +87,7 @@
 
     brews = [
       "librime"
+      "pkg-config"
       "container"
       "pinentry-mac"
       "openvpn"

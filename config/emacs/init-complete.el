@@ -105,11 +105,16 @@
 (use-package yasnippet-capf
   :after yasnippet)
 
+(defun my-eglot-ensure-safe ()
+  "仅在关联了真实物理文件，且非后台高亮等临时上下文 (non-essential) 时，才启动 Eglot LSP."
+  (when (and buffer-file-name (not non-essential))
+    (eglot-ensure)))
+
 (use-package eglot
   :hook
   ((python-mode python-ts-mode
                 java-mode java-ts-mode
-                lua-mode yaml-mode nix-mode) . eglot-ensure)
+                lua-mode yaml-mode nix-mode) . my-eglot-ensure-safe)
   :config
   ;; 显式配置 nix 语言服务器为 nixd
   (add-to-list 'eglot-server-programs

@@ -78,17 +78,28 @@
   (evil-collection-init))
 
 ;;输入法配置
-(use-package rime
+;; (use-package rime
+;;   :custom
+;;   (default-input-method "rime")
+;;   (rime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
+;;   (rime-show-candidate 'posframe)
+;;   :config
+;;   (if (eq system-type 'darwin)
+;;       (setq rime-librime-root "/opt/homebrew")
+;;     (setq rime-librime-root (shell-command-to-string "nix eval --raw nixpkgs#librime"))
+;;     (setq rime-emacs-module-header-root (concat (shell-command-to-string "nix eval --raw nixpkgs#emacs-pgtk") "/include"))
+;;     (setq rime-share-data-dir (concat (shell-command-to-string "nix eval --raw nixpkgs#brise") "/share/rime-data"))))
+
+(use-package rimel
   :custom
-  (default-input-method "rime")
-  (rime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
+  (default-input-method "rimel")
+  (liberime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
+  (rimel-posframe-style 'horizontal)
   (rime-show-candidate 'posframe)
   :config
-  (if (eq system-type 'darwin)
-      (setq rime-librime-root "/opt/homebrew")
-    (setq rime-librime-root (shell-command-to-string "nix eval --raw nixpkgs#librime"))
-    (setq rime-emacs-module-header-root (concat (shell-command-to-string "nix eval --raw nixpkgs#emacs-pgtk") "/include"))
-    (setq rime-share-data-dir (concat (shell-command-to-string "nix eval --raw nixpkgs#brise") "/share/rime-data"))))
+  (setq rimel-disable-predicates
+        '(rimel-predicate-prog-in-code-p
+          rimel-predicate-evil-mode-p)))
 
 (when (eq system-type 'darwin)
   (setq mac-command-modifier 'meta

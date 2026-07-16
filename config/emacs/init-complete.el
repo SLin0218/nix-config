@@ -107,7 +107,9 @@
 
 (defun my-eglot-ensure-safe ()
   "仅在关联了真实物理文件，且非后台高亮等临时上下文 (non-essential) 时，才启动 Eglot LSP."
-  (when (and buffer-file-name (not non-essential))
+  (when (and buffer-file-name
+             (not non-essential)
+             (not (string-match-p "eglot-jdtls-sources" buffer-file-name)))
     (eglot-ensure)))
 
 (use-package eglot
@@ -130,13 +132,15 @@
                 '((:pyright . (:python (:analysis (:completeFunctionParens t))))
                   (:java . (:autobuild (:enabled :json-false)
                             :maxConcurrentBuilds 1
-                            :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist"]
-                                     :maven (:offline (:enabled t))
-                                     :gradle (:offline (:enabled t)))
+                            :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
+                                     :maven (:offline (:enabled t) :downloadSources t)
+                                     :gradle (:offline (:enabled t) :downloadSources t))
                             :configuration (:updateBuildConfiguration "manual")
                             :referencesCodeLens (:enabled :json-false)
                             :implementationsCodeLens (:enabled :json-false)
-                            :completion (:favoriteStaticMembers ["org.junit.Assert.*" "org.mockito.Mockito.*"] :importOrder ["java" "javax" "org" "com"])))
+                            :completion (:favoriteStaticMembers ["org.junit.Assert.*" "org.mockito.Mockito.*"] :importOrder ["java" "javax" "org" "com"])
+                            :eclipse (:downloadSources t)
+                             :contentProvider (:preferred "fernflower")))
                   ))
   ;; 显式配置 java 语言服务器 jdtls 的启动参数（加入 lombok 等参数，并进行全方位性能优化）
   (add-to-list 'eglot-server-programs
@@ -152,21 +156,54 @@
                         "--jvm-arg=-DDetectVMInstallationsJob.disabled=true"
                         "--jvm-arg=-Dfile.encoding=utf8"
                         "--jvm-arg=-XX:+UseG1GC"
+                        "--jvm-arg=-XX:+UseStringDeduplication"
+                        "--jvm-arg=-Dsun.zip.disableMemoryMapping=true"
+                        "--jvm-arg=-Dlog.level=WARNING"
                         "--jvm-arg=-Xmx4G"
                         "--jvm-arg=-Xms4G"
                         "--jvm-arg=-Xlog:disable"
                         "--jvm-arg=-Daether.dependencyCollector.impl=bf"
                         :initializationOptions
-                        (:settings (:java ,(or (cdr (assoc :java eglot-workspace-configuration))
+                        (:extendedClientCapabilities (:classFileContentsSupport t)
+                         :settings (:java ,(or (cdr (assoc :java eglot-workspace-configuration))
                                                '(:autobuild (:enabled :json-false)
                                                  :maxConcurrentBuilds 1
-                                                 :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist"]
-                                                          :maven (:offline (:enabled t))
-                                                          :gradle (:offline (:enabled t)))
+                                                 :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
+                                                          :maven (:offline (:enabled t) :downloadSources t)
+                                                          :gradle (:offline (:enabled t) :downloadSources t))
                                                  :configuration (:updateBuildConfiguration "manual")
                                                  :referencesCodeLens (:enabled :json-false)
-                                                 :implementationsCodeLens (:enabled :json-false)))))
-                        ))))))
+                                                 :implementationsCodeLens (:enabled :json-false)
+                                                 :eclipse (:downloadSources t)
+                                                 :contentProvider (:preferred "fernflower")))))))))))
+
+;; 纯 Emacs Lisp 拦截并解析 JDTLS 的 jdt:/ 和 jdt:// 协议，实现依赖 jar 跳转定义
+(with-eval-after-load 'eglot
+  (defun +eglot/jdtls-uri-to-path (uri)
+    "Support Eclipse jdtls `jdt:/' and `jdt://' uri scheme by fetching content."
+    (when (string-prefix-p "jdt:" uri)
+      (let* ((md5-hash (md5 uri))
+             (class-name (if (string-match "/\\([^/?]+\\)\\(?:\\.class\\|\\.java\\)" uri)
+                             (match-string 1 uri)
+                           "UnknownClass"))
+             (filename (format "%s_%s.java" class-name md5-hash))
+             (source-dir (expand-file-name "eglot-jdtls-sources" (temporary-file-directory)))
+             (source-file (expand-file-name filename source-dir)))
+        (unless (file-directory-p source-dir)
+          (make-directory source-dir t))
+        (unless (file-readable-p source-file)
+          (let ((content (jsonrpc-request (eglot--current-server-or-lose)
+                                          :java/classFileContents
+                                          (list :uri uri))))
+            (with-temp-file source-file
+              (insert content))))
+        source-file)))
+
+  (advice-add (if (fboundp 'eglot-uri-to-path) 'eglot-uri-to-path 'eglot--uri-to-path)
+              :around
+              (lambda (orig-fn uri &rest args)
+                (or (+eglot/jdtls-uri-to-path uri)
+                    (apply orig-fn uri args)))))
 
 ;; 补全前端 Corfu
 (use-package corfu

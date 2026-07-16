@@ -92,7 +92,7 @@
   (recentf-mode 1)
   :config
   (setq recentf-max-saved-items 100
-        recentf-exclude '("/tmp/" "/ssh:" "\\.git/" "/elpa/")))
+        recentf-exclude '("/tmp/" "/ssh:" "\\.git/" "/elpa/" "eglot-jdtls-sources")))
 
 ;; 记住上次打开文件时的光标位置
 (save-place-mode 1)

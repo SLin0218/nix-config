@@ -19,7 +19,7 @@ def get_color(color_val, fallback_rgb: int) -> int:
         return as_rgb(fallback_rgb)  # type: ignore
 
 
-SUPERSCRIPTS = ["¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹", "¹⁰", "¹¹", "¹²", "¹³", "¹⁴", "¹⁵", "¹⁶"]
+SUPERSCRIPTS = ["¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹", "¹⁰"]
 
 
 def draw_tab(
@@ -53,8 +53,8 @@ def draw_tab(
     indicator_fg = 0
 
     if tab.is_active:  # type: ignore
-        if tab.layout_name == "stack":  # type: ignore
-            num = min(tab.num_windows, 16)  # type: ignore
+        if tab.num_windows > 1:  # type: ignore
+            num = min(tab.num_windows, 10)  # type: ignore
             indicator = f"{SUPERSCRIPTS[num - 1]} "
         else:
             indicator = "󰐾 "
@@ -62,8 +62,8 @@ def draw_tab(
         if tab.needs_attention:  # type: ignore
             indicator = "󱅫 "
             indicator_fg = as_rgb(color_as_int(opts.color3))  # type: ignore
-        elif tab.layout_name == "stack":  # type: ignore
-            num = min(tab.num_windows, 16)  # type: ignore
+        elif tab.num_windows > 1:  # type: ignore
+            num = min(tab.num_windows, 10)  # type: ignore
             indicator = f"{SUPERSCRIPTS[num - 1]} "
         else:
             indicator = "󰄰 "

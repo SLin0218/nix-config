@@ -73,41 +73,140 @@
           ("DONE"     . (:foreground ,(catppuccin-color 'green)    :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil)))
           ("CANCELED" . (:foreground ,(catppuccin-color 'surface2) :background ,(catppuccin-color 'surface0) :height 1.2 :box (:line-width (0 . 1) :color ,(catppuccin-color 'base) :style nil) :strike-through t ))))
 
-  ;;latex 相关配置
+  ;; ----------------- LaTeX / PDF 导出配置 (支持中文与精美排版) -----------------
+  ;; 使用 xelatex 进行编译，完美支持中文且支持多轮编译处理交叉引用
   (setq org-latex-pdf-process
-        '("latexmk -pdflatex='pdflatex -interaction nonstopmode' -pdf -bibtex -f %f"))
+        '("xelatex -interaction nonstopmode -shell-escape -output-directory %o %f"
+          "xelatex -interaction nonstopmode -shell-escape -output-directory %o %f"
+          "xelatex -interaction nonstopmode -shell-escape -output-directory %o %f"))
+
+  ;; 启用 listings 代码块语法高亮后端
+  (setq org-latex-src-block-backend 'listings)
 
   (unless (boundp 'org-latex-classes)
     (setq org-latex-classes nil))
 
+  ;; 默认 LaTeX 类设置为支持中文的 cn-article
+  (setq org-latex-default-class "cn-article")
+
+  ;; 1. 中文文章模板 (ctexart)
+  (add-to-list 'org-latex-classes
+               '("cn-article"
+                 "\\documentclass[11pt,a4paper,fontset=none]{ctexart}
+  \\usepackage[utf8]{inputenc}
+  \\usepackage[T1]{fontenc}
+  \\usepackage{graphicx}
+  \\usepackage{longtable}
+  \\usepackage{float}
+  \\usepackage{wrapfig}
+  \\usepackage{rotating}
+  \\usepackage[normalem]{ulem}
+  \\usepackage{amsmath}
+  \\usepackage{textcomp}
+  \\usepackage{marvosym}
+  \\usepackage{wasysym}
+  \\usepackage{amssymb}
+  \\usepackage[shortlabels]{enumitem}
+  \\setlist{nosep}
+  \\usepackage{color}
+  \\usepackage{xcolor}
+  \\usepackage{geometry}
+  \\geometry{a4paper,left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+  \\usepackage{listings}
+  % 采用优雅的 Catppuccin Latte 配色方案
+  \\definecolor{codebg}{RGB}{245,246,248}       % 浅灰蓝背景
+  \\definecolor{codeborder}{RGB}{220,224,232}   % 柔和边框
+  \\definecolor{codekeyword}{RGB}{30,102,245}   % 蓝色关键字
+  \\definecolor{codecomment}{RGB}{140,143,161}  % 灰色注释
+  \\definecolor{codestring}{RGB}{64,160,43}     % 绿色字符串
+  \\definecolor{codenumber}{RGB}{156,160,176}   % 灰字行号
+  \\lstdefinestyle{mystyle}{
+      backgroundcolor=\\color{codebg},
+      commentstyle=\\color{codecomment}\\itshape,
+      keywordstyle=\\color{codekeyword}\\bfseries,
+      numberstyle=\\tiny\\color{codenumber},
+      stringstyle=\\color{codestring},
+      basicstyle=\\ttfamily\\small\\color{black},
+      breakatwhitespace=false,
+      breaklines=true,
+      captionpos=b,
+      keepspaces=true,
+      numbers=left,
+      numbersep=8pt,
+      showspaces=false,
+      showstringspaces=false,
+      showtabs=false,
+      tabsize=4,
+      frame=single,
+      rulecolor=\\color{codeborder},
+      frameround=tttt,                          % 圆角边框
+      framesep=6pt,                             % 内边距
+      xleftmargin=15pt,                         % 左边距偏置，防行号溢出
+      xrightmargin=5pt,
+      extendedchars=false
+  }
+  \\lstset{style=mystyle}
+  \\usepackage{xeCJK}
+  \\setCJKmainfont{Songti SC}
+  \\setCJKsansfont{Heiti SC}
+  \\setCJKmonofont{Heiti SC}
+  \\ctexset{section={format=\\Large\\bfseries\\raggedright}}
+  \\usepackage{fontspec}
+  \\setmonofont{JetBrainsMono Nerd Font}
+  \\usepackage{hyperref}
+  \\hypersetup{
+      colorlinks=true,
+      linkcolor=blue,
+      filecolor=magenta,
+      urlcolor=cyan,
+      pdfborder=0 0 0
+  }
+  \\usepackage{fancyhdr}
+  \\pagestyle{fancy}
+  \\fancyhf{}
+  \\fancyfoot[C]{\\thepage}
+  \\renewcommand{\\headrulewidth}{0pt}
+  \\renewcommand{\\footrulewidth}{0pt}
+  \\tolerance=1000
+  [NO-DEFAULT-PACKAGES]
+  [PACKAGES]
+  [EXTRA]"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
+  ;; 保留原有的 ethz 模板
   (add-to-list 'org-latex-classes
                '("ethz"
                  "\\documentclass[a4paper,11pt,titlepage]{memoir}
- \\usepackage[utf8]{inputenc}
- \\usepackage[T1]{fontenc}
- \\usepackage{fixltx2e}
- \\usepackage{graphicx}
- \\usepackage{longtable}
- \\usepackage{float}
- \\usepackage{wrapfig}
- \\usepackage{rotating}
- \\usepackage[normalem]{ulem}
- \\usepackage{amsmath}
- \\usepackage{textcomp}
- \\usepackage{marvosym}
- \\usepackage{wasysym}
- \\usepackage{amssymb}
- \\usepackage{hyperref}
- \\usepackage{mathpazo}
- \\usepackage{color}
- \\usepackage{enumerate}
- \\definecolor{bg}{rgb}{0.95,0.95,0.95}
- \\tolerance=1000
- [NO-DEFAULT-PACKAGES]
- [PACKAGES]
- [EXTRA]
- \\linespread{1.1}
- \\hypersetup{pdfborder=0 0 0}"
+  \\usepackage[utf8]{inputenc}
+  \\usepackage[T1]{fontenc}
+  \\usepackage{fixltx2e}
+  \\usepackage{graphicx}
+  \\usepackage{longtable}
+  \\usepackage{float}
+  \\usepackage{wrapfig}
+  \\usepackage{rotating}
+  \\usepackage[normalem]{ulem}
+  \\usepackage{amsmath}
+  \\usepackage{textcomp}
+  \\usepackage{marvosym}
+  \\usepackage{wasysym}
+  \\usepackage{amssymb}
+  \\usepackage{hyperref}
+  \\usepackage{mathpazo}
+  \\usepackage{color}
+  \\usepackage[shortlabels]{enumitem}
+  \\setlist{nosep}
+  \\definecolor{bg}{rgb}{0.95,0.95,0.95}
+  \\tolerance=1000
+  [NO-DEFAULT-PACKAGES]
+  [PACKAGES]
+  [EXTRA]
+  \\linespread{1.1}
+  \\hypersetup{pdfborder=0 0 0}"
                  ("\\chapter{%s}" . "\\chapter*{%s}")
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
@@ -115,54 +214,61 @@
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 
-
+  ;; 保留原有的 article 模板
   (add-to-list 'org-latex-classes
                '("article"
                  "\\documentclass[11pt,a4paper]{article}
- \\usepackage[utf8]{inputenc}
- \\usepackage[T1]{fontenc}
- \\usepackage{fixltx2e}
- \\usepackage{graphicx}
- \\usepackage{longtable}
- \\usepackage{float}
- \\usepackage{wrapfig}
- \\usepackage{rotating}
- \\usepackage[normalem]{ulem}
- \\usepackage{amsmath}
- \\usepackage{textcomp}
- \\usepackage{marvosym}
- \\usepackage{wasysym}
- \\usepackage{amssymb}
- \\usepackage{hyperref}
- \\usepackage{mathpazo}
- \\usepackage{color}
- \\usepackage{enumerate}
- \\definecolor{bg}{rgb}{0.95,0.95,0.95}
- \\tolerance=1000
- [NO-DEFAULT-PACKAGES]
- [PACKAGES]
- [EXTRA]
- \\linespread{1.1}
- \\hypersetup{pdfborder=0 0 0}"
+  \\usepackage[utf8]{inputenc}
+  \\usepackage[T1]{fontenc}
+  \\usepackage{fixltx2e}
+  \\usepackage{graphicx}
+  \\usepackage{longtable}
+  \\usepackage{float}
+  \\usepackage{wrapfig}
+  \\usepackage{rotating}
+  \\usepackage[normalem]{ulem}
+  \\usepackage{amsmath}
+  \\usepackage{textcomp}
+  \\usepackage{marvosym}
+  \\usepackage{wasysym}
+  \\usepackage{amssymb}
+  \\usepackage{hyperref}
+  \\usepackage{mathpazo}
+  \\usepackage{color}
+  \\usepackage[shortlabels]{enumitem}
+  \\setlist{nosep}
+  \\definecolor{bg}{rgb}{0.95,0.95,0.95}
+  \\tolerance=1000
+  [NO-DEFAULT-PACKAGES]
+  [PACKAGES]
+  [EXTRA]
+  \\linespread{1.1}
+  \\hypersetup{pdfborder=0 0 0}"
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 
-
+  ;; 保留原有的 ebook 模板
   (add-to-list 'org-latex-classes '("ebook"
                                     "\\documentclass[11pt, oneside]{memoir}
- \\setstocksize{9in}{6in}
- \\settrimmedsize{\\stockheight}{\\stockwidth}{*}
- \\setlrmarginsandblock{2cm}{2cm}{*} % Left and right margin
- \\setulmarginsandblock{2cm}{2cm}{*} % Upper and lower margin
- \\checkandfixthelayout
- % Much more laTeX code omitted
- "
+  \\setstocksize{9in}{6in}
+  \\settrimmedsize{\\stockheight}{\\stockwidth}{*}
+  \\setlrmarginsandblock{2cm}{2cm}{*} % Left and right margin
+  \\setulmarginsandblock{2cm}{2cm}{*} % Upper and lower margin
+  \\checkandfixthelayout
+  % Much more laTeX code omitted
+  "
                                     ("\\chapter{%s}" . "\\chapter*{%s}")
                                     ("\\section{%s}" . "\\section*{%s}")
                                     ("\\subsection{%s}" . "\\subsection*{%s}")))
 
+  ;; ----------------- Markdown / Word 导出配置 -----------------
+  ;; 启用 Markdown 导出后端
+  (require 'ox-md nil t)
+
+  ;; 启用 ODT (OpenDocument Text) 导出后端 (可用于直接导出为 LibreOffice/Word 格式)
+  (require 'ox-odt nil t)
   )
 
 
@@ -302,6 +408,15 @@
   :after org-roam
   :config
   (org-roam-bibtex-mode +1))
+
+;; 使用 ox-pandoc 提供强大的通用格式转换（特别适合完美导出为 Word docx 格式）
+;; 仅在系统安装了 pandoc 命令行工具时加载，避免产生未安装警告
+(when (executable-find "pandoc")
+  (use-package ox-pandoc
+    :after org
+    :config
+    ;; 确保开启 Word docx 导出的默认排版支持
+    (setq org-pandoc-options-for-docx '((standalone . t)))))
 
 (provide 'init-org)
 ;;; init-org.el ends here

@@ -20,7 +20,6 @@
   nix = {
     settings = {
       experimental-features = "nix-command flakes";
-      max-jobs = 8;
       substituters = [
         "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
         "https://cache.nixos.org"

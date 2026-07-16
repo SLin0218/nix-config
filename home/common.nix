@@ -45,6 +45,11 @@
     fzf
     mycli
     httpie
+    pandoc
+    (texlive.combine {
+      inherit (texlive) scheme-medium collection-langchinese collection-latexextra;
+    })
+    nmap
 
     jetbrains.idea
 

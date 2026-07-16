@@ -116,31 +116,57 @@
                 java-mode java-ts-mode
                 lua-mode yaml-mode nix-mode) . my-eglot-ensure-safe)
   :config
+  ;; 调高 GC 阈值至 64MB，防止大数据量 JSON 传输触发频繁垃圾回收
+  (add-hook 'eglot-managed-mode-hook (lambda () (setq gc-cons-threshold (* 64 1024 1024))))
+
   ;; 显式配置 nix 语言服务器为 nixd
   (add-to-list 'eglot-server-programs
                '(nix-mode . ("nixd")))
   ;; 显式配置 python 语言服务器为 pyright-langserver
   (add-to-list 'eglot-server-programs
                `((python-mode python-ts-mode) . ("pyright-langserver" "--stdio")))
-  ;; 开启 python 补全函数时自动带上括号 ()
+  ;; 开启 python 补全函数时自动带上括号 () 并优化 Java (jdtls) 的全局配置
   (setq-default eglot-workspace-configuration
-                '((:pyright . (:python (:analysis (:completeFunctionParens t))))))
-  ;; 显式配置 java 语言服务器 jdtls 的启动参数（加入 lombok 等参数）
+                '((:pyright . (:python (:analysis (:completeFunctionParens t))))
+                  (:java . (:autobuild (:enabled :json-false)
+                            :maxConcurrentBuilds 1
+                            :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist"]
+                                     :maven (:offline (:enabled t))
+                                     :gradle (:offline (:enabled t)))
+                            :configuration (:updateBuildConfiguration "manual")
+                            :referencesCodeLens (:enabled :json-false)
+                            :implementationsCodeLens (:enabled :json-false)
+                            :completion (:favoriteStaticMembers ["org.junit.Assert.*" "org.mockito.Mockito.*"] :importOrder ["java" "javax" "org" "com"])))
+                  ))
+  ;; 显式配置 java 语言服务器 jdtls 的启动参数（加入 lombok 等参数，并进行全方位性能优化）
   (add-to-list 'eglot-server-programs
                `((java-mode java-ts-mode) .
-                 ("jdtls"
-                  "--jvm-arg=-javaagent:/Users/lin/.local/share/nvim/mason/packages/jdtls/lombok.jar"
-                  "--jvm-arg=-Djava.import.generatesMetadataFilesAtProjectRoot=false"
-                  "--jvm-arg=-DDetectVMInstallationsJob.disabled=true"
-                  "--jvm-arg=-Dfile.encoding=utf8"
-                  "--jvm-arg=-XX:+UseParallelGC"
-                  "--jvm-arg=-XX:GCTimeRatio=4"
-                  "--jvm-arg=-XX:AdaptiveSizePolicyWeight=90"
-                  "--jvm-arg=-Dsun.zip.disableMemoryMapping=true"
-                  "--jvm-arg=-Xmx2G"
-                  "--jvm-arg=-Xms100m"
-                  "--jvm-arg=-Xlog:disable"
-                  "--jvm-arg=-Daether.dependencyCollector.impl=bf"))))
+                 ,(lambda (&rest _)
+                    (let* ((project-root (project-root (project-current t)))
+                           (cache-dir (expand-file-name (md5 project-root) "~/.cache/jdtls-workspace")))
+                      (make-directory cache-dir t)
+                      `("jdtls"
+                        "-data" ,cache-dir
+                        "--jvm-arg=-javaagent:/Users/lin/.local/share/nvim/mason/packages/jdtls/lombok.jar"
+                        "--jvm-arg=-Djava.import.generatesMetadataFilesAtProjectRoot=false"
+                        "--jvm-arg=-DDetectVMInstallationsJob.disabled=true"
+                        "--jvm-arg=-Dfile.encoding=utf8"
+                        "--jvm-arg=-XX:+UseG1GC"
+                        "--jvm-arg=-Xmx4G"
+                        "--jvm-arg=-Xms4G"
+                        "--jvm-arg=-Xlog:disable"
+                        "--jvm-arg=-Daether.dependencyCollector.impl=bf"
+                        :initializationOptions
+                        (:settings (:java ,(or (cdr (assoc :java eglot-workspace-configuration))
+                                               '(:autobuild (:enabled :json-false)
+                                                 :maxConcurrentBuilds 1
+                                                 :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist"]
+                                                          :maven (:offline (:enabled t))
+                                                          :gradle (:offline (:enabled t)))
+                                                 :configuration (:updateBuildConfiguration "manual")
+                                                 :referencesCodeLens (:enabled :json-false)
+                                                 :implementationsCodeLens (:enabled :json-false)))))
+                        ))))))
 
 ;; 补全前端 Corfu
 (use-package corfu
@@ -312,6 +338,62 @@
   (add-hook 'clutch-result-mode-hook (lambda () (display-line-numbers-mode -1)))
   (add-hook 'clutch-record-mode-hook (lambda () (display-line-numbers-mode -1)))
   (add-hook 'clutch-describe-mode-hook (lambda () (display-line-numbers-mode -1))))
+
+;; 优化代码跳转 (xref) 体验：
+;; 1. 不弹出单独的 *xref* 窗口，直接在 minibuffer (Vertico) 中进行选择。
+;; 2. 若只有一条数据，则不弹窗，直接跳转过去。
+;; 3. 多条数据时在 Minibuffer 展现，并在上面窗口实时显示预览（在列表中移动时自动预览目标代码位置）。
+;; 4. 仅显示相对于项目根目录的 “路径:行号”（例如 src/main.rs:12），过滤掉长长的具体代码内容。
+(use-package xref
+  :ensure nil
+  :config
+  (defun my/consult-xref--candidates (xrefs)
+    (let ((root (and (project-current) (project-root (project-current)))))
+      (mapcar (lambda (xref)
+                (let* ((loc (xref-item-location xref))
+                       (group (and loc (xref-location-group loc)))
+                       (group-rel (if (and root group) (file-relative-name group root) group))
+                       (line (and loc (xref-location-line loc)))
+                       ;; 格式化为：行号:相对路径，例如 12:src/main.rs
+                       (cand (if line
+                                 (format "%s:%s" line (or group-rel "unknown"))
+                               (or group-rel "unknown"))))
+                  (add-text-properties
+                   0 1 `(consult-xref ,xref) cand)
+                  cand))
+              xrefs)))
+
+  (defun my/consult-xref (fetcher &optional alist)
+    (require 'consult)
+    (require 'consult-xref)
+    (let* ((real-xrefs (if (functionp fetcher) (funcall fetcher) fetcher))
+           (candidates (my/consult-xref--candidates real-xrefs))
+           (display (alist-get 'display-action alist)))
+      (unless candidates
+        (user-error "No xref locations"))
+      (xref-pop-to-location
+       (if (cdr candidates)
+           (consult--read
+            candidates
+            :command #'my/consult-xref
+            :prompt "Go to xref: "
+            :history 'consult-xref--history
+            :require-match t
+            :sort nil
+            :category 'consult-xref
+            ;; 去掉 :group 属性以取消 Vertico 的分组标题（防止同一项显示两行）
+            :state
+            (when-let* ((fun (pcase display
+                               ('frame nil)
+                               ('window #'switch-to-buffer-other-window)
+                               (_ #'switch-to-buffer))))
+              (consult-xref--preview fun))
+            :lookup (apply-partially #'consult--lookup-prop 'consult-xref))
+         (get-text-property 0 'consult-xref (car candidates)))
+       display)))
+
+  (setq xref-show-definitions-function #'my/consult-xref)
+  (setq xref-show-xrefs-function #'my/consult-xref))
 
 (provide 'init-complete)
 ;;; init-complete.el ends here

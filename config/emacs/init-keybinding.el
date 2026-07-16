@@ -41,7 +41,11 @@
   (evil-define-key 'normal 'global (kbd "<leader>kk") 'evil-avy-goto-line-above)
   (evil-define-key 'normal 'global (kbd "<leader>jj") 'evil-avy-goto-line-below)
   (evil-define-key 'normal 'global (kbd "<leader>gg") 'evil-avy-goto-char-2)
-  (evil-define-key 'normal 'global (kbd "<leader>gg") 'evil-avy-goto-char-2)
+  ;;代码跳转 (Go to definition/implementation/typeDefinition/usages)
+  (evil-define-key 'normal 'global (kbd "<leader>gd") 'xref-find-definitions)
+  (evil-define-key 'normal 'global (kbd "<leader>gm") 'eglot-find-implementation)
+  (evil-define-key 'normal 'global (kbd "<leader>gp") 'eglot-find-declaration)
+  (evil-define-key 'normal 'global (kbd "<leader>gu") 'xref-find-references)
   ;;comment
   (evil-define-key '(normal visual) 'global (kbd "<leader>/") 'evilnc-comment-or-uncomment-lines)
   ;;window

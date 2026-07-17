@@ -168,10 +168,13 @@
                     (let* ((project-root (project-root (project-current t)))
                            (cache-dir (expand-file-name (md5 project-root) "~/.cache/jdtls-workspace"))
                            (debug-jar (my/download-java-debug-adapter-if-missing))
-                           ;; 动态解析系统 JDK 21 路径，确保 JDTLS 启动的 JVM (Debugger JVM) 与被调试的 JVM (21) 版本完全一致
+                           ;; 动态解析系统 JDK 21 路径，优先使用支持 DCEVM 的 JBRSDK 21
+                           (jbr-dir (expand-file-name "~/.local/share/jbrsdk-21/Contents/Home"))
                            (jdk-21-dirs (file-expand-wildcards "/Library/Java/JavaVirtualMachines/*21*/Contents/Home"))
-                           (java-home (or (car jdk-21-dirs)
-                                          (string-trim (shell-command-to-string "/usr/libexec/java_home -v 21 2>/dev/null || echo ''"))))
+                           (java-home (cond
+                                       ((file-directory-p jbr-dir) jbr-dir)
+                                       (t (or (car jdk-21-dirs)
+                                              (string-trim (shell-command-to-string "/usr/libexec/java_home -v 21 2>/dev/null || echo ''"))))))
                            (java-bin (and (not (string-empty-p java-home))
                                           (expand-file-name "bin" java-home))))
                       (make-directory cache-dir t)
@@ -490,6 +493,38 @@
                    :hostName "localhost"
                    :port 5005
                    :hotCodeReplace "auto")))
+;; 定义 Java 热重载 (Hot Code Replace) 触发函数
+(defun my/dape-java-hot-code-replace ()
+  "Trigger Hot Code Replace (redefineClasses) for all active Java debugging sessions in Dape."
+  (interactive)
+  (if-let ((connections (and (fboundp 'dape--live-connections) (dape--live-connections))))
+      (dolist (conn connections)
+        (message "Triggering Java Hot Code Replace for connection: %s" conn)
+        (dape-request conn "redefineClasses" nil
+                      (lambda (_conn error)
+                        (if error
+                            (message "Hot Code Replace failed: %s" (plist-get error :message))
+                          (message "Hot Code Replace succeeded!")))))
+    (message "No active Dape debug session.")))
+
+;; 保存 Java 文件时自动触发热代码替换
+(defun my/dape-java-hot-code-replace-on-save ()
+  "Automatically trigger hot code replace after save for Java buffers when debugging."
+  (when (and (derived-mode-p 'java-mode 'java-ts-mode)
+             (fboundp 'dape--live-connections)
+             (dape--live-connections))
+    ;; 延迟 1.2 秒执行，留给 jdtls/eglot 足够时间编译生成新的 class 文件
+    (run-with-idle-timer 1.2 nil
+                         (lambda ()
+                           (when (dape--live-connections)
+                             (dolist (conn (dape--live-connections))
+                               (dape-request conn "redefineClasses" nil
+                                             (lambda (_conn error)
+                                               (if error
+                                                   (message "Java HCR auto-reload failed: %s" (plist-get error :message))
+                                                 (message "Java HCR auto-reload success!"))))))))))
+
+(add-hook 'after-save-hook #'my/dape-java-hot-code-replace-on-save)
 
 (provide 'init-complete)
 ;;; init-complete.el ends here

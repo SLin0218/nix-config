@@ -62,15 +62,33 @@
   ;;git diff-hl跳转
   (evil-define-key 'normal 'global (kbd "<leader>vn") 'diff-hl-next-hunk)
   (evil-define-key 'normal 'global (kbd "<leader>vp") 'diff-hl-previous-hunk)
-  ;;flymake错误跳转
+  ;; Flymake错误跳转
   (evil-define-key 'normal 'global (kbd "<leader>en") 'flymake-goto-next-error)
   (evil-define-key 'normal 'global (kbd "<leader>ep") 'flymake-goto-prev-error)
-  ;;打开dired
+  ;; 打开dired
   (evil-define-key 'normal 'global (kbd "<leader>dj") 'dired-jump)
-  ;;打开magit
+  ;; 打开magit
   (evil-define-key 'normal 'global (kbd "<leader>mg") 'magit)
 
+  ;; Dape 调试快捷键 (SPC d 开头)
+  (evil-define-key 'normal 'global (kbd "<leader>dd") 'dape)
+  (evil-define-key 'normal 'global (kbd "<leader>dq") 'dape-quit)
+  (evil-define-key 'normal 'global (kbd "<leader>db") 'dape-breakpoint-toggle)
+  (evil-define-key 'normal 'global (kbd "<leader>dc") 'dape-continue)
+  (evil-define-key 'normal 'global (kbd "<leader>dn") 'dape-next)
+  (evil-define-key 'normal 'global (kbd "<leader>di") 'dape-step-in)
+  (evil-define-key 'normal 'global (kbd "<leader>do") 'dape-step-out)
+  (evil-define-key 'normal 'global (kbd "<leader>dr") 'dape-restart)
+  (evil-define-key 'normal 'global (kbd "<leader>dh") 'my/dape-java-hot-code-replace)
+
   (evil-mode 1))
+
+;; 全局功能键调试绑定 (VS Code 风格)
+(global-set-key (kbd "<f5>") 'dape-continue)
+(global-set-key (kbd "<f9>") 'dape-breakpoint-toggle)
+(global-set-key (kbd "<f10>") 'dape-next)
+(global-set-key (kbd "<f11>") 'dape-step-in)
+(global-set-key (kbd "<f12>") 'dape-step-out)
 
 ;; 修改粘贴快捷键
 (global-set-key (kbd "M-v") 'yank)
@@ -102,8 +120,9 @@
   (rime-show-candidate 'posframe)
   :config
   (setq rimel-disable-predicates
-        '(rimel-predicate-prog-in-code-p
-          rimel-predicate-evil-mode-p)))
+        '(rimel-predicate-evil-mode-p ;; 根据evil状态切换输入法
+          ;; rimel-predicate-prog-in-code-p ;; 支持自动字符串或注释中使用中文输入法
+          )))
 
 (when (eq system-type 'darwin)
   (setq mac-command-modifier 'meta

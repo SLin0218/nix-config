@@ -130,52 +130,89 @@
   ;; 开启 python 补全函数时自动带上括号 () 并优化 Java (jdtls) 的全局配置
   (setq-default eglot-workspace-configuration
                 '((:pyright . (:python (:analysis (:completeFunctionParens t))))
-                  (:java . (:autobuild (:enabled :json-false)
+                  (:java . (:autobuild (:enabled t)
                             :maxConcurrentBuilds 1
                             :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
-                                     :maven (:offline (:enabled t) :downloadSources t)
-                                     :gradle (:offline (:enabled t) :downloadSources t))
+                                     :maven (:offline (:enabled :json-false) :downloadSources t)
+                                     :gradle (:offline (:enabled :json-false) :downloadSources t))
                             :configuration (:updateBuildConfiguration "manual")
                             :referencesCodeLens (:enabled :json-false)
                             :implementationsCodeLens (:enabled :json-false)
                             :completion (:favoriteStaticMembers ["org.junit.Assert.*" "org.mockito.Mockito.*"] :importOrder ["java" "javax" "org" "com"])
                             :eclipse (:downloadSources t)
-                             :contentProvider (:preferred "fernflower")))
+                            :contentProvider (:preferred "fernflower")))
                   ))
+
+  (defun my/download-java-debug-adapter-if-missing ()
+    "Download vscode-java-debug plugin jar if it is not present in cache."
+    (let* ((debug-dir (expand-file-name "~/.config/emacs/.cache/java-debug"))
+           (jar-pattern (expand-file-name "com.microsoft.java.debug.plugin-*.jar" debug-dir))
+           (existing-jars (file-expand-wildcards jar-pattern)))
+      (if existing-jars
+          (car existing-jars)
+        (make-directory debug-dir t)
+        (let* ((version "0.53.0")
+               (jar-name (format "com.microsoft.java.debug.plugin-%s.jar" version))
+               (target-file (expand-file-name jar-name debug-dir))
+               (url (format "https://repo1.maven.org/maven2/com/microsoft/java/com.microsoft.java.debug.plugin/%s/%s"
+                            version jar-name)))
+          (message "Downloading vscode-java-debug-adapter jar from maven...")
+          (url-copy-file url target-file t)
+          (message "Download finished: %s" target-file)
+          target-file))))
+
   ;; 显式配置 java 语言服务器 jdtls 的启动参数（加入 lombok 等参数，并进行全方位性能优化）
   (add-to-list 'eglot-server-programs
                `((java-mode java-ts-mode) .
                  ,(lambda (&rest _)
                     (let* ((project-root (project-root (project-current t)))
-                           (cache-dir (expand-file-name (md5 project-root) "~/.cache/jdtls-workspace")))
+                           (cache-dir (expand-file-name (md5 project-root) "~/.cache/jdtls-workspace"))
+                           (debug-jar (my/download-java-debug-adapter-if-missing))
+                           ;; 动态解析系统 JDK 21 路径，确保 JDTLS 启动的 JVM (Debugger JVM) 与被调试的 JVM (21) 版本完全一致
+                           (jdk-21-dirs (file-expand-wildcards "/Library/Java/JavaVirtualMachines/*21*/Contents/Home"))
+                           (java-home (or (car jdk-21-dirs)
+                                          (string-trim (shell-command-to-string "/usr/libexec/java_home -v 21 2>/dev/null || echo ''"))))
+                           (java-bin (and (not (string-empty-p java-home))
+                                          (expand-file-name "bin" java-home))))
                       (make-directory cache-dir t)
-                      `("jdtls"
-                        "-data" ,cache-dir
-                        "--jvm-arg=-javaagent:/Users/lin/.local/share/nvim/mason/packages/jdtls/lombok.jar"
-                        "--jvm-arg=-Djava.import.generatesMetadataFilesAtProjectRoot=false"
-                        "--jvm-arg=-DDetectVMInstallationsJob.disabled=true"
-                        "--jvm-arg=-Dfile.encoding=utf8"
-                        "--jvm-arg=-XX:+UseG1GC"
-                        "--jvm-arg=-XX:+UseStringDeduplication"
-                        "--jvm-arg=-Dsun.zip.disableMemoryMapping=true"
-                        "--jvm-arg=-Dlog.level=WARNING"
-                        "--jvm-arg=-Xmx4G"
-                        "--jvm-arg=-Xms4G"
-                        "--jvm-arg=-Xlog:disable"
-                        "--jvm-arg=-Daether.dependencyCollector.impl=bf"
-                        :initializationOptions
-                        (:extendedClientCapabilities (:classFileContentsSupport t)
-                         :settings (:java ,(or (cdr (assoc :java eglot-workspace-configuration))
-                                               '(:autobuild (:enabled :json-false)
-                                                 :maxConcurrentBuilds 1
-                                                 :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
-                                                          :maven (:offline (:enabled t) :downloadSources t)
-                                                          :gradle (:offline (:enabled t) :downloadSources t))
-                                                 :configuration (:updateBuildConfiguration "manual")
-                                                 :referencesCodeLens (:enabled :json-false)
-                                                 :implementationsCodeLens (:enabled :json-false)
-                                                 :eclipse (:downloadSources t)
-                                                 :contentProvider (:preferred "fernflower")))))))))))
+                      ;; 强行将 Java 21 的 bin 目录放置在 PATH 环境变量与 Emacs 内部 exec-path 的最前面，
+                      ;; 确保 jdtls wrapper 脚本优先采用 Java 21，消灭 JDK 版本不一致 Warning
+                      (let ((process-environment (if (not (string-empty-p java-home))
+                                                     (cons (format "JAVA_HOME=%s" java-home)
+                                                           (cons (format "PATH=%s:%s" java-bin (getenv "PATH"))
+                                                                 process-environment))
+                                                   process-environment))
+                            (exec-path (if java-bin
+                                           (cons java-bin exec-path)
+                                         exec-path)))
+                        `("jdtls"
+                          "-data" ,cache-dir
+                          "--jvm-arg=-javaagent:/Users/lin/.local/share/nvim/mason/packages/jdtls/lombok.jar"
+                          "--jvm-arg=-Djava.import.generatesMetadataFilesAtProjectRoot=false"
+                          "--jvm-arg=-DDetectVMInstallationsJob.disabled=true"
+                          "--jvm-arg=-Dfile.encoding=utf8"
+                          "--jvm-arg=-XX:+UseG1GC"
+                          "--jvm-arg=-XX:+UseStringDeduplication"
+                          "--jvm-arg=-Dsun.zip.disableMemoryMapping=true"
+                          "--jvm-arg=-Dlog.level=WARNING"
+                          "--jvm-arg=-Xmx4G"
+                          "--jvm-arg=-Xms4G"
+                          "--jvm-arg=-Xlog:disable"
+                          "--jvm-arg=-Daether.dependencyCollector.impl=bf"
+                          :initializationOptions
+                          (:extendedClientCapabilities (:classFileContentsSupport t)
+                           ,@(when debug-jar `(:bundles [,debug-jar]))
+                           :settings (:java ,(or (cdr (assoc :java eglot-workspace-configuration))
+                                                 '(:autobuild (:enabled t)
+                                                   :maxConcurrentBuilds 1
+                                                   :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
+                                                            :maven (:offline (:enabled :json-false) :downloadSources t)
+                                                            :gradle (:offline (:enabled :json-false) :downloadSources t))
+                                                   :configuration (:updateBuildConfiguration "manual")
+                                                   :referencesCodeLens (:enabled :json-false)
+                                                   :implementationsCodeLens (:enabled :json-false)
+                                                   :eclipse (:downloadSources t)
+                                                   :contentProvider (:preferred "fernflower"))))))))))))
 
 ;; 纯 Emacs Lisp 拦截并解析 JDTLS 的 jdt:/ 和 jdt:// 协议，实现依赖 jar 跳转定义
 (with-eval-after-load 'eglot
@@ -431,6 +468,28 @@
 
   (setq xref-show-definitions-function #'my/consult-xref)
   (setq xref-show-xrefs-function #'my/consult-xref))
+
+  ;; 注册本地 Spring Boot 的远程附加调试配置 (Attach)
+  ;; 使用 with-eval-after-load 延迟执行，防止在 dape 加载前报 dape-configs 变量未定义的 void 错误
+  (with-eval-after-load 'dape
+    (add-to-list 'dape-configs
+                 `(attach-springboot
+                   modes (java-mode java-ts-mode)
+                   ensure (lambda (config)
+                            (unless (and (featurep 'eglot) (eglot-current-server))
+                              (user-error "No eglot instance active in buffer %s" (current-buffer))))
+                   fn (lambda (config)
+                        (if-let* ((server (eglot-current-server))
+                                  (port (eglot-execute-command server "vscode.java.startDebugSession" nil)))
+                            (thread-first
+                              config
+                              (plist-put 'port port))
+                          (user-error "Failed to start debug session via JDTLS")))
+                   :type "java"
+                   :request "attach"
+                   :hostName "localhost"
+                   :port 5005
+                   :hotCodeReplace "auto")))
 
 (provide 'init-complete)
 ;;; init-complete.el ends here

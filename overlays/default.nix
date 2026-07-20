@@ -20,7 +20,7 @@
 
       # 跨平台通用包和重载
       commonOverlays = {
-        inherit (localPkgs) t jar-launcher apifox-cli;
+        inherit (localPkgs) t jar-launcher apifox-cli jbrsdk-21 mvn-springboot-debug;
       };
     in
     commonOverlays // (if isLinux then linuxOverlays else {})

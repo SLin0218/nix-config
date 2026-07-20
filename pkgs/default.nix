@@ -5,4 +5,6 @@ pkgs: {
   t = import ./translate { inherit pkgs; };
   jar-launcher = import ./jar-launcher { inherit pkgs; };
   apifox-cli = import ./apifox-cli { inherit pkgs; };
+  jbrsdk-21 = import ./jbrsdk-21.nix { inherit pkgs; };
+  mvn-springboot-debug = import ./mvn-springboot-debug.nix { inherit pkgs; };
 }

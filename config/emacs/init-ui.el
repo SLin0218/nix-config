@@ -8,6 +8,7 @@
 ;;; Code:
 
 (global-display-line-numbers-mode 1)     ;行号
+(global-hl-line-mode 1)                  ;高亮当前光标行，有助于一眼识别当前聚焦窗口
 
 (defvar slin/font-size 12
   "默认英文字体大小.")
@@ -16,7 +17,7 @@
 (defvar slin/font-family-cjk "Maple Mono NF CN"
   "默认中文字体族.")
 
-(cond ((eq system-type 'darwin) (setq slin/font-size 16)))
+(cond ((eq system-type 'darwin) (setq slin/font-size 14)))
 
 ;; 全局字体设置
 (defun load-font-setup (&optional frame)
@@ -145,6 +146,13 @@
   :hook ((css-mode html-mode emacs-lisp-mode) . colorful-mode)
   :config
   (add-to-list 'global-colorful-modes 'helpful-mode))
+
+;; 自动将非活动窗口变暗，极易识别当前聚焦窗口
+(use-package dimmer
+  :custom
+  (dimmer-fraction 0.4)                 ; 变暗系数，设为 0.4 让非活动窗口更暗
+  :config
+  (dimmer-mode 1))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here

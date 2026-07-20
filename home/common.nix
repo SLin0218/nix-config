@@ -16,6 +16,13 @@
 
   home.file.".sqlfluff".source = ../config/sqlfluff;
   home.file.".gitconfig".source = ../config/gitconfig;
+
+  # 自动下载并软链接 HotswapAgent 包到 ~/lib/hotswap-agent.jar
+  home.file."lib/hotswap-agent.jar".source = pkgs.fetchurl {
+    url = "https://github.com/HotswapProjects/HotswapAgent/releases/download/RELEASE-2.0.3/hotswap-agent-2.0.3.jar";
+    sha256 = "1ycl0mzzhysxw0j94j6kzvsbjkbzh87k39z2s8v3alnqnwj9gx2f";
+  };
+
   home.file.".gnupg/gpg-agent.conf".text = ''
     default-cache-ttl 600
     max-cache-ttl 7200
@@ -53,6 +60,14 @@
 
     jetbrains.idea
 
+    # rime
+    librime
+
+    # java & build tools
+    jbrsdk-21
+    maven
+    mvn-springboot-debug
+
     # translate
     t
     mpc
@@ -76,6 +91,7 @@
     EDITOR = "nvim";
     SSH_AUTH_SOCK = "$(gpgconf --list-dir agent-ssh-socket)";
     GPG_TTY = "$(tty)";
+    JAVA_HOME = "${pkgs.jbrsdk-21}";
   };
 
   programs = {

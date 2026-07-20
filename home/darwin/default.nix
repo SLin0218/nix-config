@@ -51,8 +51,5 @@ in
     HOMEBREW_INSTALL_FROM_API = 1;
   };
 
-  home.packages = with pkgs; [
-    jdk21
-    maven
-  ];
+  home.packages = [ ];
 }

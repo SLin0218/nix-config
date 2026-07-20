@@ -14,6 +14,8 @@
     pkgs.jar-launcher
   ];
 
+
+
   nixpkgs.config.allowUnfree = true;
 
   # Necessary for using flakes on this system.
@@ -86,8 +88,6 @@
     };
 
     brews = [
-      "librime"
-      "pkg-config"
       "container"
       "pinentry-mac"
       "openvpn"

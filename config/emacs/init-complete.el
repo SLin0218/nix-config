@@ -118,6 +118,9 @@
                 java-mode java-ts-mode
                 lua-mode yaml-mode nix-mode) . my-eglot-ensure-safe)
   :config
+  ;; 限制 Eglot 的文件监听，防止大项目下文件描述符被耗尽而报错 (no file descriptor left)
+  (setq eglot-ignored-server-capabilities '(:workspace/didChangeWatchedFiles))
+
   ;; 调高 GC 阈值至 64MB，防止大数据量 JSON 传输触发频繁垃圾回收
   (add-hook 'eglot-managed-mode-hook (lambda () (setq gc-cons-threshold (* 64 1024 1024))))
 
@@ -131,16 +134,16 @@
   (setq-default eglot-workspace-configuration
                 '((:pyright . (:python (:analysis (:completeFunctionParens t))))
                   (:java . (:autobuild (:enabled t)
-                            :maxConcurrentBuilds 1
-                            :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
-                                     :maven (:offline (:enabled :json-false) :downloadSources t)
-                                     :gradle (:offline (:enabled :json-false) :downloadSources t))
-                            :configuration (:updateBuildConfiguration "manual")
-                            :referencesCodeLens (:enabled :json-false)
-                            :implementationsCodeLens (:enabled :json-false)
-                            :completion (:favoriteStaticMembers ["org.junit.Assert.*" "org.mockito.Mockito.*"] :importOrder ["java" "javax" "org" "com"])
-                            :eclipse (:downloadSources t)
-                            :contentProvider (:preferred "fernflower")))
+                                       :maxConcurrentBuilds 1
+                                       :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
+                                                                 :maven (:offline (:enabled :json-false) :downloadSources t)
+                                                                 :gradle (:offline (:enabled :json-false) :downloadSources t))
+                                       :configuration (:updateBuildConfiguration "automatic")
+                                       :referencesCodeLens (:enabled :json-false)
+                                       :implementationsCodeLens (:enabled :json-false)
+                                       :completion (:favoriteStaticMembers ["org.junit.Assert.*" "org.mockito.Mockito.*"] :importOrder ["java" "javax" "org" "com"])
+                                       :eclipse (:downloadSources t)
+                                       :contentProvider (:preferred "fernflower")))
                   ))
 
   (defun my/download-java-debug-adapter-if-missing ()
@@ -161,6 +164,38 @@
           (message "Download finished: %s" target-file)
           target-file))))
 
+
+  (use-package project
+    :ensure nil ; project.el 是内置的，不需要额外下载
+    :bind (:map project-prefix-map
+                ("m" . project-compile)) ; 绑定快捷键 C-x p m 快速编译
+    :config
+    ;; 1. 自定义项目根目录的识别标志，增加了 .dir-locals.el 标志
+    (setq project-vc-extra-root-markers
+          '("Makefile" "package.json" "go.mod" "Cargo.toml" "pyproject.toml" ".project" ".dir-locals.el"))
+
+    ;; 2. 忽略特定的文件夹，避免全局搜索时卡顿 (添加了大量的缓存与编译目录)
+    (setq project-vc-ignores
+          '("node_modules/" "elpa/" ".elp/" "target/" "dist/" "venv/" ".venv/"
+            "build/" "bin/" ".gradle/" ".metadata/" ".settings/" ".idea/" ".vscode/"
+            "__pycache__/" ".next/" ".nuxt/"))
+
+    ;; 3. 优化项目切换时的行为：切换项目时直接打开文件列表
+    (setq project-switch-commands
+          '((project-find-file "Find file" ?f)
+            (project-find-regexp "Find regexp" ?g)
+            (project-dired "Dired" ?d)
+            (project-eshell "Eshell" ?e)))
+
+    ;; 4. 注册自定义的 .dir-locals.el 项目识别逻辑到 project-find-functions
+    (defun my/project-try-dir-locals (dir)
+      "Identify project roots containing .dir-locals.el."
+      (let ((root (locate-dominating-file dir ".dir-locals.el")))
+        (when root
+          (cons 'transient (expand-file-name root)))))
+
+    (add-to-list 'project-find-functions #'my/project-try-dir-locals))
+
   ;; 显式配置 java 语言服务器 jdtls 的启动参数（加入 lombok 等参数，并进行全方位性能优化）
   (add-to-list 'eglot-server-programs
                `((java-mode java-ts-mode) .
@@ -168,14 +203,12 @@
                     (let* ((project-root (project-root (project-current t)))
                            (cache-dir (expand-file-name (md5 project-root) "~/.cache/jdtls-workspace"))
                            (debug-jar (my/download-java-debug-adapter-if-missing))
-                           ;; 动态解析系统 JDK 21 路径，优先使用支持 DCEVM 的 JBRSDK 21
-                           (jbr-dir (expand-file-name "~/.local/share/jbrsdk-21/Contents/Home"))
-                           (jdk-21-dirs (file-expand-wildcards "/Library/Java/JavaVirtualMachines/*21*/Contents/Home"))
-                           (java-home (cond
-                                       ((file-directory-p jbr-dir) jbr-dir)
-                                       (t (or (car jdk-21-dirs)
-                                              (string-trim (shell-command-to-string "/usr/libexec/java_home -v 21 2>/dev/null || echo ''"))))))
-                           (java-bin (and (not (string-empty-p java-home))
+                           ;; 使用 Nix 注入的 JBRSDK 21 路径作为 Java Home
+                           (java-home (and (boundp 'nix-jbrsdk-path)
+                                           nix-jbrsdk-path
+                                           (file-directory-p nix-jbrsdk-path)
+                                           nix-jbrsdk-path))
+                           (java-bin (and java-home
                                           (expand-file-name "bin" java-home))))
                       (make-directory cache-dir t)
                       ;; 强行将 Java 21 的 bin 目录放置在 PATH 环境变量与 Emacs 内部 exec-path 的最前面，
@@ -204,40 +237,42 @@
                           "--jvm-arg=-Daether.dependencyCollector.impl=bf"
                           :initializationOptions
                           (:extendedClientCapabilities (:classFileContentsSupport t)
-                           ,@(when debug-jar `(:bundles [,debug-jar]))
-                           :settings (:java ,(or (cdr (assoc :java eglot-workspace-configuration))
-                                                 '(:autobuild (:enabled t)
-                                                   :maxConcurrentBuilds 1
-                                                   :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
-                                                            :maven (:offline (:enabled :json-false) :downloadSources t)
-                                                            :gradle (:offline (:enabled :json-false) :downloadSources t))
-                                                   :configuration (:updateBuildConfiguration "manual")
-                                                   :referencesCodeLens (:enabled :json-false)
-                                                   :implementationsCodeLens (:enabled :json-false)
-                                                   :eclipse (:downloadSources t)
-                                                   :contentProvider (:preferred "fernflower"))))))))))))
+                                                       ,@(when debug-jar `(:bundles [,debug-jar]))
+                                                       :settings (:java ,(or (cdr (assoc :java eglot-workspace-configuration))
+                                                                             '(:autobuild (:enabled t)
+                                                                                          :maxConcurrentBuilds 1
+                                                                                          :import (:resourceFilters ["node_modules" "\\.git" "build" "bin" "target" "dist" ".gradle" ".metadata" ".settings" ".project" ".classpath"]
+                                                                                                                    :maven (:offline (:enabled :json-false) :downloadSources t)
+                                                                                                                    :gradle (:offline (:enabled :json-false) :downloadSources t))
+                                                                                          :configuration (:updateBuildConfiguration "automatic")
+                                                                                          :referencesCodeLens (:enabled :json-false)
+                                                                                          :implementationsCodeLens (:enabled :json-false)
+                                                                                          :eclipse (:downloadSources t)
+                                                                                          :contentProvider (:preferred "fernflower"))))))))))))
 
 ;; 纯 Emacs Lisp 拦截并解析 JDTLS 的 jdt:/ 和 jdt:// 协议，实现依赖 jar 跳转定义
 (with-eval-after-load 'eglot
   (defun +eglot/jdtls-uri-to-path (uri)
     "Support Eclipse jdtls `jdt:/' and `jdt://' uri scheme by fetching content."
     (when (string-prefix-p "jdt:" uri)
-      (let* ((md5-hash (md5 uri))
-             (class-name (if (string-match "/\\([^/?]+\\)\\(?:\\.class\\|\\.java\\)" uri)
-                             (match-string 1 uri)
-                           "UnknownClass"))
-             (filename (format "%s_%s.java" class-name md5-hash))
-             (source-dir (expand-file-name "eglot-jdtls-sources" (temporary-file-directory)))
-             (source-file (expand-file-name filename source-dir)))
-        (unless (file-directory-p source-dir)
-          (make-directory source-dir t))
-        (unless (file-readable-p source-file)
-          (let ((content (jsonrpc-request (eglot--current-server-or-lose)
-                                          :java/classFileContents
-                                          (list :uri uri))))
-            (with-temp-file source-file
-              (insert content))))
-        source-file)))
+      (let ((server (eglot-current-server)))
+        (when server
+          (let* ((md5-hash (md5 uri))
+                 (class-name (if (string-match "/\\([^/?]+\\)\\(?:\\.class\\|\\.java\\)" uri)
+                                 (match-string 1 uri)
+                               "UnknownClass"))
+                 (filename (format "%s_%s.java" class-name md5-hash))
+                 (source-dir (expand-file-name "eglot-jdtls-sources" (temporary-file-directory)))
+                 (source-file (expand-file-name filename source-dir)))
+            (unless (file-directory-p source-dir)
+              (make-directory source-dir t))
+            (unless (file-readable-p source-file)
+              (let ((content (jsonrpc-request server
+                                              :java/classFileContents
+                                              (list :uri uri))))
+                (with-temp-file source-file
+                  (insert content))))
+            source-file)))))
 
   (advice-add (if (fboundp 'eglot-uri-to-path) 'eglot-uri-to-path 'eglot--uri-to-path)
               :around
@@ -360,11 +395,11 @@
                                   (sql-port ,port))
                           sql-conns)
                     (push `(,name . (:backend mysql
-                                     :host ,host
-                                     :port ,port
-                                     :user ,user
-                                     ,@(when pass `(:password ,pass))
-                                     ,@(when db `(:database ,db))))
+                                              :host ,host
+                                              :port ,port
+                                              :user ,user
+                                              ,@(when pass `(:password ,pass))
+                                              ,@(when db `(:database ,db))))
                           clutch-conns)))))
               (forward-line 1))))))
     (setq sql-connection-alist (nreverse sql-conns))
@@ -472,59 +507,61 @@
   (setq xref-show-definitions-function #'my/consult-xref)
   (setq xref-show-xrefs-function #'my/consult-xref))
 
+(use-package dape
+  :defer t
+  :init
+  ;; 定义 Java 热重载 (Hot Code Replace) 触发函数
+  (defun my/dape-java-hot-code-replace ()
+    "Trigger Hot Code Replace (redefineClasses) for all active Java debugging sessions in Dape."
+    (interactive)
+    (if-let ((connections (and (fboundp 'dape--live-connections) (dape--live-connections))))
+        (dolist (conn connections)
+          (message "Triggering Java Hot Code Replace for connection: %s" conn)
+          (dape-request conn "redefineClasses" nil
+                        (lambda (_conn error)
+                          (if error
+                              (message "Hot Code Replace failed: %s" (plist-get error :message))
+                            (message "Hot Code Replace succeeded!")))))
+      (message "No active Dape debug session.")))
+
+  ;; 保存 Java 文件时自动触发热代码替换
+  (defun my/dape-java-hot-code-replace-on-save ()
+    "Automatically trigger hot code replace after save for Java buffers when debugging."
+    (when (and (derived-mode-p 'java-mode 'java-ts-mode)
+               (fboundp 'dape--live-connections)
+               (dape--live-connections))
+      ;; 延迟 1.2 秒执行，留给 jdtls/eglot 足够时间编译生成新的 class 文件
+      (run-with-idle-timer 1.2 nil
+                           (lambda ()
+                             (when (dape--live-connections)
+                               (dolist (conn (dape--live-connections))
+                                 (dape-request conn "redefineClasses" nil
+                                               (lambda (_conn error)
+                                                 (if error
+                                                     (message "Java HCR auto-reload failed: %s" (plist-get error :message))
+                                                   (message "Java HCR auto-reload success!"))))))))))
+
+  (add-hook 'after-save-hook #'my/dape-java-hot-code-replace-on-save)
+
+  :config
   ;; 注册本地 Spring Boot 的远程附加调试配置 (Attach)
-  ;; 使用 with-eval-after-load 延迟执行，防止在 dape 加载前报 dape-configs 变量未定义的 void 错误
-  (with-eval-after-load 'dape
-    (add-to-list 'dape-configs
-                 `(attach-springboot
-                   modes (java-mode java-ts-mode)
-                   ensure (lambda (config)
-                            (unless (and (featurep 'eglot) (eglot-current-server))
-                              (user-error "No eglot instance active in buffer %s" (current-buffer))))
-                   fn (lambda (config)
-                        (if-let* ((server (eglot-current-server))
-                                  (port (eglot-execute-command server "vscode.java.startDebugSession" nil)))
-                            (thread-first
-                              config
-                              (plist-put 'port port))
-                          (user-error "Failed to start debug session via JDTLS")))
-                   :type "java"
-                   :request "attach"
-                   :hostName "localhost"
-                   :port 5005
-                   :hotCodeReplace "auto")))
-;; 定义 Java 热重载 (Hot Code Replace) 触发函数
-(defun my/dape-java-hot-code-replace ()
-  "Trigger Hot Code Replace (redefineClasses) for all active Java debugging sessions in Dape."
-  (interactive)
-  (if-let ((connections (and (fboundp 'dape--live-connections) (dape--live-connections))))
-      (dolist (conn connections)
-        (message "Triggering Java Hot Code Replace for connection: %s" conn)
-        (dape-request conn "redefineClasses" nil
-                      (lambda (_conn error)
-                        (if error
-                            (message "Hot Code Replace failed: %s" (plist-get error :message))
-                          (message "Hot Code Replace succeeded!")))))
-    (message "No active Dape debug session.")))
-
-;; 保存 Java 文件时自动触发热代码替换
-(defun my/dape-java-hot-code-replace-on-save ()
-  "Automatically trigger hot code replace after save for Java buffers when debugging."
-  (when (and (derived-mode-p 'java-mode 'java-ts-mode)
-             (fboundp 'dape--live-connections)
-             (dape--live-connections))
-    ;; 延迟 1.2 秒执行，留给 jdtls/eglot 足够时间编译生成新的 class 文件
-    (run-with-idle-timer 1.2 nil
-                         (lambda ()
-                           (when (dape--live-connections)
-                             (dolist (conn (dape--live-connections))
-                               (dape-request conn "redefineClasses" nil
-                                             (lambda (_conn error)
-                                               (if error
-                                                   (message "Java HCR auto-reload failed: %s" (plist-get error :message))
-                                                 (message "Java HCR auto-reload success!"))))))))))
-
-(add-hook 'after-save-hook #'my/dape-java-hot-code-replace-on-save)
+  (add-to-list 'dape-configs
+               `(attach-springboot
+                 modes (java-mode java-ts-mode)
+                 ensure (lambda (config)
+                          (unless (and (featurep 'eglot) (eglot-current-server))
+                            (user-error "No eglot instance active in buffer %s" (current-buffer))))
+                 fn (lambda (config)
+                      (if-let* ((server (eglot-current-server))
+                                (port (eglot-execute-command server "vscode.java.startDebugSession" nil)))
+                          (thread-first
+                            config
+                            (plist-put 'port port))
+                        (user-error "Failed to start debug session via JDTLS")))
+                 :type "java"
+                 :request "attach"
+                 :hostName "localhost"
+                 :port 5005)))
 
 (provide 'init-complete)
 ;;; init-complete.el ends here

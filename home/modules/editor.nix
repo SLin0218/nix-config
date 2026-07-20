@@ -10,6 +10,8 @@
   # 3. Emacs 初始化引导
   xdg.configFile."emacs/init.el".text = ''
     ;; -*- lexical-binding: t; -*-
+    (setq nix-librime-path "${pkgs.librime}")
+    (setq nix-jbrsdk-path "${pkgs.jbrsdk-21}")
     (add-to-list 'load-path "~/.config/slin-emacs")
     (require 'slin-emacs)
   '';

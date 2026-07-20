@@ -18,22 +18,16 @@
 (setq backup-directory-alist `((".*" . ,(expand-file-name "backups" user-emacs-directory)))) ;备份文件存放位置
 
 
-(setq my-paths '("/opt/homebrew/bin" "/usr/local/bin" "~/.local/share/nvim/mason/bin/" "~/.local/bin/" "/Library/TeX/texbin/"))
+(setq my-paths '("~/.nix-profile/bin" "/etc/profiles/per-user/lin/bin" "/run/current-system/sw/bin" "/opt/homebrew/bin" "/usr/local/bin" "~/.local/share/nvim/mason/bin/" "~/.local/bin/" "/Library/TeX/texbin/"))
 (setq my-paths-join (string-join (mapcar #'expand-file-name my-paths) ":"))
 
 (setenv "PATH" (concat my-paths-join ":" (getenv "PATH")))
 (setq exec-path (append (mapcar #'expand-file-name my-paths) exec-path))
 
-;; macOS 上的 Emacs Native Compilation 环境变量配置，解决 "ld: library not found for -lSystem" 问题
-(when (eq system-type 'darwin)
-  (let ((sdkpath (with-temp-buffer
-                   (when (eq 0 (ignore-errors (call-process "xcrun" nil t nil "--show-sdk-path")))
-                     (goto-char (point-min))
-                     (when (re-search-forward "[^\n\r]+" nil t)
-                       (match-string 0))))))
-    (when (and sdkpath (file-exists-p sdkpath))
-      (setenv "SDKROOT" sdkpath)
-      (setenv "LIBRARY_PATH" (concat sdkpath "/usr/lib")))))
+;; 注入 Nix 安装的 librime 路径供编译使用
+(when (bound-and-true-p nix-librime-path)
+  (setenv "LIBRARY_PATH" (concat nix-librime-path "/lib:" (getenv "LIBRARY_PATH")))
+  (setenv "CPATH" (concat nix-librime-path "/include" (if (getenv "CPATH") (concat ":" (getenv "CPATH")) ""))))
 
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)

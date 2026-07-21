@@ -2,24 +2,27 @@
 
 ;;; Commentary:
 ;;
-;; 个人 Emacs 配置主入口：设置系统 PATH 环境变量，加载其余分步模块配置文件。
+;; 个人 Emacs 配置主入口：设置系统 PATH 环境变量，按逻辑清晰加载各大分步模块。
 ;;
 
 ;;; Code:
-;;(defconst user-emacs-cache-directory (expand-file-name ".cache" user-emacs-directory))             ;缓存文件存放位置 存放临时文件
-;;(setq recentf-save-file (expand-file-name "recentf" user-emacs-cache-directory))                   ;最近打开文件 存放位置
-;;(setq savehist-file (expand-file-name "history" user-emacs-cache-directory))                       ;savehist文件位置
-;;(setq auto-save-list-file-prefix (expand-file-name "auto-save-list" user-emacs-cache-directory))   ;自动保存文件目录
-;;(setq package-user-dir (expand-file-name "elpa" user-emacs-cache-directory))                       ;ELPA目录
-;;(setq tutorial-directory (expand-file-name "tutorial" user-emacs-cache-directory))
 
-(setq read-process-output-max (* 1024 1024)) ; 提升进程输出读取上限，优化 eglot
+;; 1. 提升进程输出读取上限，优化 LSP (eglot)
+(setq read-process-output-max (* 1024 1024))
 
-(setq backup-directory-alist `((".*" . ,(expand-file-name "backups" user-emacs-directory)))) ;备份文件存放位置
+;; 2. 备份文件统一存放位置
+(setq backup-directory-alist `((".*" . ,(expand-file-name "backups" user-emacs-directory))))
 
-
-(setq my-paths '("~/.nix-profile/bin" "/etc/profiles/per-user/lin/bin" "/run/current-system/sw/bin" "/opt/homebrew/bin" "/usr/local/bin" "~/.local/share/nvim/mason/bin/" "~/.local/bin/" "/Library/TeX/texbin/"))
-(setq my-paths-join (string-join (mapcar #'expand-file-name my-paths) ":"))
+;; 3. 全局 PATH 与 exec-path 设置
+(defconst my-paths '("~/.nix-profile/bin"
+                     "/etc/profiles/per-user/lin/bin"
+                     "/run/current-system/sw/bin"
+                     "/opt/homebrew/bin"
+                     "/usr/local/bin"
+                     "~/.local/share/nvim/mason/bin/"
+                     "~/.local/bin/"
+                     "/Library/TeX/texbin/"))
+(defconst my-paths-join (string-join (mapcar #'expand-file-name my-paths) ":"))
 
 (setenv "PATH" (concat my-paths-join ":" (getenv "PATH")))
 (setq exec-path (append (mapcar #'expand-file-name my-paths) exec-path))
@@ -29,31 +32,27 @@
   (setenv "LIBRARY_PATH" (concat nix-librime-path "/lib:" (getenv "LIBRARY_PATH")))
   (setenv "CPATH" (concat nix-librime-path "/include" (if (getenv "CPATH") (concat ":" (getenv "CPATH")) ""))))
 
+;; 基础缩进风格
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
-;;M+x历史命令保留
+;; M-x 命令历史保留
 (savehist-mode 1)
 
-;;(setenv "HTTP_PROXY" "http://myphone:7890")
-;;(setenv "HTTPS_PROXY" "http://myphone:7890")
-;;(setenv "ALL_PROXY" "socks5://myphone:7890")
-;;(setenv "MAVEN_OPTS" "-Dhttp.proxyHost=myphone -Dhttp.proxyPort=7890 -Dhttps.proxyHost=myphone -Dhttps.proxyPort=7890")
+;; 4. 按逻辑模块划分依次加载子配置
+(require 'init-package)      ; 包管理器初始化 (use-package / ELPA)
+(require 'init-base)         ; 基础编辑策略 (Session, Undo-tree, Magit, Recentf)
+(require 'init-ui)           ; 外观界面美化 (Theme, Font, Modeline, Dimmer)
+(require 'init-input)        ; 中文输入法 (Rimel/Rime) 与按键修饰符
+(require 'init-completion)   ; Minibuffer & In-buffer 补全检索 (Vertico, Consult, Corfu, Xref)
+(require 'init-keybinding)   ; Evil 框架与全局 Leader 快捷键映射
+(require 'init-prog)         ; 编程语言服务 (Eglot, Treesit, Apheleia, Project)
+(require 'init-dap)          ; 代码调试器 (Dape, Java HCR, Attach)
+(require 'init-database)     ; 数据库支持 (SQL, Clutch, myclirc 自动解析)
+(require 'init-dired)        ; 文件管理器 (Dired)
+(require 'init-org)          ; Org-mode 知识库 & GTD & Roam
 
-
-(require 'init-package)
-(require 'init-ui)
-(require 'init-keybinding)
-(require 'init-session)
-(require 'init-dired)
-(require 'init-complete)
-(require 'init-org)
-;; 自动启动 Emacs 服务，以便后续使用 emacsclient 瞬间打开文件
-(require 'server)
-(unless (server-running-p)
-  (server-start))
-
-;; 加载本地自定义变量文件
+;; 5. 加载本地自定义变量文件
 (when (and custom-file (file-exists-p custom-file))
   (load custom-file nil :nomessage))
 

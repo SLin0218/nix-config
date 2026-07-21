@@ -2,147 +2,109 @@
 
 ;;; Commentary:
 ;;
-;; 自定义 Evil 键位、Rime 输入法、Avy、Ace-window 等快捷键与交互控制配置。
+;; 自定义 Evil 键位、Leader 前缀快捷键、Avy 快速跳转、Ace-window 等按键控制配置。
 ;;
 
 ;;; Code:
 
-;;vim键位
+(setq evil-want-integration t)
+(setq evil-want-keybinding nil)
+
+(require 'evil)
+
+;; Vim 模式与 Leader 键设置
 (use-package evil
   :custom
-  ;;使用undo-tree作为撤回系统
   (evil-undo-system 'undo-tree)
   (evil-want-C-u-scroll t)
-  :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
-  (setq evil-want-keybinding nil)
   :config
   (dolist (mode '(dashboard-mode
-  	              help-mode
-  	              buffer-menu-mode
-  	              package-menu-mode))
+                  help-mode
+                  buffer-menu-mode
+                  package-menu-mode))
     (add-to-list 'evil-emacs-state-modes mode))
   (evil-set-leader '(normal visual) (kbd "SPC") nil)
-  ;;file操作
+
+  ;; File 操作
   (evil-define-key 'normal 'global (kbd "<leader>fr") 'consult-recent-file)
   (evil-define-key 'normal 'global (kbd "<leader>ff") 'find-file)
   (evil-define-key 'normal 'global (kbd "<leader>fd") 'dired)
   (evil-define-key 'normal 'global (kbd "<leader>fj") 'dired-jump)
-  ;;buffer操作
+
+  ;; Buffer 操作
   (evil-define-key 'normal 'global (kbd "<leader>bb") 'consult-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bB") 'my/switch-to-star-buffers)
   (evil-define-key 'normal 'global (kbd "<leader>bk") 'my/consult-kill-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bx") 'kill-current-buffer)
   (evil-define-key 'normal 'global (kbd "<leader>bs") 'save-buffer)
-  ;;搜索操作 (Fuzzy Search)
+
+  ;; 搜索操作 (Fuzzy Search)
   (evil-define-key 'normal 'global (kbd "<leader>sp") 'consult-ripgrep)
   (evil-define-key 'normal 'global (kbd "<leader>ss") 'consult-line)
-  ;;jump
+
+  ;; Avy 快速跳转
   (evil-define-key 'normal 'global (kbd "<leader>kk") 'evil-avy-goto-line-above)
   (evil-define-key 'normal 'global (kbd "<leader>jj") 'evil-avy-goto-line-below)
   (evil-define-key 'normal 'global (kbd "<leader>gg") 'evil-avy-goto-char-2)
-  ;;代码跳转 (Go to definition/implementation/typeDefinition/usages)
+
+  ;; 代码跳转 (Go to definition/implementation/typeDefinition/usages)
   (evil-define-key 'normal 'global (kbd "<leader>gd") 'xref-find-definitions)
   (evil-define-key 'normal 'global (kbd "<leader>gm") 'eglot-find-implementation)
   (evil-define-key 'normal 'global (kbd "<leader>gp") 'eglot-find-declaration)
   (evil-define-key 'normal 'global (kbd "<leader>gu") 'xref-find-references)
-  ;;comment
+
+  ;; 注释
   (evil-define-key '(normal visual) 'global (kbd "<leader>/") 'evilnc-comment-or-uncomment-lines)
-  ;;window
+
+  ;; 窗口 Window 操作
   (evil-define-key 'normal 'global (kbd "<leader>ws") 'evil-window-split)
   (evil-define-key 'normal 'global (kbd "<leader>wv") 'evil-window-vsplit)
   (evil-define-key 'normal 'global (kbd "<leader>wl") 'evil-window-right)
   (evil-define-key 'normal 'global (kbd "<leader>wk") 'evil-window-up)
   (evil-define-key 'normal 'global (kbd "<leader>wj") 'evil-window-down)
   (evil-define-key 'normal 'global (kbd "<leader>wo") 'evil-window-down)
-
   (evil-define-key 'normal 'global (kbd "<leader>wh") 'evil-window-left)
   (evil-define-key 'normal 'global (kbd "<leader>wq") 'delete-window)
   (evil-define-key 'normal 'global (kbd "<leader>ww") 'delete-other-windows)
-  ;;git diff-hl跳转
+
+  ;; Git diff-hl 跳转
   (evil-define-key 'normal 'global (kbd "<leader>vn") 'diff-hl-next-hunk)
   (evil-define-key 'normal 'global (kbd "<leader>vp") 'diff-hl-previous-hunk)
-  ;; Flymake错误跳转
+
+  ;; Flymake 错误跳转
   (evil-define-key 'normal 'global (kbd "<leader>en") 'flymake-goto-next-error)
   (evil-define-key 'normal 'global (kbd "<leader>ep") 'flymake-goto-prev-error)
-  ;; 打开dired
-  (evil-define-key 'normal 'global (kbd "<leader>dj") 'dired-jump)
-  ;; 打开magit
-  (evil-define-key 'normal 'global (kbd "<leader>mg") 'magit)
 
-  ;; Dape 调试快捷键 (SPC d 开头)
-  (evil-define-key 'normal 'global (kbd "<leader>dd") 'dape)
-  (evil-define-key 'normal 'global (kbd "<leader>dq") 'dape-quit)
-  (evil-define-key 'normal 'global (kbd "<leader>db") 'dape-breakpoint-toggle)
-  (evil-define-key 'normal 'global (kbd "<leader>dc") 'dape-continue)
-  (evil-define-key 'normal 'global (kbd "<leader>dn") 'dape-next)
-  (evil-define-key 'normal 'global (kbd "<leader>di") 'dape-step-in)
-  (evil-define-key 'normal 'global (kbd "<leader>do") 'dape-step-out)
-  (evil-define-key 'normal 'global (kbd "<leader>dr") 'dape-restart)
-  (evil-define-key 'normal 'global (kbd "<leader>dh") 'my/dape-java-hot-code-replace)
+  ;; 快捷打开 Dired & Magit
+  (evil-define-key 'normal 'global (kbd "<leader>dj") 'dired-jump)
+  (evil-define-key 'normal 'global (kbd "<leader>mg") 'magit)
 
   (evil-mode 1))
 
-;; 全局功能键调试绑定 (VS Code 风格)
-(global-set-key (kbd "<f5>") 'dape-continue)
-(global-set-key (kbd "<f9>") 'dape-breakpoint-toggle)
-(global-set-key (kbd "<f10>") 'dape-next)
-(global-set-key (kbd "<f11>") 'dape-step-in)
-(global-set-key (kbd "<f12>") 'dape-step-out)
-
-;; 修改粘贴快捷键
+;; 全局按键重映射 (例如 M-v 粘贴)
 (global-set-key (kbd "M-v") 'yank)
 
-;; evil相关扩展
+;; Evil 集合增强
 (use-package evil-collection
   :after evil
   :config
   (evil-collection-init))
 
-;;输入法配置
-;; (use-package rime
-;;   :custom
-;;   (default-input-method "rime")
-;;   (rime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
-;;   (rime-show-candidate 'posframe)
-;;   :config
-;;   (if (eq system-type 'darwin)
-;;       (setq rime-librime-root "/opt/homebrew")
-;;     (setq rime-librime-root (shell-command-to-string "nix eval --raw nixpkgs#librime"))
-;;     (setq rime-emacs-module-header-root (concat (shell-command-to-string "nix eval --raw nixpkgs#emacs-pgtk") "/include"))
-;;     (setq rime-share-data-dir (concat (shell-command-to-string "nix eval --raw nixpkgs#brise") "/share/rime-data"))))
-
-(use-package rimel
-  :custom
-  (default-input-method "rimel")
-  (liberime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
-  (rimel-posframe-style 'horizontal)
-  (rime-show-candidate 'posframe)
-  :config
-  (setq rimel-disable-predicates
-        '(rimel-predicate-evil-mode-p ;; 根据evil状态切换输入法
-          ;; rimel-predicate-prog-in-code-p ;; 支持自动字符串或注释中使用中文输入法
-          )))
-
-(when (eq system-type 'darwin)
-  (setq mac-command-modifier 'meta
-	    mac-option-modifier 'super))
-
-;;快捷键提示
+;; 快捷键提示
 (use-package which-key
   :init (which-key-mode))
 
-;;快速跳转
+;; Avy 快速跳转
 (use-package avy)
 
-;;快速切换窗口
+;; Ace-window 快速切换窗口
 (use-package ace-window
   :bind (("C-x o" . ace-window)))
 
-;; 注释
+;; Evil 快捷注释
 (use-package evil-nerd-commenter)
 
-;; 多光标同步编辑 (evil-multiedit)
+;; 多光标同步编辑
 (use-package evil-multiedit
   :after evil
   :config

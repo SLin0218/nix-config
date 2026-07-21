@@ -19,7 +19,7 @@
 (defvar slin/font-family-cjk "Maple Mono NF CN"
   "默认中文字体族.")
 
-(cond ((eq system-type 'darwin) (setq slin/font-size 14)))
+(cond ((eq system-type 'darwin) (setq slin/font-size 16)))
 
 (defun load-font-setup (&optional frame)
   "根据当前 FRAME 设置默认英文字体与中文字体映射."

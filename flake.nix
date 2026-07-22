@@ -33,6 +33,11 @@
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nixos-wsl = {
+      url = "github:nix-community/NixOS-WSL/main";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -66,6 +71,31 @@
                   ./home/nixos
                   inputs.catppuccin.homeModules.catppuccin
                   inputs.ags.homeManagerModules.default
+                ];
+              };
+              home-manager.extraSpecialArgs = { inherit inputs; };
+            }
+          ];
+        };
+
+        DESKTOP-I8CKT04 = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            inputs.nixos-wsl.nixosModules.default
+            ./platforms/wsl/configuration.nix
+            ./hosts/DESKTOP-I8CKT04
+
+            # 直接引用上面定义的统一 Overlay
+            { nixpkgs.overlays = overlays; }
+
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.lin = {
+                imports = [
+                  ./home/wsl
+                  inputs.catppuccin.homeModules.catppuccin
                 ];
               };
               home-manager.extraSpecialArgs = { inherit inputs; };

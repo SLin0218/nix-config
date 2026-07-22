@@ -1,5 +1,8 @@
 { pkgs }:
 
+# 高版本 JDK 默认开启了严格的模块封装（Strong Encapsulation），不再允许外部库（如 HotswapAgent）通过反射随意读取 java.base 模块下的 JVM 内部私有属性，因此抛出了 InaccessibleObjectException。
+# 告诉 JVM 放开对 sun.nio.ch 的反射限制。 --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+
 pkgs.writeShellScriptBin "mvn-springboot-debug" ''
   HOTSWAP_DIR="$HOME/.config/emacs/.cache"
   HOTSWAP_JAR="$HOTSWAP_DIR/hotswap-agent.jar"
@@ -29,6 +32,10 @@ pkgs.writeShellScriptBin "mvn-springboot-debug" ''
     -XX:+AllowEnhancedClassRedefinition \
     -javaagent:$HOTSWAP_JAR \
     -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 \
+    -Xms2g -Xmx2g -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m \
+    -XX:ReservedCodeCacheSize=512m -XX:+UseCodeCacheFlushing \
+    -XX:+UseG1GC \
+    --add-opens=java.base/sun.nio.ch=ALL-UNNAMED \
     --add-opens java.base/java.lang=ALL-UNNAMED \
     --add-opens java.desktop/java.beans=ALL-UNNAMED \
     --add-opens java.base/java.lang.invoke=ALL-UNNAMED \

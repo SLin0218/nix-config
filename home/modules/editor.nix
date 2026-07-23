@@ -11,6 +11,7 @@
   xdg.configFile."emacs/init.el".text = ''
     ;; -*- lexical-binding: t; -*-
     (setq nix-librime-path "${pkgs.librime}")
+    (setq nix-rime-share-data-path "${pkgs.rime-data}")
     (setq nix-jbrsdk-path "${pkgs.jbrsdk-21}")
     (add-to-list 'load-path "~/.config/slin-emacs")
     (require 'slin-emacs)

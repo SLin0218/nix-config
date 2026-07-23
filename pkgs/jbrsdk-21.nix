@@ -38,11 +38,11 @@ stdenv.mkDerivation rec {
   buildInputs = pkgs.lib.optionals stdenv.isLinux (with pkgs; [
     alsa-lib
     fontconfig
-    xorg.libX11
-    xorg.libXext
-    xorg.libXi
-    xorg.libXrender
-    xorg.libXtst
+    libx11
+    libxext
+    libxi
+    libxrender
+    libxtst
     wayland
     stdenv.cc.cc.lib
   ]);

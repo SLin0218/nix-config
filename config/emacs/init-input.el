@@ -14,6 +14,13 @@
   (rime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
   (rime-posframe-style 'horizontal)
   (rime-show-candidate 'posframe)
+  (rime-share-data-dir
+   (cond
+    ((bound-and-true-p nix-rime-share-data-path)
+     (expand-file-name "share/rime-data" nix-rime-share-data-path))
+    ((eq system-type 'darwin)
+     "/Library/Input Methods/Squirrel.app/Contents/SharedSupport")
+    (t "/usr/share/rime-data")))
   (rime-emacs-module-header-root
    (let* ((elpa-dir (file-name-as-directory package-user-dir))
           (liberime-dirs (and (file-directory-p elpa-dir)

@@ -102,16 +102,34 @@
 ;; Evil 快捷注释
 (use-package evil-nerd-commenter)
 
-;; 多光标同步编辑
+;; 多光标同步编辑 (Evil)
 (use-package evil-multiedit
   :after evil
   :config
   (evil-multiedit-default-keybinds))
 
+;; 多光标基础支持 (用于与 phi-search 联动或常规多光标操作)
+(use-package multiple-cursors
+  :after evil
+  :config
+  ;; 绑定 Evil Leader (SPC m) 多光标快捷键，规避部分终端下修饰键失效问题
+  (evil-define-key '(normal visual) 'global (kbd "<leader>mn") 'mc/mark-next-like-this)
+  (evil-define-key '(normal visual) 'global (kbd "<leader>mp") 'mc/mark-previous-like-this)
+  (evil-define-key '(normal visual) 'global (kbd "<leader>ma") 'mc/mark-all-like-this)
+  (evil-define-key '(normal visual) 'global (kbd "<leader>mc") 'mc/cycle-forward)
+  (evil-define-key '(normal visual) 'global (kbd "<leader>mC") 'mc/cycle-backward)
+  (evil-define-key '(normal visual) 'global (kbd "<leader>ml") 'mc/edit-lines))
+
 ;; 交互式搜索 (phi-search) 替代 isearch
 (use-package phi-search
+  :after evil
   :bind (("C-s" . phi-search)
-         ("C-r" . phi-search-backward)))
+         ("C-r" . phi-search-backward))
+  :init
+  ;; 放在 :init 中，确保即使未触发 C-s，在 Evil 下直接按 / 和 ? 也能成功拦截并触发懒加载
+  (with-eval-after-load 'evil
+    (evil-define-key '(normal visual motion) 'global (kbd "/") 'phi-search)
+    (evil-define-key '(normal visual motion) 'global (kbd "?") 'phi-search-backward)))
 
 (provide 'init-keybinding)
 ;;; init-keybinding.el ends here

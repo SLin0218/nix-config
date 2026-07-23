@@ -5,6 +5,8 @@
     ../common.nix
   ];
 
+  dconf.enable = false;
+
   home = {
     homeDirectory = "/home/lin";
   };

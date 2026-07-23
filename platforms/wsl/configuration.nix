@@ -79,6 +79,8 @@
 
   programs.zsh.enable = true;
 
+  services.pcscd.enable = true;
+
   i18n = {
     extraLocaleSettings = {
       LC_TIME = "en_US.UTF-8";

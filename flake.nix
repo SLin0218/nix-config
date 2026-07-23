@@ -158,5 +158,16 @@
         };
 
       };
+
+      homeConfigurations = {
+        "lin@DESKTOP-I8CKT04" = inputs.home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          extraSpecialArgs = { inherit inputs; };
+          modules = [
+            ./home/wsl
+            inputs.catppuccin.homeModules.catppuccin
+          ];
+        };
+      };
     };
 }

@@ -43,6 +43,8 @@ stdenv.mkDerivation rec {
     xorg.libXi
     xorg.libXrender
     xorg.libXtst
+    wayland
+    stdenv.cc.cc.lib
   ]);
 
   installPhase = ''

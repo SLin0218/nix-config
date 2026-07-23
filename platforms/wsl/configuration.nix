@@ -89,7 +89,10 @@
 
   programs.zsh.enable = true;
 
-  services.pcscd.enable = true;
+  services = {
+    pcscd.enable = true;
+    openssh.enable = true;
+  };
 
   i18n = {
     extraLocaleSettings = {

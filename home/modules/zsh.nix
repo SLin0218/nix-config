@@ -178,7 +178,7 @@
           owner = "ohmyzsh";
           repo = "ohmyzsh";
           rev = "master";
-          sha256 = "sha256-tUsAJ5t06+DFoO960CVx414l5jn7AkQNB/1HP4oXgCs=";
+          sha256 = "sha256-8rIEdbWcAhiX5u5dR/DwMQ8T+GlVxcBLNuHCF2ckMUs=";
         };
         file = "plugins/sudo/sudo.plugin.zsh";
       }

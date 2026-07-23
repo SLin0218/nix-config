@@ -108,5 +108,10 @@
   :config
   (evil-multiedit-default-keybinds))
 
+;; 交互式搜索 (phi-search) 替代 isearch
+(use-package phi-search
+  :bind (("C-s" . phi-search)
+         ("C-r" . phi-search-backward)))
+
 (provide 'init-keybinding)
 ;;; init-keybinding.el ends here

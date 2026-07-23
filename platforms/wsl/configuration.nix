@@ -61,9 +61,15 @@
       neovim
       wget
       docker-compose
+      jar-launcher
     ];
 
-    variables.EDITOR = "nvim";
+    variables = {
+      EDITOR = "nvim";
+      GDK_SCALE = "2";
+      GDK_DPI_SCALE = "1.0";
+      QT_SCALE_FACTOR = "2";
+    };
   };
 
   virtualisation = {

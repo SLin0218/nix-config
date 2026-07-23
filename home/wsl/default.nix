@@ -15,6 +15,7 @@
     zip
     unzip
     wl-clipboard
+    tproxy
   ];
 
   systemd.user.startServices = "sd-switch";

@@ -19,7 +19,13 @@
 (defvar slin/font-family-cjk "Maple Mono NF CN"
   "默认中文字体族.")
 
+(defconst sys/wsl-p
+  (and (eq system-type 'gnu/linux)
+       (getenv "WSL_DISTRO_NAME")))
+
 (cond ((eq system-type 'darwin) (setq slin/font-size 16)))
+(when sys/wsl-p
+  (setq slin/font-size 20))
 
 (defun load-font-setup (&optional frame)
   "根据当前 FRAME 设置默认英文字体与中文字体映射."

@@ -95,5 +95,13 @@
     ];
   };
 
+  fonts = {
+    packages = with pkgs; [
+      nerd-fonts.jetbrains-mono
+      maple-mono.NF-CN-unhinted
+    ];
+    fontDir.enable = true;
+  };
+
   system.stateVersion = "24.11";
 }

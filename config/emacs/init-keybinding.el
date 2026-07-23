@@ -10,8 +10,6 @@
 (setq evil-want-integration t)
 (setq evil-want-keybinding nil)
 
-(require 'evil)
-
 ;; Vim 模式与 Leader 键设置
 (use-package evil
   :custom

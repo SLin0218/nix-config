@@ -14,6 +14,14 @@
   (rime-user-data-dir (if (eq system-type 'darwin) "~/Library/Rime" "~/.local/share/fcitx5/rime"))
   (rime-posframe-style 'horizontal)
   (rime-show-candidate 'posframe)
+  (rime-emacs-module-header-root
+   (let* ((elpa-dir (file-name-as-directory package-user-dir))
+          (liberime-dirs (and (file-directory-p elpa-dir)
+                              (directory-files elpa-dir t "^liberime-[0-9]")))
+          (latest-liberime-dir (car (last (sort liberime-dirs 'string<)))))
+     (when latest-liberime-dir
+       (expand-file-name (number-to-string emacs-major-version)
+                         (expand-file-name "emacs-module" latest-liberime-dir)))))
   :config
   (setq rime-disable-predicates
         '(rime-predicate-evil-mode-p)))

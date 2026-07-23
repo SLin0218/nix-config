@@ -8,32 +8,10 @@ let
     rules = [ "DST-PORT,53,DNS" ] ++ mihomo-common.mkSettings.rules;
   };
   yamlFormat = pkgs.formats.yaml { };
-  templateConfig = yamlFormat.generate "mihomo-config-template.yaml" settings;
+  mihomoConfig = yamlFormat.generate "mihomo-config.yaml" settings;
 in
 {
-  # 激活脚本：在系统激活阶段动态生成带有秘钥的配置文件
-  system.activationScripts.postActivation.text = ''
-    echo "Applying secrets to Mihomo config..."
-
-    # 确保目标目录存在
-    mkdir -p /etc/mihomo
-
-    # 检查秘钥文件是否存在
-    if [ -f "${config.age.secrets.jmssub.path}" ]; then
-      # shellcheck disable=SC1091
-      source "${config.age.secrets.jmssub.path}"
-
-      ${pkgs.gnused}/bin/sed \
-        -e "s/__JMS_SERVICE__/$SERVICE/g" \
-        -e "s/__JMS_ID__/$ID/g" \
-        "${templateConfig}" > /etc/mihomo/config.yaml
-
-      echo "Mihomo config generated successfully at /etc/mihomo/config.yaml"
-    else
-      echo "Error: jmssub secret not found at ${config.age.secrets.jmssub.path}"
-      exit 1
-    fi
-  '';
+  environment.etc."mihomo/config.yaml".source = mihomoConfig;
 
   services.mihomo = {
     enable = true;

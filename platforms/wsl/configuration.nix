@@ -7,6 +7,10 @@
 }:
 
 {
+  imports = [
+    ../nixos/modules/mihomo.nix
+  ];
+
   wsl = {
     enable = true;
     defaultUser = "lin";

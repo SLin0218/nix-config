@@ -4,7 +4,7 @@
   home.file.".ideavimrc".source = ../../config/ideavimrc;
 
   # 2. 使用 xdg.configFile 管理目录软链接，这是 Home Manager 推荐的处理方式
-  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/nvim";
+  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/nvim-config";
   xdg.configFile."slin-emacs".source = ../../config/emacs;
 
   # 3. Emacs 初始化引导

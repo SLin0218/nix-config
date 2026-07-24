@@ -63,6 +63,7 @@
           specialArgs = { inherit inputs; };
           modules = [
             ./platforms/nixos/configuration.nix
+            ./hosts/inspiron-lin
 
             # 直接引用上面定义的统一 Overlay
             { nixpkgs.overlays = overlays; }
@@ -89,6 +90,31 @@
             inputs.nixos-wsl.nixosModules.default
             ./platforms/wsl/configuration.nix
             ./hosts/DESKTOP-I8CKT04
+
+            # 直接引用上面定义的统一 Overlay
+            { nixpkgs.overlays = overlays; }
+
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.lin = {
+                imports = [
+                  ./home/wsl
+                  inputs.catppuccin.homeModules.catppuccin
+                ];
+              };
+              home-manager.extraSpecialArgs = { inherit inputs; };
+            }
+          ];
+        };
+
+        wsl-home-desktop = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            inputs.nixos-wsl.nixosModules.default
+            ./platforms/wsl/configuration.nix
+            ./hosts/wsl-home-desktop
 
             # 直接引用上面定义的统一 Overlay
             { nixpkgs.overlays = overlays; }
@@ -161,18 +187,7 @@
             }
           ];
         };
-
       };
 
-      homeConfigurations = {
-        "lin@DESKTOP-I8CKT04" = inputs.home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-          extraSpecialArgs = { inherit inputs; };
-          modules = [
-            ./home/wsl
-            inputs.catppuccin.homeModules.catppuccin
-          ];
-        };
-      };
     };
 }

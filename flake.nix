@@ -38,6 +38,11 @@
       url = "github:nix-community/NixOS-WSL/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    rime-config = {
+      url = "git+ssh://git@github.com/SLin0218/rime-config.git";
+      flake = false;
+    };
   };
 
   outputs =

@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ inputs, config, pkgs, ... }:
 
 {
   imports = [
@@ -15,8 +15,7 @@
   xdg.configFile."keyd/app.conf".source = ../config/keyd/app.conf;
 
   # 动态配置
-  home.file.".local/share/fcitx5/rime".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Workspace/rime-config";
+  home.file.".local/share/fcitx5/rime".source = inputs.rime-config;
 
   home = {
     homeDirectory = "/home/lin";

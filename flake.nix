@@ -40,7 +40,7 @@
     };
 
     rime-config = {
-      url = "git+ssh://git@github.com/SLin0218/rime-config.git";
+      url = "github:SLin0218/rime-config";
       flake = false;
     };
   };

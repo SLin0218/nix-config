@@ -36,8 +36,9 @@
                 (when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
                 (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))))
 
-    ;; 4. 压制异步编译警告
-    (setq native-comp-async-report-warnings-errors nil)
+    ;; 4. 压制异步编译警告并禁用内置函数蹦床编译（防止缺少 C 编译器驱动或 macOS SDK 时崩溃）
+    (setq native-comp-async-report-warnings-errors nil
+          native-comp-enable-subr-trampolines nil)
 
     ;; 5. 禁用 package.el 自动激活（已经在 init-package.el 中手动激活）
     (setq package-enable-at-startup nil)

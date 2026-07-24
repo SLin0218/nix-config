@@ -591,6 +591,22 @@
         "type": "github"
       }
     },
+    "rime-config": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784876485,
+        "narHash": "sha256-QoLYcEkqiE2A481ovlhCZ3mQRgbNBKzyvNbDMGOKPRw=",
+        "owner": "SLin0218",
+        "repo": "rime-config",
+        "rev": "f0e60562a5af302c8f5498599bd3ba9d68565073",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SLin0218",
+        "repo": "rime-config",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "ags": "ags",
@@ -600,7 +616,8 @@
         "home-manager": "home-manager",
         "hyprland": "hyprland",
         "nixos-wsl": "nixos-wsl",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "rime-config": "rime-config"
       }
     },
     "systems": {

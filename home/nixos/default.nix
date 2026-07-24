@@ -16,7 +16,7 @@
 
   # 动态配置
   home.file.".local/share/fcitx5/rime".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/rime-crane";
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Workspace/rime-config";
 
   home = {
     homeDirectory = "/home/lin";

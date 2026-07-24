@@ -1,22 +1,5 @@
 { config, pkgs, ... }:
-let
-  rimeFiles = [
-    "build/flypy.reverse.bin"
-    "build/flypy.table.bin"
-    "default.custom.yaml"
-    "flypy.schema.yaml"
-    "flypy_full.txt"
-    "flypy_ok.txt"
-    "flypy_sys.txt"
-    "flypy_top.txt"
-    "flypy_user.txt"
-    "flypydz.dict.yaml"
-    "flypydz.schema.yaml"
-    "lua/calculator_translator.lua"
-    "rime.lua"
-    "squirrel.custom.yaml"
-  ];
-in
+
 {
   imports = [
     ../common.nix
@@ -26,15 +9,8 @@ in
   # 映射特定的 Rime 配置文件与 Hammerspoon 配置
   home.file = {
     ".hammerspoon".source = ../../config/hammerspoon;
-  }
-  // builtins.listToAttrs (
-    map (path: {
-      name = "Library/Rime/${path}";
-      value = {
-        source = ../../config/rime-data + "/${path}";
-      };
-    }) rimeFiles
-  );
+    "Library/Rime".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/Workspace/rime-config";
+  };
 
   home = {
     homeDirectory = "/Users/${config.home.username}";

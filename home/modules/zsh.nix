@@ -36,6 +36,11 @@
     # 自动启动 gpg-agent 并更新 TTY
     gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
 
+    # 导出 Nix-LD 动态库路径供 Java JNI / 外部二进制使用
+    if [[ -n "$NIX_LD_LIBRARY_PATH" ]]; then
+      export LD_LIBRARY_PATH="$NIX_LD_LIBRARY_PATH''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    fi
+
     # 如果在交互式终端内，要求 pinentry 脚本使用终端模式 (curses)
     if [[ -t 0 ]]; then
       export PINENTRY_USER_DATA="USE_CURSES=1"
@@ -125,7 +130,7 @@
       bc  = "bc -ql";
 
       fetch = "fastfetch";
-      kssh  = "kitten ssh";
+      kssh    = "kitty +kitten ssh";
 
       # git
       gl     = "git pull";
@@ -142,7 +147,6 @@
       gbr    = "git br";
       gcl    = "git clone";
       grv    = "git remote --verbose";
-      ssh    = "kitty +kitten ssh";
 
       datetime = "date '+%Y-%m-%d %H:%M:%S'";
 

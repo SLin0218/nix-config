@@ -33,11 +33,14 @@ struct GlobalConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]
+#[serde(default)]
 struct AppConfigItem {
     jvm_args: String,
     nix_enabled: bool,
     nix_jdk_package: String,
     app_args: String,
+    #[serde(default)]
+    app_args_dict: HashMap<String, String>,
 }
 
 #[derive(Clone, PartialEq)]
@@ -53,8 +56,12 @@ enum ActiveWindow {
     EnvAddKeyPrompt,
     EnvAddValuePrompt,
     EnvActionSubmenu,
+    AppArgsEditor,
+    AppArgsAddKeyPrompt,
+    AppArgsAddValuePrompt,
+    AppArgsActionSubmenu,
     ThemeMenu,
-    AppArgsInput,
+    HmViewModal,
 }
 
 #[derive(Clone, PartialEq, Copy)]
@@ -85,6 +92,8 @@ struct JarState {
     jvm_args: String,
     nix_enabled: bool,
     nix_jdk: String,
+    app_args: String,
+    app_args_dict: HashMap<String, String>,
 }
 
 struct App {
@@ -123,6 +132,10 @@ struct App {
     env_keys_list: Vec<String>,
     env_dict_cache: HashMap<String, String>,
     env_selected_key: String,
+    app_args_keys_list: Vec<String>,
+    app_args_dict_cache: HashMap<String, String>,
+    app_args_selected_key: String,
+    app_args_temp_idx: usize,
     last_visible_log_height: usize,
 }
 
@@ -168,6 +181,10 @@ impl App {
             env_keys_list: Vec::new(),
             env_dict_cache: HashMap::new(),
             env_selected_key: String::new(),
+            app_args_keys_list: Vec::new(),
+            app_args_dict_cache: HashMap::new(),
+            app_args_selected_key: String::new(),
+            app_args_temp_idx: 0,
             last_visible_log_height: 25,
         }
     }
@@ -324,6 +341,10 @@ impl App {
         } else {
             app_cfg.nix_jdk_package.clone()
         };
+        let mut app_args = app_cfg.app_args.clone();
+        if app_args.is_empty() && !app_cfg.app_args_dict.is_empty() {
+            app_args = format_app_args_from_dict(&app_cfg.app_args_dict);
+        }
 
         let proc = self.get_app_status(jar_path);
         if let Some(p) = proc {
@@ -343,6 +364,8 @@ impl App {
                 jvm_args,
                 nix_enabled: app_cfg.nix_enabled,
                 nix_jdk,
+                app_args,
+                app_args_dict: app_cfg.app_args_dict,
             };
         }
 
@@ -379,6 +402,8 @@ impl App {
             jvm_args,
             nix_enabled: app_cfg.nix_enabled,
             nix_jdk,
+            app_args,
+            app_args_dict: app_cfg.app_args_dict,
         }
     }
 
@@ -405,6 +430,14 @@ impl App {
             ActiveWindow::SearchPrompt => self.active_window = ActiveWindow::LogViewer,
             ActiveWindow::EnvAddKeyPrompt | ActiveWindow::EnvAddValuePrompt => {
                 self.active_window = ActiveWindow::EnvEditor;
+                self.menu_idx = 0;
+            }
+            ActiveWindow::AppArgsAddKeyPrompt | ActiveWindow::AppArgsAddValuePrompt => {
+                if !self.jars_list.is_empty() {
+                    let jar = self.jars_list[self.selected_idx].clone();
+                    self.reload_app_args_keys(&jar);
+                }
+                self.active_window = ActiveWindow::AppArgsEditor;
                 self.menu_idx = 0;
             }
             _ => self.active_window = ActiveWindow::MainList,
@@ -1057,6 +1090,14 @@ impl App {
                     self.active_window = ActiveWindow::JvmArgsPrompt;
                 }
             }
+            KeyCode::Char('a') => {
+                if !self.jars_list.is_empty() {
+                    let jar = self.jars_list[self.selected_idx].clone();
+                    self.reload_app_args_keys(&jar);
+                    self.menu_idx = 0;
+                    self.active_window = ActiveWindow::AppArgsEditor;
+                }
+            }
             KeyCode::Char('d') => {
                 self.prompt_title = "Global Scan Directory".to_string();
                 self.prompt_label = "Enter JAR absolute path:".to_string();
@@ -1271,6 +1312,124 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                 app.active_window = ActiveWindow::MainList;
             });
         }
+        ActiveWindow::AppArgsEditor => {
+            let options_cnt = app.app_args_keys_list.len() + 2;
+            match key {
+                KeyCode::Esc | KeyCode::Char('q') => {
+                    app.active_window = ActiveWindow::MainList;
+                    app.menu_idx = 0;
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    app.menu_idx = (app.menu_idx + options_cnt - 1) % options_cnt;
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    app.menu_idx = (app.menu_idx + 1) % options_cnt;
+                }
+                KeyCode::Enter => {
+                    if app.menu_idx == 0 {
+                        app.prompt_title = "Add App Argument".to_string();
+                        app.prompt_label = "Enter argument key (e.g. server.port):".to_string();
+                        app.begin_input(String::new());
+                        app.active_window = ActiveWindow::AppArgsAddKeyPrompt;
+                    } else if app.menu_idx == options_cnt - 1 {
+                        app.active_window = ActiveWindow::MainList;
+                        app.menu_idx = 0;
+                    } else {
+                        app.app_args_temp_idx = app.menu_idx;
+                        app.menu_idx = 0;
+                        app.active_window = ActiveWindow::AppArgsActionSubmenu;
+                    }
+                }
+                _ => {}
+            }
+        }
+        ActiveWindow::AppArgsAddKeyPrompt => {
+            handle_vim_input(app, key, |app, val| {
+                if !val.is_empty() {
+                    let clean_key = val.trim_start_matches('-').to_string();
+                    app.prompt_title = format!("Add Value for {}", clean_key);
+                    app.prompt_label = format!("Enter value for {}:", clean_key);
+                    app.app_args_selected_key = clean_key;
+                    app.begin_input(String::new());
+                    app.active_window = ActiveWindow::AppArgsAddValuePrompt;
+                } else if !app.jars_list.is_empty() {
+                    let jar = app.jars_list[app.selected_idx].clone();
+                    app.reload_app_args_keys(&jar);
+                    app.active_window = ActiveWindow::AppArgsEditor;
+                    app.menu_idx = 0;
+                }
+            });
+        }
+        ActiveWindow::AppArgsAddValuePrompt => {
+            handle_vim_input(app, key, |app, val| {
+                if !app.jars_list.is_empty() {
+                    let jar = app.jars_list[app.selected_idx].clone();
+                    let mut app_cfg = app.apps_config.get(&jar).cloned().unwrap_or_default();
+                    app_cfg.app_args_dict.insert(app.app_args_selected_key.clone(), val);
+                    app_cfg.app_args = format_app_args_from_dict(&app_cfg.app_args_dict);
+                    app.apps_config.insert(jar.clone(), app_cfg);
+                    app.save_apps_config();
+                    app.reload_app_args_keys(&jar);
+                    app.set_status("[INFO] App argument saved");
+                }
+                app.active_window = ActiveWindow::AppArgsEditor;
+                app.menu_idx = 0;
+            });
+        }
+        ActiveWindow::AppArgsActionSubmenu => {
+            let options_cnt = 3;
+            match key {
+                KeyCode::Esc | KeyCode::Char('q') => {
+                    app.active_window = ActiveWindow::AppArgsEditor;
+                    app.menu_idx = app.app_args_temp_idx;
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    app.menu_idx = (app.menu_idx + options_cnt - 1) % options_cnt;
+                }
+                KeyCode::Down | KeyCode::Char('j') => {
+                    app.menu_idx = (app.menu_idx + 1) % options_cnt;
+                }
+                KeyCode::Enter => {
+                    if !app.jars_list.is_empty() {
+                        let jar = app.jars_list[app.selected_idx].clone();
+                        let key_idx = app.app_args_temp_idx - 1;
+                        if key_idx < app.app_args_keys_list.len() {
+                            let target_key = app.app_args_keys_list[key_idx].clone();
+                            match app.menu_idx {
+                                0 => {
+                                    let curr_val = app.app_args_dict_cache.get(&target_key).cloned().unwrap_or_default();
+                                    app.prompt_title = format!("Edit {}", target_key);
+                                    app.prompt_label = format!("Enter value for {}:", target_key);
+                                    app.app_args_selected_key = target_key;
+                                    app.begin_input(curr_val);
+                                    app.active_window = ActiveWindow::AppArgsAddValuePrompt;
+                                }
+                                1 => {
+                                    let mut app_cfg = app.apps_config.get(&jar).cloned().unwrap_or_default();
+                                    app_cfg.app_args_dict.remove(&target_key);
+                                    app_cfg.app_args = format_app_args_from_dict(&app_cfg.app_args_dict);
+                                    app.apps_config.insert(jar.clone(), app_cfg);
+                                    app.save_apps_config();
+                                    app.reload_app_args_keys(&jar);
+                                    app.set_status("[INFO] App argument deleted");
+                                    app.active_window = ActiveWindow::AppArgsEditor;
+                                    app.menu_idx = 0;
+                                }
+                                2 => {
+                                    app.active_window = ActiveWindow::AppArgsEditor;
+                                    app.menu_idx = app.app_args_temp_idx;
+                                }
+                                _ => {}
+                            }
+                        } else {
+                            app.active_window = ActiveWindow::AppArgsEditor;
+                            app.menu_idx = 0;
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
         ActiveWindow::JarDirPrompt => {
             handle_vim_input(app, key, |app, val| {
                 if Path::new(&val).is_dir() {
@@ -1327,7 +1486,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                             let (code, file_path) = gen_home_manager(&jar, &app_cfg.jvm_args, jdk, &run_envs, &log_file, &app.config_dir);
                             app.prompt_title = format!("Nix Code - {}", file_path.file_name().unwrap().to_string_lossy());
                             app.input_value = code; // Used to store HM code viewer text
-                            app.active_window = ActiveWindow::AppArgsInput; // HM View mode
+                            app.active_window = ActiveWindow::HmViewModal; // HM View mode
                         }
                         4 => {
                             let run_envs = app.get_merged_env(&jar);
@@ -1345,7 +1504,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                 _ => {}
             }
         }
-        ActiveWindow::AppArgsInput => {
+        ActiveWindow::HmViewModal => {
             // Home manager view mode scroll, press any key to return
             match key {
                 _ => {
@@ -1733,6 +1892,67 @@ impl App {
         keys.sort();
         self.env_keys_list = keys;
     }
+
+    fn reload_app_args_keys(&mut self, jar_path: &str) {
+        let mut app_cfg = self.apps_config.get(jar_path).cloned().unwrap_or_default();
+        if app_cfg.app_args_dict.is_empty() && !app_cfg.app_args.is_empty() {
+            let (dict, _order) = parse_app_args_to_dict(&app_cfg.app_args);
+            app_cfg.app_args_dict = dict;
+            self.apps_config.insert(jar_path.to_string(), app_cfg.clone());
+            self.save_apps_config();
+        }
+        self.app_args_dict_cache = app_cfg.app_args_dict.clone();
+        let mut keys: Vec<String> = self.app_args_dict_cache.keys().cloned().collect();
+        keys.sort();
+        self.app_args_keys_list = keys;
+    }
+}
+
+fn parse_app_args_to_dict(args_str: &str) -> (HashMap<String, String>, Vec<String>) {
+    let mut dict = HashMap::new();
+    let mut keys_order = Vec::new();
+    for token in args_str.split_whitespace() {
+        if token.is_empty() {
+            continue;
+        }
+        let clean_token = if token.starts_with("--") {
+            &token[2..]
+        } else if token.starts_with('-') {
+            &token[1..]
+        } else {
+            token
+        };
+        if let Some((k, v)) = clean_token.split_once('=') {
+            if !k.is_empty() {
+                dict.insert(k.to_string(), v.to_string());
+                if !keys_order.contains(&k.to_string()) {
+                    keys_order.push(k.to_string());
+                }
+            }
+        } else if !clean_token.is_empty() {
+            dict.insert(clean_token.to_string(), String::new());
+            if !keys_order.contains(&clean_token.to_string()) {
+                keys_order.push(clean_token.to_string());
+            }
+        }
+    }
+    (dict, keys_order)
+}
+
+fn format_app_args_from_dict(dict: &HashMap<String, String>) -> String {
+    let mut keys: Vec<&String> = dict.keys().collect();
+    keys.sort();
+    let mut parts = Vec::new();
+    for k in keys {
+        let v = &dict[k];
+        let pref_key = if k.starts_with('-') { k.clone() } else { format!("--{}", k) };
+        if v.is_empty() {
+            parts.push(pref_key);
+        } else {
+            parts.push(format!("{}={}", pref_key, v));
+        }
+    }
+    parts.join(" ")
 }
 
 // GUI Drawing Component Implementation
@@ -1808,7 +2028,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
         Constraint::Length(1),      // │
         Constraint::Length(10),     // Uptime
         Constraint::Length(1),      // │
-        Constraint::Percentage(50), // JVM Options / Nix JDK Environment
+        Constraint::Percentage(50), // JVM / App Args / Nix Environment
     ];
 
     let mut rows = Vec::new();
@@ -1827,6 +2047,8 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
             jvm_args: "-Xms128m -Xmx512m".to_string(),
             nix_enabled: false,
             nix_jdk: "jdk17".to_string(),
+            app_args: String::new(),
+            app_args_dict: HashMap::new(),
         };
         let s = state.unwrap_or(&default_state);
 
@@ -1859,6 +2081,27 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
             Style::default().fg(s.status_color).add_modifier(Modifier::BOLD)
         };
 
+        let args_formatted = if !s.app_args_dict.is_empty() {
+            let mut keys: Vec<&String> = s.app_args_dict.keys().collect();
+            keys.sort();
+            keys.iter().map(|k| {
+                let v = &s.app_args_dict[*k];
+                if v.is_empty() {
+                    k.to_string()
+                } else {
+                    format!("{}={}", k, v)
+                }
+            }).collect::<Vec<String>>().join(" ")
+        } else {
+            s.app_args.clone()
+        };
+
+        let args_display = if args_formatted.is_empty() {
+            s.jvm_args.clone()
+        } else {
+            format!("{} | args: {}", s.jvm_args, args_formatted)
+        };
+
         let cells = vec![
             ratatui::widgets::Cell::from(Span::raw(format!(" {:02} ", i + 1))),
             sep_cell.clone(),
@@ -1877,7 +2120,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
             sep_cell.clone(),
             ratatui::widgets::Cell::from(Span::raw(format!(" {}", s.uptime_str))),
             sep_cell.clone(),
-            ratatui::widgets::Cell::from(Span::raw(format!(" ({}) {}", env_tag, s.jvm_args))),
+            ratatui::widgets::Cell::from(Span::raw(format!(" ({}) {}", env_tag, args_display))),
         ];
 
         rows.push(Row::new(cells).style(row_style));
@@ -1900,7 +2143,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
         ratatui::widgets::Cell::from(Span::styled("│", header_sep_style)),
         ratatui::widgets::Cell::from(Span::styled(" Uptime ", header_style)),
         ratatui::widgets::Cell::from(Span::styled("│", header_sep_style)),
-        ratatui::widgets::Cell::from(Span::styled(" JVM Options / Nix JDK Environment", header_style)),
+        ratatui::widgets::Cell::from(Span::styled(" JVM / App Args / Nix Environment", header_style)),
     ];
     let table_header = Row::new(header_cells).style(Style::default().add_modifier(Modifier::BOLD));
 
@@ -1934,6 +2177,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
         ("v", "Env Var"),
         ("t", "Theme"),
         ("e", "Edit JVM"),
+        ("a", "App Args"),
         ("d", "Set Jar Dir"),
         ("q", "Quit"),
     ];
@@ -1949,18 +2193,17 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
             break;
         }
 
-        footer_spans.push(Span::styled(key_str, Style::default().bg(Color::Rgb(203, 166, 247)).fg(Color::Rgb(30, 30, 46)).add_modifier(Modifier::BOLD)));
-        footer_spans.push(Span::styled(desc_str, Style::default().fg(Color::White)));
+        footer_spans.push(Span::styled(key_str, Style::default().fg(accent_color).add_modifier(Modifier::BOLD)));
+        footer_spans.push(Span::styled(desc_str, Style::default().fg(muted_color)));
         accum_x += block_w;
     }
 
-    let footer_lines = vec![
-        Line::from("━".repeat(size.width as usize)).style(Style::default().fg(border_color)),
+    let footer = Paragraph::new(vec![
         Line::from(status_line),
         Line::from(footer_spans),
-    ];
-    let footer_widget = Paragraph::new(footer_lines).block(Block::default().borders(Borders::NONE));
-    f.render_widget(footer_widget, chunks[2]);
+    ])
+    .block(Block::default().borders(Borders::TOP).border_style(Style::default().fg(border_color)));
+    f.render_widget(footer, chunks[2]);
 
     // 4. Render Modals & Popups based on ActiveWindow state
     match app.active_window {
@@ -1982,18 +2225,31 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
             draw_menu_modal(f, app, "🌱 Environment Variables Manager", &opts_refs, border_color, accent_color);
         }
         ActiveWindow::EnvActionSubmenu => draw_menu_modal(f, app, "Manage Variable", &["Edit Value", "Delete Variable", "Cancel"], border_color, accent_color),
+        ActiveWindow::AppArgsEditor => {
+            let mut opts = vec!["+ Add New App Argument".to_string()];
+            for k in &app.app_args_keys_list {
+                let v = app.app_args_dict_cache.get(k).cloned().unwrap_or_default();
+                if v.is_empty() {
+                    opts.push(k.clone());
+                } else {
+                    opts.push(format!("{} = {}", k, v));
+                }
+            }
+            opts.push("Back to Main Menu".to_string());
+            let opts_refs: Vec<&str> = opts.iter().map(|s| s.as_str()).collect();
+            draw_menu_modal(f, app, "📦 App Arguments Manager", &opts_refs, border_color, accent_color);
+        }
+        ActiveWindow::AppArgsActionSubmenu => draw_menu_modal(f, app, "Manage Argument", &["Edit Value", "Delete Argument", "Cancel"], border_color, accent_color),
         ActiveWindow::ThemeMenu => draw_menu_modal(f, app, "🎨 Switch Theme Profile", &["Catppuccin Mocha", "Default Curses System"], border_color, accent_color),
-        ActiveWindow::JvmArgsPrompt | ActiveWindow::JarDirPrompt | ActiveWindow::EnvAddKeyPrompt | ActiveWindow::EnvAddValuePrompt => {
+        ActiveWindow::JvmArgsPrompt | ActiveWindow::JarDirPrompt | ActiveWindow::EnvAddKeyPrompt | ActiveWindow::EnvAddValuePrompt | ActiveWindow::AppArgsAddKeyPrompt | ActiveWindow::AppArgsAddValuePrompt => {
             draw_input_modal(f, app, border_color, accent_color);
         }
-        ActiveWindow::AppArgsInput => {
+        ActiveWindow::HmViewModal => {
             draw_text_modal(f, app, border_color, accent_color);
         }
         _ => {}
     }
 }
-
-
 
 // Modal popups render utilities
 fn centered_fixed_rect(width: u16, height: u16, r: Rect) -> Rect {

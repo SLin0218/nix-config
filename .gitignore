@@ -4,3 +4,4 @@ config/ags/@girs/
 **/lazy-lock.json
 jmssub
 *.elc
+pkgs/jar-launcher/target

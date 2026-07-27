@@ -62,6 +62,7 @@
       wget
       docker-compose
       jar-launcher
+      openvpn
     ];
 
     variables = {
@@ -89,7 +90,17 @@
     };
   };
 
-  programs.zsh.enable = true;
+  programs = {
+    zsh.enable = true;
+    nix-ld = {
+      enable = true;
+      libraries = with pkgs; [
+        stdenv.cc.cc.lib
+        zlib
+        glibc
+      ];
+    };
+  };
 
   services = {
     pcscd.enable = true;

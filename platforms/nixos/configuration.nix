@@ -181,6 +181,14 @@
     };
     zsh.enable = true;
     gpu-screen-recorder.enable = true;
+    nix-ld = {
+      enable = true;
+      libraries = with pkgs; [
+        stdenv.cc.cc.lib
+        zlib
+        glibc
+      ];
+    };
   };
 
   xdg.portal = {

@@ -1,10 +1,10 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   # 1. 基础文件链接
   home.file.".ideavimrc".source = ../../config/ideavimrc;
 
   # 2. 使用 xdg.configFile 管理目录软链接，这是 Home Manager 推荐的处理方式
-  xdg.configFile."nvim".source = ../../config/nvim;
+  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix-config/config/nvim-config";
   xdg.configFile."slin-emacs".source = ../../config/emacs;
 
   # 3. Emacs 初始化引导
@@ -36,8 +36,9 @@
                 (when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
                 (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))))
 
-    ;; 4. 压制异步编译警告
-    (setq native-comp-async-report-warnings-errors nil)
+    ;; 4. 压制异步编译警告并禁用内置函数蹦床编译（防止缺少 C 编译器驱动或 macOS SDK 时崩溃）
+    (setq native-comp-async-report-warnings-errors nil
+          native-comp-enable-subr-trampolines nil)
 
     ;; 5. 禁用 package.el 自动激活（已经在 init-package.el 中手动激活）
     (setq package-enable-at-startup nil)

@@ -38,6 +38,21 @@
       url = "github:nix-community/NixOS-WSL/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    ohmyzsh = {
+      url = "github:ohmyzsh/ohmyzsh";
+      flake = false;
+    };
+
+    rime-config = {
+      url = "github:SLin0218/rime-config";
+      flake = false;
+    };
   };
 
   outputs =
@@ -58,6 +73,7 @@
           specialArgs = { inherit inputs; };
           modules = [
             ./platforms/nixos/configuration.nix
+            ./hosts/inspiron-lin
 
             # 直接引用上面定义的统一 Overlay
             { nixpkgs.overlays = overlays; }
@@ -84,6 +100,31 @@
             inputs.nixos-wsl.nixosModules.default
             ./platforms/wsl/configuration.nix
             ./hosts/DESKTOP-I8CKT04
+
+            # 直接引用上面定义的统一 Overlay
+            { nixpkgs.overlays = overlays; }
+
+            inputs.home-manager.nixosModules.home-manager
+            {
+              home-manager.useGlobalPkgs = true;
+              home-manager.useUserPackages = true;
+              home-manager.users.lin = {
+                imports = [
+                  ./home/wsl
+                  inputs.catppuccin.homeModules.catppuccin
+                ];
+              };
+              home-manager.extraSpecialArgs = { inherit inputs; };
+            }
+          ];
+        };
+
+        wsl-home-desktop = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs; };
+          modules = [
+            inputs.nixos-wsl.nixosModules.default
+            ./platforms/wsl/configuration.nix
+            ./hosts/wsl-home-desktop
 
             # 直接引用上面定义的统一 Overlay
             { nixpkgs.overlays = overlays; }
@@ -156,18 +197,7 @@
             }
           ];
         };
-
       };
 
-      homeConfigurations = {
-        "lin@DESKTOP-I8CKT04" = inputs.home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-          extraSpecialArgs = { inherit inputs; };
-          modules = [
-            ./home/wsl
-            inputs.catppuccin.homeModules.catppuccin
-          ];
-        };
-      };
     };
 }

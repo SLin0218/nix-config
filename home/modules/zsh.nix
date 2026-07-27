@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 {
 
   programs.fzf = {
@@ -174,12 +174,7 @@
     plugins = [
       {
         name = "omz-sudo";
-        src = pkgs.fetchFromGitHub {
-          owner = "ohmyzsh";
-          repo = "ohmyzsh";
-          rev = "master";
-          sha256 = "sha256-8rIEdbWcAhiX5u5dR/DwMQ8T+GlVxcBLNuHCF2ckMUs=";
-        };
+        src = inputs.ohmyzsh;
         file = "plugins/sudo/sudo.plugin.zsh";
       }
       {

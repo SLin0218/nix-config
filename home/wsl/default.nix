@@ -42,6 +42,7 @@ in
     unzip
     wl-clipboard
     tproxy
+    google-antigravity-cli
   ];
 
   systemd.user.startServices = "sd-switch";

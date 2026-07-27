@@ -11,6 +11,9 @@
         ags = if inputs.ags.packages ? ${prev.stdenv.hostPlatform.system}
               then inputs.ags.packages.${prev.stdenv.hostPlatform.system}.default
               else prev.ags or null;
+        google-antigravity-cli = if inputs ? antigravity-nix && inputs.antigravity-nix.packages ? ${prev.stdenv.hostPlatform.system}
+                                 then inputs.antigravity-nix.packages.${prev.stdenv.hostPlatform.system}.google-antigravity-cli
+                                 else null;
         inherit (localPkgs) lunar-javascript wechat tproxy;
         joker = prev.joker.overrideAttrs (oldAttrs: {
           proxyVendor = true;

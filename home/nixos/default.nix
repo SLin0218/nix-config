@@ -29,6 +29,7 @@
     inkscape
     wechat
     antigravity-fhs
+    google-antigravity-cli
 
     jadx
     frida-tools

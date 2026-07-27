@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, ... }:
 let
   rimeFiles = [
     "build/flypy.reverse.bin"

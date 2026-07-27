@@ -66,6 +66,8 @@
 
     variables = {
       EDITOR = "nvim";
+      TERM = "xterm-256color";
+      COLORTERM = "truecolor";
       GDK_SCALE = "2";
       GDK_DPI_SCALE = "1.0";
       QT_SCALE_FACTOR = "2";

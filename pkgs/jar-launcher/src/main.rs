@@ -32,15 +32,39 @@ struct GlobalConfig {
     theme: String,
 }
 
+fn deserialize_app_args<'de, D>(deserializer: D) -> Result<HashMap<String, String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum AppArgsInput {
+        Dict(HashMap<String, String>),
+        Str(String),
+    }
+
+    Option::<AppArgsInput>::deserialize(deserializer).map(|opt| match opt {
+        Some(AppArgsInput::Dict(map)) => map,
+        Some(AppArgsInput::Str(s)) => {
+            if s.trim().is_empty() {
+                HashMap::new()
+            } else {
+                let (dict, _) = parse_app_args_to_dict(&s);
+                dict
+            }
+        }
+        None => HashMap::new(),
+    })
+}
+
 #[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(default)]
 struct AppConfigItem {
     jvm_args: String,
     nix_enabled: bool,
     nix_jdk_package: String,
-    app_args: String,
-    #[serde(default)]
-    app_args_dict: HashMap<String, String>,
+    #[serde(deserialize_with = "deserialize_app_args")]
+    app_args: HashMap<String, String>,
 }
 
 #[derive(Clone, PartialEq)]
@@ -92,8 +116,7 @@ struct JarState {
     jvm_args: String,
     nix_enabled: bool,
     nix_jdk: String,
-    app_args: String,
-    app_args_dict: HashMap<String, String>,
+    app_args: HashMap<String, String>,
 }
 
 struct App {
@@ -189,6 +212,10 @@ impl App {
         }
     }
 
+    fn get_apps_config_path(&self) -> PathBuf {
+        Path::new(&self.config.jar_dir).join("apps.json")
+    }
+
     fn load_all_configs(&mut self) {
         fs::create_dir_all(&self.config_dir).ok();
 
@@ -203,7 +230,16 @@ impl App {
             self.save_global_config();
         }
 
-        let apps_path = self.config_dir.join("apps.json");
+        let jar_apps_path = self.get_apps_config_path();
+        let old_apps_path = self.config_dir.join("apps.json");
+        let apps_path = if jar_apps_path.exists() {
+            jar_apps_path
+        } else if old_apps_path.exists() {
+            old_apps_path
+        } else {
+            jar_apps_path
+        };
+
         if apps_path.exists() {
             if let Ok(content) = fs::read_to_string(&apps_path) {
                 if let Ok(parsed) = serde_json::from_str::<HashMap<String, AppConfigItem>>(&content) {
@@ -221,7 +257,9 @@ impl App {
     }
 
     fn save_apps_config(&self) {
-        let apps_path = self.config_dir.join("apps.json");
+        let jar_dir = Path::new(&self.config.jar_dir);
+        fs::create_dir_all(jar_dir).ok();
+        let apps_path = self.get_apps_config_path();
         if let Ok(content) = serde_json::to_string_pretty(&self.apps_config) {
             fs::write(apps_path, content).ok();
         }
@@ -341,10 +379,7 @@ impl App {
         } else {
             app_cfg.nix_jdk_package.clone()
         };
-        let mut app_args = app_cfg.app_args.clone();
-        if app_args.is_empty() && !app_cfg.app_args_dict.is_empty() {
-            app_args = format_app_args_from_dict(&app_cfg.app_args_dict);
-        }
+        let app_args = app_cfg.app_args.clone();
 
         let proc = self.get_app_status(jar_path);
         if let Some(p) = proc {
@@ -365,7 +400,6 @@ impl App {
                 nix_enabled: app_cfg.nix_enabled,
                 nix_jdk,
                 app_args,
-                app_args_dict: app_cfg.app_args_dict,
             };
         }
 
@@ -403,7 +437,6 @@ impl App {
             nix_enabled: app_cfg.nix_enabled,
             nix_jdk,
             app_args,
-            app_args_dict: app_cfg.app_args_dict,
         }
     }
 
@@ -538,7 +571,7 @@ impl App {
 
         let app_cfg = self.apps_config.get(jar_path).cloned().unwrap_or_default();
         let jvm_args = if app_cfg.jvm_args.is_empty() { "-Xms128m -Xmx512m" } else { &app_cfg.jvm_args };
-        let app_args = &app_cfg.app_args;
+        let app_args_str = format_app_args_from_dict(&app_cfg.app_args);
 
         let log_dir = self.get_log_dir();
         fs::create_dir_all(&log_dir).ok();
@@ -554,10 +587,10 @@ impl App {
             let jdk = if app_cfg.nix_jdk_package.is_empty() { "jdk17" } else { &app_cfg.nix_jdk_package };
             format!(
                 "nix shell nixpkgs#{} -c java {} -jar \"{}\" {}",
-                jdk, jvm_args, jar_path, app_args
+                jdk, jvm_args, jar_path, app_args_str
             )
         } else {
-            format!("java {} -jar \"{}\" {}", jvm_args, jar_path, app_args)
+            format!("java {} -jar \"{}\" {}", jvm_args, jar_path, app_args_str)
         };
 
         let wrapped = format!("sh -c 'cd \"{}\" && {}; echo $? > \"{}\"'", self.config.jar_dir, java_cmd, exit_code_file.to_string_lossy());
@@ -1365,8 +1398,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                 if !app.jars_list.is_empty() {
                     let jar = app.jars_list[app.selected_idx].clone();
                     let mut app_cfg = app.apps_config.get(&jar).cloned().unwrap_or_default();
-                    app_cfg.app_args_dict.insert(app.app_args_selected_key.clone(), val);
-                    app_cfg.app_args = format_app_args_from_dict(&app_cfg.app_args_dict);
+                    app_cfg.app_args.insert(app.app_args_selected_key.clone(), val);
                     app.apps_config.insert(jar.clone(), app_cfg);
                     app.save_apps_config();
                     app.reload_app_args_keys(&jar);
@@ -1406,8 +1438,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                                 }
                                 1 => {
                                     let mut app_cfg = app.apps_config.get(&jar).cloned().unwrap_or_default();
-                                    app_cfg.app_args_dict.remove(&target_key);
-                                    app_cfg.app_args = format_app_args_from_dict(&app_cfg.app_args_dict);
+                                    app_cfg.app_args.remove(&target_key);
                                     app.apps_config.insert(jar.clone(), app_cfg);
                                     app.save_apps_config();
                                     app.reload_app_args_keys(&jar);
@@ -1435,6 +1466,7 @@ fn handle_keys(app: &mut App, key_event: event::KeyEvent) -> io::Result<()> {
                 if Path::new(&val).is_dir() {
                     app.config.jar_dir = val;
                     app.save_global_config();
+                    app.load_all_configs();
                     app.scan_jars();
                     app.selected_idx = 0;
                     app.update_status();
@@ -1894,14 +1926,8 @@ impl App {
     }
 
     fn reload_app_args_keys(&mut self, jar_path: &str) {
-        let mut app_cfg = self.apps_config.get(jar_path).cloned().unwrap_or_default();
-        if app_cfg.app_args_dict.is_empty() && !app_cfg.app_args.is_empty() {
-            let (dict, _order) = parse_app_args_to_dict(&app_cfg.app_args);
-            app_cfg.app_args_dict = dict;
-            self.apps_config.insert(jar_path.to_string(), app_cfg.clone());
-            self.save_apps_config();
-        }
-        self.app_args_dict_cache = app_cfg.app_args_dict.clone();
+        let app_cfg = self.apps_config.get(jar_path).cloned().unwrap_or_default();
+        self.app_args_dict_cache = app_cfg.app_args.clone();
         let mut keys: Vec<String> = self.app_args_dict_cache.keys().cloned().collect();
         keys.sort();
         self.app_args_keys_list = keys;
@@ -2047,8 +2073,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
             jvm_args: "-Xms128m -Xmx512m".to_string(),
             nix_enabled: false,
             nix_jdk: "jdk17".to_string(),
-            app_args: String::new(),
-            app_args_dict: HashMap::new(),
+            app_args: HashMap::new(),
         };
         let s = state.unwrap_or(&default_state);
 
@@ -2081,20 +2106,7 @@ fn draw_ui(f: &mut ratatui::Frame, app: &mut App) {
             Style::default().fg(s.status_color).add_modifier(Modifier::BOLD)
         };
 
-        let args_formatted = if !s.app_args_dict.is_empty() {
-            let mut keys: Vec<&String> = s.app_args_dict.keys().collect();
-            keys.sort();
-            keys.iter().map(|k| {
-                let v = &s.app_args_dict[*k];
-                if v.is_empty() {
-                    k.to_string()
-                } else {
-                    format!("{}={}", k, v)
-                }
-            }).collect::<Vec<String>>().join(" ")
-        } else {
-            s.app_args.clone()
-        };
+        let args_formatted = format_app_args_from_dict(&s.app_args);
 
         let args_display = if args_formatted.is_empty() {
             s.jvm_args.clone()

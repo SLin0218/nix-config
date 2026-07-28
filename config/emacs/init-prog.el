@@ -116,7 +116,7 @@
           (message "Download finished: %s" target-file)
           target-file))))
 
-  ;; 自动整合 Nix 注入的 JBRSDK 21 与 Lombok 的 JDTLS 启动定义
+  ;; 自动整合 Nix 注入的 JBRSDK 17 与 Lombok 的 JDTLS 启动定义
   (add-to-list 'eglot-server-programs
                `((java-mode java-ts-mode) .
                  ,(lambda (&rest _)

@@ -7,12 +7,12 @@ let
   # 定义不同系统架构对应的包下载参数
   srcs = {
     "aarch64-darwin" = {
-      url = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.3-osx-aarch64-b446.1.tar.gz";
-      sha256 = "1naw25vwa806qlyw0bkx6ky6phwyb5mhn40y4jrx4b8xfvq8nm5d";
+      url = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-17.0.12-osx-aarch64-b1087.25.tar.gz";
+      sha256 = "1ihpijnwdyvl3pqjszfi17rxhsq0ikdaq3r33fiwyi7z08gmmfpp";
     };
     "x86_64-linux" = {
-      url = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.3-linux-x64-b446.1.tar.gz";
-      sha256 = "07vb97bl4xhh0iqfiddg71r43whxj7prdzlakyhyimd66vipa3yd";
+      url = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-17.0.12-linux-x64-b1087.25.tar.gz";
+      sha256 = "0cxxw02mad2ljlry78f7km9d7plkpgnspxggy9q2h2ly4fz452vi";
     };
   };
 
@@ -21,8 +21,8 @@ let
 
 in
 stdenv.mkDerivation rec {
-  pname = "jbrsdk-21";
-  version = "21.0.3-b446.1";
+  pname = "jbrsdk-17";
+  version = "17.0.12-b1087.25";
 
   src = pkgs.fetchurl {
     inherit (srcAttrs) url sha256;
@@ -32,7 +32,7 @@ stdenv.mkDerivation rec {
   dontBuild = true;
   dontStrip = true;
 
-  # Linux 需要的链接库和自动补丁 Hook
+  # Linux 需要的链接库 and 自动补丁 Hook
   nativeBuildInputs = pkgs.lib.optionals stdenv.isLinux [ pkgs.autoPatchelfHook ];
   
   buildInputs = pkgs.lib.optionals stdenv.isLinux (with pkgs; [
@@ -58,7 +58,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with pkgs.lib; {
-    description = "JetBrains Runtime 21 SDK with DCEVM support (precompiled binary)";
+    description = "JetBrains Runtime 17 SDK with DCEVM support (precompiled binary)";
     homepage = "https://github.com/JetBrains/JetBrainsRuntime";
     license = licenses.gpl2;
     platforms = [ "aarch64-darwin" "x86_64-linux" ];

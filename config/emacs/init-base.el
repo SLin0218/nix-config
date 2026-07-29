@@ -58,10 +58,64 @@
 (add-hook 'before-save-hook #'auto-save-delete-trailing-whitespace-except-current-line)
 
 ;; Git 版本控制 (Magit & Diff-hl)
+;; 定义按 Commit Hash 循环着色的 Face 调色板 (Catppuccin Mocha 背景色风格)
+(defface my/magit-blame-c1 '((t (:background "#89b4fa" :foreground "#11111b" :extend t))) "Catppuccin Mocha Blue BG")
+(defface my/magit-blame-c2 '((t (:background "#a6e3a1" :foreground "#11111b" :extend t))) "Catppuccin Mocha Green BG")
+(defface my/magit-blame-c3 '((t (:background "#f9e2af" :foreground "#11111b" :extend t))) "Catppuccin Mocha Yellow BG")
+(defface my/magit-blame-c4 '((t (:background "#cba6f7" :foreground "#11111b" :extend t))) "Catppuccin Mocha Mauve BG")
+(defface my/magit-blame-c5 '((t (:background "#fab387" :foreground "#11111b" :extend t))) "Catppuccin Mocha Peach BG")
+(defface my/magit-blame-c6 '((t (:background "#f38ba8" :foreground "#11111b" :extend t))) "Catppuccin Mocha Pink BG")
+(defface my/magit-blame-c7 '((t (:background "#94e2d5" :foreground "#11111b" :extend t))) "Catppuccin Mocha Teal BG")
+
+(defvar my/magit-blame-faces
+  '(my/magit-blame-c1
+    my/magit-blame-c2
+    my/magit-blame-c3
+    my/magit-blame-c4
+    my/magit-blame-c5
+    my/magit-blame-c6
+    my/magit-blame-c7))
+
+(defun my/magit-blame-commit-face (rev)
+  "根据 Commit REV 哈希值动态分配 Catppuccin 调色板 Face."
+  (if (and rev (stringp rev) (>= (length rev) 6))
+      (let ((idx (mod (string-to-number (substring rev 0 6) 16) (length my/magit-blame-faces))))
+        (nth idx my/magit-blame-faces))
+    'magit-blame-margin))
+
+(defun my/magit-blame-format-string-1 (orig-fn rev revinfo format face)
+  "在 Magit 格式化边栏字段后，将 Commit 专属 Face 插入至 face 列表的最前端（顶级优先级）."
+  (let* ((cface (my/magit-blame-commit-face rev))
+         (str (funcall orig-fn rev revinfo format face))
+         (len (length str)))
+    (when (and str (stringp str))
+      (dotimes (i len)
+        (let ((f (get-text-property i 'font-lock-face str)))
+          (put-text-property
+           i (1+ i) 'font-lock-face
+           (cons cface (if (listp f) f (and f (list f))))
+           str))))
+    str))
+
 (use-package magit
   :defer t
   :init
-  (setq magit-auto-revert-mode nil))
+  (setq magit-auto-revert-mode nil)
+  :config
+  ;; 设置 Blame 时间格式为 yy-MM-dd HH:mm:ss
+  (setq magit-blame-time-format "%y-%m-%d %H:%M:%S")
+
+  ;; 设置 magit-blame 使用 margin 边栏样式 (格式：作者 -> 时间 -> Commit ID 放最后)
+  (setq magit-blame-styles
+        '((margin
+           (margin-format . " %-10a %A %h ")
+           (margin-width . 38)
+           (margin-face . magit-blame-margin)
+           (margin-body-face . nil))))
+
+  ;; 挂载底层格式化 Advice，动态注入最优先级的 Commit Face
+  (advice-remove 'magit-blame-propertize-margin #'my/magit-blame-color-margin-string)
+  (advice-add 'magit-blame--format-string-1 :around #'my/magit-blame-format-string-1))
 
 (global-auto-revert-mode 1)
 

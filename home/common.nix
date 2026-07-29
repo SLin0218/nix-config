@@ -58,7 +58,7 @@
     librime
 
     # java & build tools
-    jbrsdk-21
+    jbrsdk-17
     maven
     mvn-springboot-debug
 
@@ -85,7 +85,7 @@
     EDITOR = "nvim";
     SSH_AUTH_SOCK = "$(gpgconf --list-dir agent-ssh-socket)";
     GPG_TTY = "$(tty)";
-    JAVA_HOME = "${pkgs.jbrsdk-21}";
+    JAVA_HOME = "${pkgs.jbrsdk-17}";
   };
 
   programs = {

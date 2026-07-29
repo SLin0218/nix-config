@@ -32,38 +32,12 @@ struct GlobalConfig {
     theme: String,
 }
 
-fn deserialize_app_args<'de, D>(deserializer: D) -> Result<HashMap<String, String>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum AppArgsInput {
-        Dict(HashMap<String, String>),
-        Str(String),
-    }
-
-    Option::<AppArgsInput>::deserialize(deserializer).map(|opt| match opt {
-        Some(AppArgsInput::Dict(map)) => map,
-        Some(AppArgsInput::Str(s)) => {
-            if s.trim().is_empty() {
-                HashMap::new()
-            } else {
-                let (dict, _) = parse_app_args_to_dict(&s);
-                dict
-            }
-        }
-        None => HashMap::new(),
-    })
-}
-
 #[derive(Serialize, Deserialize, Clone, Default)]
 #[serde(default)]
 struct AppConfigItem {
     jvm_args: String,
     nix_enabled: bool,
     nix_jdk_package: String,
-    #[serde(deserialize_with = "deserialize_app_args")]
     app_args: HashMap<String, String>,
 }
 
@@ -230,16 +204,7 @@ impl App {
             self.save_global_config();
         }
 
-        let jar_apps_path = self.get_apps_config_path();
-        let old_apps_path = self.config_dir.join("apps.json");
-        let apps_path = if jar_apps_path.exists() {
-            jar_apps_path
-        } else if old_apps_path.exists() {
-            old_apps_path
-        } else {
-            jar_apps_path
-        };
-
+        let apps_path = self.get_apps_config_path();
         if apps_path.exists() {
             if let Ok(content) = fs::read_to_string(&apps_path) {
                 if let Ok(parsed) = serde_json::from_str::<HashMap<String, AppConfigItem>>(&content) {
@@ -1934,36 +1899,6 @@ impl App {
     }
 }
 
-fn parse_app_args_to_dict(args_str: &str) -> (HashMap<String, String>, Vec<String>) {
-    let mut dict = HashMap::new();
-    let mut keys_order = Vec::new();
-    for token in args_str.split_whitespace() {
-        if token.is_empty() {
-            continue;
-        }
-        let clean_token = if token.starts_with("--") {
-            &token[2..]
-        } else if token.starts_with('-') {
-            &token[1..]
-        } else {
-            token
-        };
-        if let Some((k, v)) = clean_token.split_once('=') {
-            if !k.is_empty() {
-                dict.insert(k.to_string(), v.to_string());
-                if !keys_order.contains(&k.to_string()) {
-                    keys_order.push(k.to_string());
-                }
-            }
-        } else if !clean_token.is_empty() {
-            dict.insert(clean_token.to_string(), String::new());
-            if !keys_order.contains(&clean_token.to_string()) {
-                keys_order.push(clean_token.to_string());
-            }
-        }
-    }
-    (dict, keys_order)
-}
 
 fn format_app_args_from_dict(dict: &HashMap<String, String>) -> String {
     let mut keys: Vec<&String> = dict.keys().collect();

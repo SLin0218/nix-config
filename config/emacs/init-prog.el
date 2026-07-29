@@ -123,6 +123,7 @@
                     (let* ((project-root (project-root (project-current t)))
                            (cache-dir (expand-file-name (md5 project-root) "~/.cache/jdtls-workspace"))
                            (debug-jar (my/download-java-debug-adapter-if-missing))
+                           (lombok-jar (expand-file-name "~/.local/share/nvim/mason/packages/jdtls/lombok.jar"))
                            (java-home (and (boundp 'nix-jbrsdk-path)
                                            nix-jbrsdk-path
                                            (file-directory-p nix-jbrsdk-path)
@@ -140,7 +141,7 @@
                                          exec-path)))
                         `("jdtls"
                           "-data" ,cache-dir
-                          "--jvm-arg=-javaagent:/Users/lin/.local/share/nvim/mason/packages/jdtls/lombok.jar"
+                          ,(concat "--jvm-arg=-javaagent:" lombok-jar)
                           "--jvm-arg=-Djava.import.generatesMetadataFilesAtProjectRoot=false"
                           "--jvm-arg=-DDetectVMInstallationsJob.disabled=true"
                           "--jvm-arg=-Dfile.encoding=utf8"

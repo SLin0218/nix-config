@@ -4,7 +4,6 @@ let
   stdenv = pkgs.stdenv;
   system = stdenv.hostPlatform.system;
 
-  # 定义不同系统架构对应的包下载参数
   srcs = {
     "aarch64-darwin" = {
       url = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-17.0.12-osx-aarch64-b1087.25.tar.gz";
@@ -16,51 +15,59 @@ let
     };
   };
 
-  # 获取当前系统匹配的下载源，如果不支持则抛出错误
   srcAttrs = srcs.${system} or (throw "Unsupported system architecture: ${system}");
 
+  # 保持原始 JBR 17 二进制文件不被 patchelf 修改
+  jbrRaw = stdenv.mkDerivation rec {
+    pname = "jbrsdk-17-raw";
+    version = "17.0.12-b1087.25";
+
+    src = pkgs.fetchurl {
+      inherit (srcAttrs) url sha256;
+    };
+
+    dontBuild = true;
+    dontStrip = true;
+    dontPatchELF = true;
+    dontPatchelf = true;
+
+    installPhase = ''
+      mkdir -p $out
+      if [ -d Contents/Home ]; then
+        cp -r Contents/Home/* $out/
+      else
+        cp -r * $out/
+      fi
+    '';
+  };
+
 in
-stdenv.mkDerivation rec {
-  pname = "jbrsdk-17";
-  version = "17.0.12-b1087.25";
+if stdenv.isDarwin then
+  jbrRaw
+else
+  # 在 Linux 下使用 FHS 环境包装，解决 autoPatchelfHook 破坏 libjimage.so 导致的 SIGSEGV 崩溃
+  pkgs.buildFHSEnv {
+    name = "java";
+    targetPkgs = pkgs: (with pkgs; [
+      alsa-lib
+      fontconfig
+      freetype
+      libx11
+      libxext
+      libxi
+      libxrender
+      libxtst
+      libxrandr
+      libxcursor
+      libxcb
+      wayland
+      zlib
+      stdenv.cc.cc.lib
+    ]);
+    runScript = "${jbrRaw}/bin/java";
+    passthru = {
+      home = jbrRaw;
+    };
+  }
 
-  src = pkgs.fetchurl {
-    inherit (srcAttrs) url sha256;
-  };
 
-  # 预编译包直接安装
-  dontBuild = true;
-  dontStrip = true;
-
-  # Linux 需要的链接库 and 自动补丁 Hook
-  nativeBuildInputs = pkgs.lib.optionals stdenv.isLinux [ pkgs.autoPatchelfHook ];
-  
-  buildInputs = pkgs.lib.optionals stdenv.isLinux (with pkgs; [
-    alsa-lib
-    fontconfig
-    libx11
-    libxext
-    libxi
-    libxrender
-    libxtst
-    wayland
-    stdenv.cc.cc.lib
-  ]);
-
-  installPhase = ''
-    mkdir -p $out
-    # 解压并拷贝 JDK 文件目录
-    if [ -d Contents/Home ]; then
-      cp -r Contents/Home/* $out/
-    else
-      cp -r * $out/
-    fi
-  '';
-
-  meta = with pkgs.lib; {
-    description = "JetBrains Runtime 17 SDK with DCEVM support (precompiled binary)";
-    homepage = "https://github.com/JetBrains/JetBrainsRuntime";
-    license = licenses.gpl2;
-    platforms = [ "aarch64-darwin" "x86_64-linux" ];
-  };
-}

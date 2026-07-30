@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  lib,
   ...
 }:
 
@@ -58,7 +59,8 @@
     librime
 
     # java & build tools
-    jbrsdk-17
+    (lib.hiPrio jbrsdk-17)
+    (lib.lowPrio openjdk21)
     maven
     mvn-springboot-debug
 
@@ -85,7 +87,8 @@
     EDITOR = "nvim";
     SSH_AUTH_SOCK = "$(gpgconf --list-dir agent-ssh-socket)";
     GPG_TTY = "$(tty)";
-    JAVA_HOME = "${pkgs.jbrsdk-17}";
+    JAVA_HOME = "${pkgs.jbrsdk-17.home or pkgs.jbrsdk-17}";
+    JAVA21_HOME = "${pkgs.openjdk21}";
   };
 
   programs = {

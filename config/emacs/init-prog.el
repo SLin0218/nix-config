@@ -129,7 +129,13 @@
                                            (file-directory-p nix-jbrsdk-path)
                                            nix-jbrsdk-path))
                            (java-bin (and java-home
-                                          (expand-file-name "bin" java-home))))
+                                          (expand-file-name "bin" java-home)))
+                           (java21-home (and (boundp 'nix-openjdk21-path)
+                                             nix-openjdk21-path
+                                             (file-directory-p nix-openjdk21-path)
+                                             nix-openjdk21-path))
+                           (java21-executable (and java21-home
+                                                   (expand-file-name "bin/java" java21-home))))
                       (make-directory cache-dir t)
                       (let ((process-environment (if (not (string-empty-p java-home))
                                                      (cons (format "JAVA_HOME=%s" java-home)
@@ -140,6 +146,7 @@
                                            (cons java-bin exec-path)
                                          exec-path)))
                         `("jdtls"
+                          ,@(when java21-executable `(,(concat "--java-executable=" java21-executable)))
                           "-data" ,cache-dir
                           ,(concat "--jvm-arg=-javaagent:" lombok-jar)
                           "--jvm-arg=-Djava.import.generatesMetadataFilesAtProjectRoot=false"
@@ -150,7 +157,7 @@
                           "--jvm-arg=-Dsun.zip.disableMemoryMapping=true"
                           "--jvm-arg=-Dlog.level=WARNING"
                           "--jvm-arg=-Xmx4G"
-                          "--jvm-arg=-Xms4G"
+                          "--jvm-arg=-Xms1G"
                           "--jvm-arg=-Xlog:disable"
                           "--jvm-arg=-Daether.dependencyCollector.impl=bf"
                           :initializationOptions
@@ -170,33 +177,115 @@
 
 ;; 纯 Emacs Lisp 拦截并解析 JDTLS 的 jdt:/ 和 jdt:// 协议，支持第三方依赖 Jar 查看
 (with-eval-after-load 'eglot
+  (defvar +eglot/jdtls-file-to-uri-map (make-hash-table :test 'equal)
+    "Map of decompiled source file path to (uri . server).")
+
+  (defun +eglot/jdtls-find-active-server ()
+    "Find an active JDTLS server instance across all projects."
+    (or (eglot-current-server)
+        (cl-find-if (lambda (server)
+                      (and (jsonrpc-running-p server)
+                           (or (memq 'java-mode (eglot--major-modes server))
+                               (memq 'java-ts-mode (eglot--major-modes server)))))
+                    (apply #'append (hash-table-values eglot--servers-by-project)))))
+
+  (defun +eglot/jdtls-clear-cache ()
+    "Clear cached JDTLS decompiled source files."
+    (interactive)
+    (let ((source-dir (expand-file-name "eglot-jdtls-sources" (temporary-file-directory))))
+      (when (file-directory-p source-dir)
+        (delete-directory source-dir t)
+        (clrhash +eglot/jdtls-file-to-uri-map)
+        (message "Cleared JDTLS decompiled source cache."))))
+
+  (defun +eglot/jdtls-revert-buffer-fn (&optional _ignore-auto _noconfirm)
+    "Re-fetch decompiled source for current buffer from JDTLS."
+    (interactive)
+    (let* ((file (and buffer-file-name (file-truename buffer-file-name)))
+           (entry (and file (gethash file +eglot/jdtls-file-to-uri-map)))
+           (uri (or (bound-and-true-p +eglot/jdtls-source-uri)
+                    (car-safe entry)))
+           (server (or (bound-and-true-p +eglot/jdtls-source-server)
+                       (cdr-safe entry)
+                       (+eglot/jdtls-find-active-server))))
+      (if (and uri server (jsonrpc-running-p server))
+          (let ((content (jsonrpc-request server
+                                          :java/classFileContents
+                                          (list :uri uri)))
+                (inhibit-read-only t))
+            (with-temp-file file
+              (insert content))
+            (erase-buffer)
+            (insert content)
+            (set-buffer-modified-p nil)
+            (message "Refreshed decompiled source from JDTLS for %s" (file-name-nondirectory file)))
+        (if (not uri)
+            (message "Unable to refresh: URI missing for this buffer. Use M-x +eglot/jdtls-clear-cache.")
+          (message "Unable to refresh: No active JDTLS server running.")))))
+
   (defun +eglot/jdtls-uri-to-path (uri)
     "Support Eclipse jdtls `jdt:/' and `jdt://' uri scheme by fetching content."
-    (when (string-prefix-p "jdt:" uri)
-      (let ((server (eglot-current-server)))
-        (when server
-          (let* ((md5-hash (md5 uri))
-                 (class-name (if (string-match "/\\([^/?]+\\)\\(?:\\.class\\|\\.java\\)" uri)
-                                 (match-string 1 uri)
-                               "UnknownClass"))
-                 (filename (format "%s_%s.java" class-name md5-hash))
-                 (source-dir (expand-file-name "eglot-jdtls-sources" (temporary-file-directory)))
-                 (source-file (expand-file-name filename source-dir)))
-            (unless (file-directory-p source-dir)
-              (make-directory source-dir t))
-            (unless (file-readable-p source-file)
-              (let ((content (jsonrpc-request server
-                                              :java/classFileContents
-                                              (list :uri uri))))
-                (with-temp-file source-file
-                  (insert content))))
-            source-file)))))
+    (let ((uri-str (cond ((stringp uri) uri)
+                         ((symbolp uri) (replace-regexp-in-string "^:" "" (symbol-name uri)))
+                         (t nil))))
+      (when (and uri-str (string-prefix-p "jdt:" uri-str))
+        (let ((server (+eglot/jdtls-find-active-server)))
+          (when server
+            (let* ((md5-hash (md5 uri-str))
+                   (class-name (if (string-match "/\\([^/?]+\\)\\(?:\\.class\\|\\.java\\)" uri-str)
+                                   (match-string 1 uri-str)
+                                 "UnknownClass"))
+                   (filename (format "%s_%s.java" class-name md5-hash))
+                   (source-dir (expand-file-name "eglot-jdtls-sources" (temporary-file-directory)))
+                   (source-file (expand-file-name filename source-dir))
+                   (true-file (file-truename source-file)))
+              (unless (file-directory-p source-dir)
+                (make-directory source-dir t))
+              (puthash true-file (cons uri-str server) +eglot/jdtls-file-to-uri-map)
+              (unless (file-readable-p source-file)
+                (let ((content (jsonrpc-request server
+                                                :java/classFileContents
+                                                (list :uri uri-str))))
+                  (with-temp-file source-file
+                    (insert content))))
+              source-file))))))
+
+  (defvar-keymap +eglot/jdtls-source-mode-map
+    :doc "Keymap for JDTLS decompiled source buffers."
+    "r" #'revert-buffer)
+
+  (define-minor-mode +eglot/jdtls-source-mode
+    "Minor mode enabled in JDTLS decompiled source buffers."
+    :init-value nil
+    :lighter " JDTLS-Src"
+    :keymap +eglot/jdtls-source-mode-map)
+
+  (with-eval-after-load 'evil
+    (evil-define-key '(normal motion) +eglot/jdtls-source-mode-map
+      "r" #'revert-buffer))
+
+  (defun +eglot/jdtls-setup-revert-buffer ()
+    "Setup revert-buffer-function for JDTLS decompiled files."
+    (when (and buffer-file-name
+               (string-prefix-p (file-truename (expand-file-name "eglot-jdtls-sources" (temporary-file-directory)))
+                                (file-truename buffer-file-name)))
+      (let* ((true-file (file-truename buffer-file-name))
+             (entry (gethash true-file +eglot/jdtls-file-to-uri-map)))
+        (when entry
+          (setq-local +eglot/jdtls-source-uri (car entry))
+          (setq-local +eglot/jdtls-source-server (cdr entry))))
+      (setq-local revert-buffer-function #'+eglot/jdtls-revert-buffer-fn)
+      (read-only-mode 1)
+      (+eglot/jdtls-source-mode 1)))
+
+  (add-hook 'find-file-hook #'+eglot/jdtls-setup-revert-buffer)
 
   (advice-add (if (fboundp 'eglot-uri-to-path) 'eglot-uri-to-path 'eglot--uri-to-path)
               :around
               (lambda (orig-fn uri &rest args)
-                (or (+eglot/jdtls-uri-to-path uri)
-                    (apply orig-fn uri args)))))
+                (let ((uri-clean (if (symbolp uri) (replace-regexp-in-string "^:" "" (symbol-name uri)) uri)))
+                  (or (+eglot/jdtls-uri-to-path uri-clean)
+                      (apply orig-fn uri-clean args))))))
 
 
 ;; ---------------------------------------------------------------------------

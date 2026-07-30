@@ -51,6 +51,12 @@
   (evil-define-key 'normal 'global (kbd "<leader>gp") 'eglot-find-declaration)
   (evil-define-key 'normal 'global (kbd "<leader>gu") 'xref-find-references)
 
+  ;; 重构 修改名称
+  (evil-define-key 'normal 'global (kbd "<leader>rn") 'eglot-rename)
+  ;; 代码格式化
+  (evil-define-key 'normal 'global (kbd "<leader>fm") 'eglot-format)
+  (evil-define-key 'normal 'global (kbd "<leader>da") 'eglot-code-actions)
+
   ;; 注释
   (evil-define-key '(normal visual) 'global (kbd "<leader>/") 'evilnc-comment-or-uncomment-lines)
 
@@ -76,6 +82,8 @@
   ;; 快捷打开 Dired & Magit
   (evil-define-key 'normal 'global (kbd "<leader>dj") 'dired-jump)
   (evil-define-key 'normal 'global (kbd "<leader>mg") 'magit)
+  ;; 快速查看 blame 类似 idea Git Annotate
+  (evil-define-key 'normal 'global (kbd "<leader>mb") 'magit-blame-addition)
 
   (evil-mode 1))
 

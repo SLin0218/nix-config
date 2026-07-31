@@ -131,51 +131,10 @@
 (use-package xref
   :ensure nil
   :config
-  (defun my/consult-xref--candidates (xrefs)
-    (let ((root (and (project-current) (project-root (project-current)))))
-      (mapcar (lambda (xref)
-                (let* ((loc (xref-item-location xref))
-                       (group (and loc (xref-location-group loc)))
-                       (group-rel (if (and root group) (file-relative-name group root) group))
-                       (line (and loc (xref-location-line loc)))
-                       (cand (if line
-                                 (format "%s:%s" line (or group-rel "unknown"))
-                               (or group-rel "unknown"))))
-                  (add-text-properties
-                   0 1 `(consult-xref ,xref) cand)
-                  cand))
-              xrefs)))
-
-  (defun my/consult-xref (fetcher &optional alist)
-    (require 'consult)
+  (with-eval-after-load 'consult
     (require 'consult-xref)
-    (let* ((real-xrefs (if (functionp fetcher) (funcall fetcher) fetcher))
-           (candidates (my/consult-xref--candidates real-xrefs))
-           (display (alist-get 'display-action alist)))
-      (unless candidates
-        (user-error "No xref locations"))
-      (xref-pop-to-location
-       (if (cdr candidates)
-           (consult--read
-            candidates
-            :command #'my/consult-xref
-            :prompt "Go to xref: "
-            :history 'consult-xref--history
-            :require-match t
-            :sort nil
-            :category 'consult-xref
-            :state
-            (when-let* ((fun (pcase display
-                               ('frame nil)
-                               ('window #'switch-to-buffer-other-window)
-                               (_ #'switch-to-buffer))))
-              (consult-xref--preview fun))
-            :lookup (apply-partially #'consult--lookup-prop 'consult-xref))
-         (get-text-property 0 'consult-xref (car candidates)))
-       display)))
-
-  (setq xref-show-definitions-function #'my/consult-xref)
-  (setq xref-show-xrefs-function #'my/consult-xref))
+    (setq xref-show-definitions-function #'consult-xref)
+    (setq xref-show-xrefs-function #'consult-xref)))
 
 
 ;; ---------------------------------------------------------------------------

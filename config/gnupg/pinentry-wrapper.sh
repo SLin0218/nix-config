@@ -1,15 +1,32 @@
 #!/bin/bash
-# If we are running inside agy (which runs on the GPG_TTY), bypass curses and use pinentry-mac
-if [ "$PINENTRY_USER_DATA" = "USE_CURSES=1" ] && ! ([ -n "$GPG_TTY" ] && ps -t "${GPG_TTY#/dev/}" -o comm= 2>/dev/null | grep -qE "antigravity|agy"); then
+# 1. If explicitly requesting curses mode in an interactive terminal
+if [ "$PINENTRY_USER_DATA" = "USE_CURSES=1" ] && [ -t 0 ]; then
 	if command -v pinentry-curses >/dev/null 2>&1; then
 		exec pinentry-curses "$@"
-	elif [ -x "$HOME/.nix-profile/bin/pinentry-curses" ]; then
-		exec "$HOME/.nix-profile/bin/pinentry-curses" "$@"
-	elif [ -x "/run/current-system/sw/bin/pinentry-curses" ]; then
-		exec "/run/current-system/sw/bin/pinentry-curses" "$@"
-	else
-		exec $HOMEBREW_PREFIX/bin/pinentry-mac "$@"
 	fi
-else
-	exec $HOMEBREW_PREFIX/bin/pinentry-mac "$@"
 fi
+
+# 2. macOS: Use pinentry-mac
+if [ "$(uname)" = "Darwin" ]; then
+	if [ -n "$HOMEBREW_PREFIX" ] && [ -x "$HOMEBREW_PREFIX/bin/pinentry-mac" ]; then
+		exec "$HOMEBREW_PREFIX/bin/pinentry-mac" "$@"
+	elif command -v pinentry-mac >/dev/null 2>&1; then
+		exec pinentry-mac "$@"
+	fi
+fi
+
+# 3. Try GUI pinentry (GNOME/GTK / Qt) - ideal for WSLg and Linux GUI
+if command -v pinentry-gnome3 >/dev/null 2>&1; then
+	exec pinentry-gnome3 "$@"
+elif command -v pinentry-qt >/dev/null 2>&1; then
+	exec pinentry-qt "$@"
+fi
+
+# 4. Final Fallback
+if command -v pinentry-curses >/dev/null 2>&1; then
+	exec pinentry-curses "$@"
+else
+	exec pinentry "$@"
+fi
+
+

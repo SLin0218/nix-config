@@ -20,13 +20,16 @@
 
 ;; 同步 Shell 环境变量 (GUI 模式)
 (use-package exec-path-from-shell
-  :if (and (memq system-type '(darwin)) (display-graphic-p))
+  :if (and (memq system-type '(darwin gnu/linux)) (display-graphic-p))
   :config
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-envs '("SSH_AUTH_SOCK" "GPG_TTY"))
   (when (boundp 'my-paths-join)
     (setenv "PATH" (concat my-paths-join ":" (getenv "PATH")))
     (setq exec-path (append (mapcar #'expand-file-name my-paths) exec-path))))
+
+;; GPG / EPA 设置：在 Emacs Minibuffer 中直接输入 GPG 密码 (Loopback 模式)
+(setq epa-pinentry-mode 'loopback)
 
 ;; 备份与自动保存策略
 (setq auto-save-default nil)    ; 关闭自动保存

@@ -209,10 +209,11 @@
                        (cdr-safe entry)
                        (+eglot/jdtls-find-active-server))))
       (if (and uri server (jsonrpc-running-p server))
-          (let ((content (jsonrpc-request server
-                                          :java/classFileContents
-                                          (list :uri uri)))
-                (inhibit-read-only t))
+          (let* ((raw (jsonrpc-request server
+                                       :java/classFileContents
+                                       (list :uri uri)))
+                 (content (replace-regexp-in-string "\r\n" "\n" (or raw "")))
+                 (inhibit-read-only t))
             (with-temp-file file
               (insert content))
             (erase-buffer)
@@ -243,12 +244,21 @@
                 (make-directory source-dir t))
               (puthash true-file (cons uri-str server) +eglot/jdtls-file-to-uri-map)
               (unless (file-readable-p source-file)
-                (let ((content (jsonrpc-request server
-                                                :java/classFileContents
-                                                (list :uri uri-str))))
+                (let* ((raw (jsonrpc-request server
+                                             :java/classFileContents
+                                             (list :uri uri-str)))
+                       (content (replace-regexp-in-string "\r\n" "\n" (or raw ""))))
                   (with-temp-file source-file
                     (insert content))))
               source-file))))))
+
+  (defun +eglot/jdtls-path-to-uri (path)
+    "Convert decompiled source file path back to its `jdt://' URI."
+    (when path
+      (let* ((true-file (file-truename path))
+             (entry (gethash true-file +eglot/jdtls-file-to-uri-map)))
+        (or (car-safe entry)
+            (bound-and-true-p +eglot/jdtls-source-uri)))))
 
   (defvar-keymap +eglot/jdtls-source-mode-map
     :doc "Keymap for JDTLS decompiled source buffers."
@@ -265,18 +275,28 @@
       "r" #'revert-buffer))
 
   (defun +eglot/jdtls-setup-revert-buffer ()
-    "Setup revert-buffer-function for JDTLS decompiled files."
+    "Setup revert-buffer-function and eglot management for JDTLS decompiled files."
     (when (and buffer-file-name
                (string-prefix-p (file-truename (expand-file-name "eglot-jdtls-sources" (temporary-file-directory)))
                                 (file-truename buffer-file-name)))
       (let* ((true-file (file-truename buffer-file-name))
-             (entry (gethash true-file +eglot/jdtls-file-to-uri-map)))
-        (when entry
-          (setq-local +eglot/jdtls-source-uri (car entry))
-          (setq-local +eglot/jdtls-source-server (cdr entry))))
+             (entry (gethash true-file +eglot/jdtls-file-to-uri-map))
+             (uri (car-safe entry))
+             (server (or (cdr-safe entry) (+eglot/jdtls-find-active-server))))
+        (when uri
+          (setq-local +eglot/jdtls-source-uri uri))
+        (when server
+          (setq-local +eglot/jdtls-source-server server)
+          (setq-local eglot--cached-server server)
+          (puthash true-file server eglot--servers-by-xrefed-file)
+          (unless (memq (current-buffer) (eglot--managed-buffers server))
+            (push (current-buffer) (eglot--managed-buffers server)))))
       (setq-local revert-buffer-function #'+eglot/jdtls-revert-buffer-fn)
       (read-only-mode 1)
-      (+eglot/jdtls-source-mode 1)))
+      (+eglot/jdtls-source-mode 1)
+      (when (and (bound-and-true-p +eglot/jdtls-source-server)
+                 (jsonrpc-running-p +eglot/jdtls-source-server))
+        (eglot--managed-mode 1))))
 
   (add-hook 'find-file-hook #'+eglot/jdtls-setup-revert-buffer)
 
@@ -285,7 +305,13 @@
               (lambda (orig-fn uri &rest args)
                 (let ((uri-clean (if (symbolp uri) (replace-regexp-in-string "^:" "" (symbol-name uri)) uri)))
                   (or (+eglot/jdtls-uri-to-path uri-clean)
-                      (apply orig-fn uri-clean args))))))
+                      (apply orig-fn uri-clean args)))))
+
+  (advice-add (if (fboundp 'eglot-path-to-uri) 'eglot-path-to-uri 'eglot--path-to-uri)
+              :around
+              (lambda (orig-fn path &rest args)
+                (or (+eglot/jdtls-path-to-uri path)
+                    (apply orig-fn path args)))))
 
 
 ;; ---------------------------------------------------------------------------

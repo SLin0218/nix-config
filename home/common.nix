@@ -22,6 +22,7 @@
     default-cache-ttl 600
     max-cache-ttl 7200
     pinentry-program ${config.home.homeDirectory}/.gnupg/pinentry-wrapper.sh
+    allow-loopback-pinentry
     enable-ssh-support
   '';
   home.file.".gnupg/pinentry-wrapper.sh" = {
@@ -34,54 +35,58 @@
     stateVersion = "25.11";
   };
 
-  home.packages = with pkgs; [
-    # common cli
-    fd
-    jq
-    nixd
-    nixfmt
-    ripgrep
-    nodejs
-    pnpm
-    delta
-    fzf
-    mycli
-    httpie
-    pandoc
-    (texlive.combine {
-      inherit (texlive) scheme-medium collection-langchinese collection-latexextra;
-    })
-    nmap
+  home.packages =
+    with pkgs;
+    [
+      # common cli
+      fd
+      jq
+      nixd
+      nixfmt
+      ripgrep
+      nodejs
+      pnpm
+      delta
+      fzf
+      mycli
+      httpie
+      pandoc
+      (texlive.combine {
+        inherit (texlive) scheme-medium collection-langchinese collection-latexextra;
+      })
+      nmap
 
-    jetbrains.idea
+      jetbrains.idea
 
-    # rime
-    librime
+      # rime
+      librime
 
-    # java & build tools
-    (lib.hiPrio jbrsdk-17)
-    (lib.lowPrio openjdk21)
-    maven
-    mvn-springboot-debug
+      # java & build tools
+      (lib.hiPrio jbrsdk-17)
+      (lib.lowPrio openjdk21)
+      maven
+      mvn-springboot-debug
 
-    # translate
-    t
-    mpc
-    mpv
-    android-tools
+      # translate
+      t
+      mpc
+      mpv
+      android-tools
 
-    gnupg
-    pinentry-curses
+      gnupg
 
-    git-crypt
+      git-crypt
 
-    # build tools
-    gdb
-    python3
-    cmake
-    gnumake
-    gcc
-  ];
+      # build tools
+      gdb
+      python3
+      cmake
+      gnumake
+      gcc
+    ]
+    ++ lib.optionals pkgs.stdenv.isLinux [
+      pinentry-gnome3
+    ];
 
   home.sessionVariables = {
     EDITOR = "nvim";

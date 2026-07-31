@@ -10,6 +10,7 @@
     ./modules/zsh.nix
     ./modules/starship.nix
     ./modules/kitty.nix
+    ./modules/wezterm.nix
     ./modules/theme.nix
     ./modules/fastfetch.nix
     ./modules/editor.nix

@@ -234,24 +234,23 @@ let
         ]
       )
 
-      # wezterm 专用
-      (map
-        (
-          key:
-          mkHyperKey {
-            fromKey = key;
-            toModifiers = [
-              "left_control"
-              "left_shift"
-            ];
-            conditions = mkFrontmost apps.wezterm;
-          }
-        )
-        [
-          "open_bracket"
-          "close_bracket"
-        ]
-      )
+      [
+        (mkHyperKey {
+          fromKey = "open_bracket";
+          toKey = "tab";
+          toModifiers = [
+            "left_control"
+            "left_shift"
+          ];
+          conditions = mkFrontmost apps.wezterm;
+        })
+        (mkHyperKey {
+          fromKey = "close_bracket";
+          toKey = "tab";
+          toModifiers = [ "left_control" ];
+          conditions = mkFrontmost apps.wezterm;
+        })
+      ]
 
       # 2. JetBrains / Android Studio 专用
       (map

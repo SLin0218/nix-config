@@ -10,7 +10,7 @@
     # ./modules/zsh.nix
     # ./modules/starship.nix
     # ./modules/kitty.nix
-    ./modules/wezterm.nix
+    # ./modules/wezterm.nix
     ./modules/theme.nix
     ./modules/fastfetch.nix
     # ./modules/editor.nix
@@ -88,6 +88,7 @@
 
       # gui
       jetbrains.idea
+      wezterm
     ]
     ++ lib.optionals pkgs.stdenv.isLinux [
       pinentry-gnome3

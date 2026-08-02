@@ -7,29 +7,29 @@
 
 {
   imports = [
-    ./modules/zsh.nix
-    ./modules/starship.nix
-    ./modules/kitty.nix
+    # ./modules/zsh.nix
+    # ./modules/starship.nix
+    # ./modules/kitty.nix
     ./modules/wezterm.nix
     ./modules/theme.nix
     ./modules/fastfetch.nix
-    ./modules/editor.nix
+    # ./modules/editor.nix
   ];
 
   home.file.".sqlfluff".source = ../config/sqlfluff;
   home.file.".gitconfig".source = ../config/gitconfig;
 
-  home.file.".gnupg/gpg-agent.conf".text = ''
-    default-cache-ttl 600
-    max-cache-ttl 7200
-    pinentry-program ${config.home.homeDirectory}/.gnupg/pinentry-wrapper.sh
-    allow-loopback-pinentry
-    enable-ssh-support
-  '';
-  home.file.".gnupg/pinentry-wrapper.sh" = {
-    source = ../config/gnupg/pinentry-wrapper.sh;
-    executable = true;
-  };
+  # home.file.".gnupg/gpg-agent.conf".text = ''
+  #   default-cache-ttl 600
+  #   max-cache-ttl 7200
+  #   pinentry-program ${config.home.homeDirectory}/.gnupg/pinentry-wrapper.sh
+  #   allow-loopback-pinentry
+  #   enable-ssh-support
+  # '';
+  # home.file.".gnupg/pinentry-wrapper.sh" = {
+  #   source = ../config/gnupg/pinentry-wrapper.sh;
+  #   executable = true;
+  # };
 
   home = {
     username = "lin";
@@ -56,8 +56,7 @@
         inherit (texlive) scheme-medium collection-langchinese collection-latexextra;
       })
       nmap
-
-      jetbrains.idea
+      bind.dnsutils
 
       # rime
       librime
@@ -78,12 +77,17 @@
 
       git-crypt
 
+      chezmoi
+
       # build tools
       gdb
       python3
       cmake
       gnumake
       gcc
+
+      # gui
+      jetbrains.idea
     ]
     ++ lib.optionals pkgs.stdenv.isLinux [
       pinentry-gnome3

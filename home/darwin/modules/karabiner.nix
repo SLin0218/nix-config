@@ -86,21 +86,50 @@ let
     manipulators =
       let
         navMap = [
-          { key = "k"; arrow = "up_arrow"; }
-          { key = "j"; arrow = "down_arrow"; }
-          { key = "h"; arrow = "left_arrow"; }
-          { key = "l"; arrow = "right_arrow"; }
+          {
+            key = "k";
+            arrow = "up_arrow";
+          }
+          {
+            key = "j";
+            arrow = "down_arrow";
+          }
+          {
+            key = "h";
+            arrow = "left_arrow";
+          }
+          {
+            key = "l";
+            arrow = "right_arrow";
+          }
         ];
         allNavs =
-          (map (item: item // { extraFrom = [ ]; extraTo = [ ]; }) navMap)
-          ++ (map (item: item // { extraFrom = [ "left_command" ]; extraTo = [ "left_command" ]; }) navMap);
+          (map (
+            item:
+            item
+            // {
+              extraFrom = [ ];
+              extraTo = [ ];
+            }
+          ) navMap)
+          ++ (map (
+            item:
+            item
+            // {
+              extraFrom = [ "left_command" ];
+              extraTo = [ "left_command" ];
+            }
+          ) navMap);
       in
-      map (item: mkHyperKey {
-        fromKey = item.key;
-        toKey = item.arrow;
-        extraFromModifiers = item.extraFrom;
-        toModifiers = item.extraTo;
-      }) allNavs;
+      map (
+        item:
+        mkHyperKey {
+          fromKey = item.key;
+          toKey = item.arrow;
+          extraFromModifiers = item.extraFrom;
+          toModifiers = item.extraTo;
+        }
+      ) allNavs;
   };
 
   # 4. 模块化：应用启动
@@ -117,16 +146,46 @@ let
           to = [ { shell_command = "open -a '${item.app}'"; } ];
         })
         [
-          { key = "e"; app = "Finder"; }
-          { key = "g"; app = "Brave Browser"; }
-          { key = "i"; app = "kitty"; }
-          { key = "y"; app = "QQMusic"; }
-          { key = "s"; app = "System Preferences"; }
-          { key = "u"; app = mainChat; }
-          { key = "o"; app = "企业微信"; }
-          { key = "n"; app = "IntelliJ IDEA"; }
-          { key = "m"; app = "Emacs"; }
-          { key = "b"; app = "wpsoffice"; }
+          {
+            key = "e";
+            app = "Finder";
+          }
+          {
+            key = "g";
+            app = "Brave Browser";
+          }
+          {
+            key = "i";
+            app = "wezterm";
+          }
+          {
+            key = "y";
+            app = "QQMusic";
+          }
+          {
+            key = "s";
+            app = "System Preferences";
+          }
+          {
+            key = "u";
+            app = mainChat;
+          }
+          {
+            key = "o";
+            app = "企业微信";
+          }
+          {
+            key = "n";
+            app = "IntelliJ IDEA";
+          }
+          {
+            key = "m";
+            app = "Emacs";
+          }
+          {
+            key = "b";
+            app = "wpsoffice";
+          }
         ];
   };
 
@@ -144,6 +203,7 @@ let
       "^com\\.google\\.android\\.studio$"
     ];
     kitty = [ "^net\\.kovidgoyal\\.kitty$" ];
+    wezterm = [ "^com\\.github\\.wez\\.wezterm$" ];
     emacs = [ "^org\\.gnu\\.Emacs$" ];
     raycast = [ "^com\\.raycast\\.macos$" ];
     welink = [ "^com\\.huawei\\.cloud\\.welink$" ];
@@ -156,25 +216,72 @@ let
     description = "Only specified application settings";
     manipulators = builtins.concatLists [
       # 1. Kitty 专用
-      (map (key: mkHyperKey {
-        fromKey = key;
-        toModifiers = [ "left_control" "left_shift" ];
-        conditions = mkFrontmost apps.kitty;
-      }) [ "open_bracket" "close_bracket" ])
+      (map
+        (
+          key:
+          mkHyperKey {
+            fromKey = key;
+            toModifiers = [
+              "left_control"
+              "left_shift"
+            ];
+            conditions = mkFrontmost apps.kitty;
+          }
+        )
+        [
+          "open_bracket"
+          "close_bracket"
+        ]
+      )
+
+      # wezterm 专用
+      (map
+        (
+          key:
+          mkHyperKey {
+            fromKey = key;
+            toModifiers = [
+              "left_control"
+              "left_shift"
+            ];
+            conditions = mkFrontmost apps.wezterm;
+          }
+        )
+        [
+          "open_bracket"
+          "close_bracket"
+        ]
+      )
 
       # 2. JetBrains / Android Studio 专用
-      (map (key: mkHyperKey {
-        fromKey = key;
-        toModifiers = [ "left_command" "left_shift" "right_shift" ];
-        conditions = mkFrontmost apps.jetbrains;
-      }) [ "open_bracket" "close_bracket" ])
+      (map
+        (
+          key:
+          mkHyperKey {
+            fromKey = key;
+            toModifiers = [
+              "left_command"
+              "left_shift"
+              "right_shift"
+            ];
+            conditions = mkFrontmost apps.jetbrains;
+          }
+        )
+        [
+          "open_bracket"
+          "close_bracket"
+        ]
+      )
 
       # 3. 浏览器专用 (切换 Tab)
       [
         (mkHyperKey {
           fromKey = "open_bracket";
           toKey = "tab";
-          toModifiers = [ "left_control" "left_shift" ];
+          toModifiers = [
+            "left_control"
+            "left_shift"
+          ];
           conditions = mkFrontmost apps.browsers;
         })
         (mkHyperKey {
@@ -196,25 +303,48 @@ let
       ]
 
       # 5. Raycast 专用
-      (map (item: {
-        type = "basic";
-        from = {
-          key_code = item.fromKey;
-          modifiers.mandatory = [ "left_control" ];
-        };
-        to = [ { key_code = item.toKey; } ];
-        conditions = mkFrontmost apps.raycast;
-      }) [
-        { fromKey = "u"; toKey = "page_up"; }
-        { fromKey = "d"; toKey = "page_down"; }
-      ])
+      (map
+        (item: {
+          type = "basic";
+          from = {
+            key_code = item.fromKey;
+            modifiers.mandatory = [ "left_control" ];
+          };
+          to = [ { key_code = item.toKey; } ];
+          conditions = mkFrontmost apps.raycast;
+        })
+        [
+          {
+            fromKey = "u";
+            toKey = "page_up";
+          }
+          {
+            fromKey = "d";
+            toKey = "page_down";
+          }
+        ]
+      )
 
       # 6. WeLink 专用
-      (map (key: mkHyperKey {
-        fromKey = key;
-        toModifiers = [ "left_control" "left_option" "left_command" ];
-        conditions = mkFrontmost apps.welink;
-      }) [ "f" "k" "j" ])
+      (map
+        (
+          key:
+          mkHyperKey {
+            fromKey = key;
+            toModifiers = [
+              "left_control"
+              "left_option"
+              "left_command"
+            ];
+            conditions = mkFrontmost apps.welink;
+          }
+        )
+        [
+          "f"
+          "k"
+          "j"
+        ]
+      )
     ];
   };
 
